@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简化K线测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #0a0e27;
+            color: #f9fafb;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button, input {
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #1f2937;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        button {
+            background: #3b82f6;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #chart-container {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            height: 500px;
+            margin-bottom: 20px;
+        }
+        #log-container {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .status-success {
+            color: #10b981;
+            font-weight: bold;
+            padding: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .status-error {
+            color: #ef4444;
+            font-weight: bold;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 威科夫系统 - K线图表简化测试</h1>
+
+        <div class="section">
+            <h2>控制面板</h2>
+            <div class="controls">
+                <input type="text" id="stockCode" value="000001" placeholder="股票代码" style="width: 120px;">
+                <select id="timeframe">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                </select>
+                <button onclick="testStep1()">1. 测试API</button>
+                <button onclick="testStep2()">2. 加载图表</button>
+                <button onclick="clearLogs()">清空日志</button>
+            </div>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="section">
+            <h2>K线图表</h2>
+            <div id="chart-container">
+                <canvas id="klineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>操作日志</h2>
+            <div id="log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let chart = null;
+        let quotesData = null;
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#9ca3af';
+            logContainer.innerHTML += `<div style="color: ${color}; margin-bottom: 5px;">[${time}] ${message}</div>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function showStatus(message, isSuccess) {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="${isSuccess ? 'status-success' : 'status-error'}">${message}</div>`;
+        }
+
+        async function testStep1() {
+            const code = document.getElementById('stockCode').value;
+            const timeframe = document.getElementById('timeframe').value;
+
+            log('开始测试API...', 'info');
+            showStatus('正在测试API连接...', false);
+
+            try {
+                // 测试获取K线数据
+                log(`正在请求K线数据: ${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}`, 'info');
+                const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}`);
+                const quotesData = await quotesRes.json();
+
+                log(`✓ K线数据请求成功: 状态${quotesRes.ok}, 数据量: ${quotesData.total}条`, 'success');
+
+                // 测试获取分析结果
+                log(`正在请求分析结果: ${API_BASE}/api/v1/stocks/analyze`, 'info');
+                const analysisRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const analysisData = await analysisRes.json();
+
+                log(`✓ 分析结果请求成功: 有analysis_summary: ${!!analysisData.analysis_summary}`, 'success');
+
+                // 保存数据
+                window.quotesData = quotesData.quotes;
+                window.analysisData = analysisData.analysis_summary;
+
+                log('✓ 步骤1完成，请点击"加载图表"按钮', 'success');
+                showStatus('API测试成功！现在可以加载图表', true);
+
+            } catch (error) {
+                log(`✗ API测试失败: ${error.message}`, 'error');
+                showStatus(`API测试失败: ${error.message}`, false);
+            }
+        }
+
+        async function testStep2() {
+            if (!window.quotesData) {
+                log('✗ 请先测试API（步骤1）', 'error');
+                showStatus('请先测试API', false);
+                return;
+            }
+
+            log('开始加载图表...', 'info');
+            showStatus('正在加载图表...', false);
+
+            try {
+                renderChart(window.quotesData);
+                log('✓ 图表渲染完成', 'success');
+                showStatus('图表加载成功！', true);
+
+            } catch (error) {
+                log(`✗ 图表加载失败: ${error.message}`, 'error');
+                showStatus(`图表加载失败: ${error.message}`, false);
+            }
+        }
+
+        function renderChart(quotes) {
+            log(`开始渲染图表，数据量: ${quotes.length}`, 'info');
+
+            const ctx = document.getElementById('klineChart');
+            if (!ctx) {
+                throw new Error('Canvas元素未找到');
+            }
+
+            // 检查Chart.js是否加载
+            if (typeof Chart === 'undefined') {
+                throw new Error('Chart.js库未加载');
+            }
+
+            log('Chart.js已加载，准备创建图表', 'info');
+
+            // 销毁旧图表
+            if (chart) {
+                chart.destroy();
+            }
+
+            const candlestickData = quotes.map(q => ({
+                x: new Date(q.date),
+                o: q.open,
+                h: q.high,
+                l: q.low,
+                c: q.close
+            }));
+
+            log(`K线数据准备完成: ${candlestickData.length}条`, 'info');
+
+            chart = new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: 'K线',
+                        data: candlestickData
+                    }, {
+                        label: 'MA5',
+                        type: 'line',
+                        data: quotes.map(q => ({ x: new Date(q.date), y: q.ma5 })),
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }, {
+                        label: 'MA10',
+                        type: 'line',
+                        data: quotes.map(q => ({ x: new Date(q.date), y: q.ma10 })),
+                        borderColor: 'rgba(139, 92, 246, 0.8)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }, {
+                        label: 'MA20',
+                        type: 'line',
+                        data: quotes.map(q => ({ x: new Date(q.date), y: q.ma20 })),
+                        borderColor: 'rgba(245, 158, 11, 0.8)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'yyyy-MM-dd'
+                            },
+                            grid: {
+                                color: 'rgba(75, 85, 99, 0.2)'
+                            },
+                            ticks: {
+                                color: '#9ca3af'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(75, 85, 99, 0.2)'
+                            },
+                            ticks: {
+                                color: '#9ca3af'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#f9fafb'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            log('图表创建成功', 'success');
+        }
+
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = '';
+            log('日志已清空', 'info');
+        }
+
+        // 页面加载时
+        window.addEventListener('load', () => {
+            log('页面加载完成', 'info');
+            log(`API_BASE: ${API_BASE}`, 'info');
+            
+            // 检查Chart.js
+            if (typeof Chart === 'undefined') {
+                log('⚠ Chart.js库未加载，请检查网络', 'error');
+            } else {
+                log('✓ Chart.js库已加载', 'success');
+            }
+
+            if (typeof ChartFinancial === 'undefined') {
+                log('⚠ ChartFinancial插件未加载，请检查网络', 'error');
+            } else {
+                log('✓ ChartFinancial插件已加载', 'success');
+            }
+        });
+    </script>
+</body>
+</html>

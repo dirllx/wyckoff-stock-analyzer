@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>威科夫股票分析系统 - 简化图表版</title>
+    <!-- TradingView Lightweight Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            min-height: 100vh;
+            line-height: 1.6;
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f9fafb;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+            width: 120px;
+            margin-right: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 500px;
+            border: 1px solid #374151;
+            margin-bottom: 16px;
+        }
+
+        /* Indicators Panel */
+        .indicators-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .indicator-item {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .indicator-name {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .indicator-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .indicator-bullish { color: #10b981; }
+        .indicator-bearish { color: #ef4444; }
+        .indicator-neutral { color: #9ca3af; }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            gap: 8px;
+        }
+
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: loading-bounce 1.4s infinite ease-in-out;
+        }
+
+        @keyframes loading-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .chart-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* K线表格 */
+        .kline-table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            border: 1px solid #374151;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .kline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            min-width: 800px;
+        }
+
+        .kline-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #111827;
+        }
+
+        .kline-table th,
+        .kline-table td {
+            padding: 8px 6px;
+            text-align: right;
+            border-bottom: 1px solid #374151;
+        }
+
+        .kline-table th {
+            font-weight: 600;
+            color: #9ca3af;
+            font-size: 11px;
+            background: #111827;
+            position: sticky;
+            top: 0;
+        }
+
+        .kline-table td:first-child {
+            text-align: left;
+        }
+
+        .kline-red { color: #ef4444; }
+        .kline-green { color: #10b981; }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .phase-A { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+        .phase-U { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
+        .phase-D { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+        .phase-DS { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid #8b5cf6; }
+        .phase-neutral { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid #374151; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">威科夫股票分析（简化图表版）</h2>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                <select class="form-input" id="timeframe" style="width: 100px;">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                    <option value="monthly">月线</option>
+                </select>
+                <button class="btn btn-primary" onclick="analyzeStock()">开始分析</button>
+            </div>
+            <div id="analyzeResult"></div>
+        </div>
+
+        <!-- 实时行情面板 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">实时行情（easyquotation数据源）</h2>
+            </div>
+            <div class="indicators-grid" id="realtimePanel">
+                <div style="text-align: center; color: #9ca3af; padding: 20px;">
+                    暂无实时数据
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表/表格切换 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">K线图表</h2>
+                <div class="chart-toggle">
+                    <button class="toggle-btn active" id="btnTable" onclick="showMode('table')">表格</button>
+                    <button class="toggle-btn" id="btnChart" onclick="showMode('chart')">图表</button>
+                </div>
+            </div>
+
+            <!-- 图表模式 -->
+            <div id="chartMode" class="chart-container" style="display: none;">
+                <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af;">
+                    图表模式正在加载...
+                </div>
+            </div>
+
+            <!-- 表格模式 -->
+            <div id="tableMode" class="kline-table-container">
+                <table class="kline-table" id="klineTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>开盘</th>
+                            <th>最高</th>
+                            <th>最低</th>
+                            <th>收盘</th>
+                            <th>成交量</th>
+                            <th>MA5</th>
+                            <th>MA10</th>
+                            <th>MA20</th>
+                            <th>OBV</th>
+                            <th>阶段</th>
+                        </tr>
+                    </thead>
+                    <tbody id="klineBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 技术指标面板 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">技术指标</h2>
+            </div>
+            <div class="indicators-panel" id="indicatorsPanel"></div>
+        </div>
+
+        <!-- 威科夫指标面板 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">威科夫指标</h2>
+            </div>
+            <div class="indicators-panel" id="wyckoffPanel"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let currentQuotesData = null;
+        let currentAnalysisData = null;
+        let useTableMode = true; // 默认表格模式
+
+        // 添加实时行情
+        async function fetchRealtimeQuote(code) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/realtime/quote/${code}`);
+                const data = await response.json();
+
+                const realtimePanel = document.getElementById('realtimePanel');
+                if (data && data.length > 0) {
+                    const quote = data[0];
+                    realtimePanel.innerHTML = `
+                        <div class="indicator-item">
+                            <span class="indicator-name">当前价</span>
+                            <span class="indicator-value indicator-${quote.change >= 0 ? 'bullish' : 'bearish'}">${quote.current.toFixed(2)}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">涨跌额</span>
+                            <span class="indicator-value indicator-${quote.change >= 0 ? 'bullish' : 'bearish'}">${quote.change.toFixed(2)}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">涨跌幅</span>
+                            <span class="indicator-value indicator-${quote.change >= 0 ? 'bullish' : 'bearish'}">${(quote.changePercent * 100).toFixed(2)}%</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">成交量</span>
+                            <span class="indicator-value">${(quote.volume / 10000).toFixed(0)}万</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">成交额</span>
+                            <span class="indicator-value">${(quote.amount / 100000000).toFixed(2)}亿</span>
+                        </div>
+                    `;
+                } else {
+                    realtimePanel.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 20px;">暂无实时数据</div>';
+                }
+            } catch (error) {
+                console.error('获取实时行情失败:', error);
+            }
+        }
+
+        // 显示模式切换
+        function showMode(mode) {
+            const btnTable = document.getElementById('btnTable');
+            const btnChart = document.getElementById('btnChart');
+            const tableMode = document.getElementById('tableMode');
+            const chartMode = document.getElementById('chartMode');
+
+            if (mode === 'table') {
+                btnTable.classList.add('active');
+                btnChart.classList.remove('active');
+                tableMode.style.display = 'block';
+                chartMode.style.display = 'none';
+                useTableMode = true;
+            } else {
+                btnChart.classList.add('active');
+                btnTable.classList.remove('active');
+                tableMode.style.display = 'none';
+                chartMode.style.display = 'block';
+                useTableMode = false;
+                renderChart();
+            }
+        }
+
+        // 添加威科夫指标标记
+        function addWyckoffIndicators(chart, candleSeries, quotes, analysis) {
+            if (!quotes || quotes.length === 0) return;
+
+            try {
+                const latestQuote = quotes[quotes.length - 1];
+
+                // 计算支撑位和阻力位
+                const recentQuotes = quotes.slice(-30);
+                const highs = recentQuotes.map(q => q.high);
+                const lows = recentQuotes.map(q => q.low);
+                const supportLevel = Math.min(...lows);
+                const resistanceLevel = Math.max(...highs);
+
+                // 添加支撑位水平线
+                candleSeries.createPriceLine({
+                    price: supportLevel,
+                    color: '#10b981',
+                    lineWidth: 2,
+                    lineStyle: 2,
+                    axisLabelVisible: true,
+                    title: '支撑'
+                });
+
+                // 添加阻力位水平线
+                candleSeries.createPriceLine({
+                    price: resistanceLevel,
+                    color: '#ef4444',
+                    lineWidth: 2,
+                    lineStyle: 2,
+                    axisLabelVisible: true,
+                    title: '阻力'
+                });
+
+                // 计算当前阶段
+                let phase = '震荡';
+                if (latestQuote.close > latestQuote.ma20 && latestQuote.ma5 > latestQuote.ma10 && latestQuote.ma10 > latestQuote.ma20) {
+                    phase = 'U';
+                } else if (latestQuote.close < latestQuote.ma20 && latestQuote.ma5 < latestQuote.ma10 && latestQuote.ma10 < latestQuote.ma20) {
+                    phase = 'D';
+                } else if (latestQuote.volume > latestQuote.volume_ma5 * 1.5) {
+                    phase = 'A';
+                } else if (latestQuote.close < latestQuote.ma5 && latestQuote.close > latestQuote.ma20) {
+                    phase = 'DS';
+                }
+
+                // 添加趋势线（U/D阶段）
+                if (phase === 'U' || phase === 'D') {
+                    const trendData = quotes.slice(-20);
+                    if (trendData.length >= 2) {
+                        const lineData = phase === 'U'
+                            ? trendData.map(q => ({ time: q.date, value: q.low }))
+                            : trendData.map(q => ({ time: q.date, value: q.high }));
+
+                        chart.addLineSeries(lineData, {
+                            color: phase === 'U' ? '#10b981' : '#ef4444',
+                            lineWidth: 2,
+                            lineStyle: 2,
+                            title: phase === 'U' ? '上升趋势' : '下降趋势'
+                        });
+                    }
+                }
+
+                // 添加信号点标记
+                const markers = [];
+                const signalQuotes = quotes.slice(-50);
+
+                signalQuotes.forEach((q, index) => {
+                    if (index === 0) return;
+
+                    const prev = signalQuotes[index - 1];
+
+                    // 异常成交量标记
+                    if (q.volume > q.volume_ma5 * 2) {
+                        const isBullish = q.close > prev.close;
+                        markers.push({
+                            time: q.date,
+                            position: isBullish ? 'belowBar' : 'aboveBar',
+                            color: isBullish ? '#10b981' : '#ef4444',
+                            shape: 'circle',
+                            text: '🔥'
+                        });
+                    }
+
+                    // MA金叉/死叉标记
+                    const ma5Cross = (prev.ma5 < prev.ma10 && q.ma5 > q.ma10) || (prev.ma5 > prev.ma10 && q.ma5 < q.ma10);
+                    if (ma5Cross) {
+                        const isGolden = q.ma5 > q.ma10;
+                        markers.push({
+                            time: q.date,
+                            position: 'belowBar',
+                            color: isGolden ? '#10b981' : '#ef4444',
+                            shape: 'circle',
+                            text: isGolden ? '⬆️' : '⬇️'
+                        });
+                    }
+                });
+
+                // 添加当前方向标记（最新K线）
+                if (analysis && analysis.direction) {
+                    const direction = analysis.direction;
+                    if (direction === 'LONG') {
+                        markers.push({
+                            time: latestQuote.date,
+                            position: 'belowBar',
+                            color: '#10b981',
+                            shape: 'arrowUp',
+                            text: '📈'
+                        });
+                    } else if (direction === 'SHORT') {
+                        markers.push({
+                            time: latestQuote.date,
+                            position: 'aboveBar',
+                            color: '#ef4444',
+                            shape: 'arrowDown',
+                            text: '📉'
+                        });
+                    }
+                }
+
+                if (markers.length > 0) {
+                    candleSeries.setMarkers(markers);
+                    console.log('添加威科夫标记: 支撑位、阻力位、趋势线、信号点');
+                }
+
+            } catch (error) {
+                console.error('添加威科夫指标失败:', error);
+            }
+        }
+
+        // 更新阶段标签
+        function updatePhaseTag() {
+            if (!currentQuotesData || currentQuotesData.length === 0) return;
+
+            const latestQuote = currentQuotesData[currentQuotesData.length - 1];
+            let phase = '震荡';
+            let phaseClass = 'phase-neutral';
+            let phaseTooltip = '横盘整理，等待方向选择';
+
+            if (latestQuote.close > latestQuote.ma20 && latestQuote.ma5 > latestQuote.ma10 && latestQuote.ma10 > latestQuote.ma20) {
+                phase = 'U';
+                phaseClass = 'phase-U';
+                phaseTooltip = '上升趋势，均线多头排列，价格强势';
+            } else if (latestQuote.close < latestQuote.ma20 && latestQuote.ma5 < latestQuote.ma10 && latestQuote.ma10 < latestQuote.ma20) {
+                phase = 'D';
+                phaseClass = 'phase-D';
+                phaseTooltip = '下降趋势，均线空头排列，价格弱势';
+            } else if (latestQuote.volume > latestQuote.volume_ma5 * 1.5) {
+                phase = 'A';
+                phaseClass = 'phase-A';
+                phaseTooltip = '成交量大，主力吸筹或派发，关注';
+            } else if (latestQuote.close < latestQuote.ma5 && latestQuote.close > latestQuote.ma20) {
+                phase = 'DS';
+                phaseClass = 'phase-DS';
+                phaseTooltip = '下跌吸筹，价格回调后可能上涨';
+            }
+
+            const phaseTag = document.getElementById('phaseTag');
+            const phaseTooltipText = document.getElementById('phaseTooltipText');
+            phaseTag.textContent = phase + '阶段';
+            phaseTag.className = 'phase-badge ' + phaseClass;
+            phaseTooltipText.textContent = phaseTooltip;
+        }
+
+        // 渲染简化图表
+        function renderChart() {
+            if (!currentQuotesData || currentQuotesData.length === 0) return;
+
+            const container = document.getElementById('chartMode');
+            container.innerHTML = '';
+
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    container.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">图表库加载失败，请使用表格模式</div>';
+                    return;
+                }
+
+                const candlestickData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close
+                }));
+
+                const volumeData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    value: q.volume,
+                    color: q.close > q.open ? '#26a69a' : '#ef5350'
+                }));
+
+                const ma5Data = currentQuotesData.map(q => ({ time: q.date, value: q.ma5 }));
+                const ma10Data = currentQuotesData.map(q => ({ time: q.date, value: q.ma10 }));
+                const ma20Data = currentQuotesData.map(q => ({ time: q.date, value: q.ma20 }));
+
+                // 计算MA60/MA90/MA120/MA250
+                const closes = currentQuotesData.map(q => q.close);
+                const ma60Data = calculateMA(closes, 60);
+                const ma90Data = calculateMA(closes, 90);
+                const ma120Data = calculateMA(closes, 120);
+                const ma250Data = calculateMA(closes, 250);
+
+                // 转换为图表数据格式
+                const ma60Chart = ma60Data.map((v, i) => ({ time: currentQuotesData[i].date, value: v }));
+                const ma90Chart = ma90Data.map((v, i) => ({ time: currentQuotesData[i].date, value: v }));
+                const ma120Chart = ma120Data.map((v, i) => ({ time: currentQuotesData[i].date, value: v }));
+                const ma250Chart = ma250Data.map((v, i) => ({ time: currentQuotesData[i].date, value: v }));
+
+                // 创建图表
+                const chart = window.LightweightCharts.createChart(container, {
+                    width: container.clientWidth,
+                    height: container.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#1f2937' },
+                        textColor: '#9ca3af'
+                    },
+                    rightPriceScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        scaleMargins: {
+                            top: 0.1,
+                            bottom: 0.25
+                        }
+                    },
+                    timeScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        timeVisible: true,
+                        secondsVisible: false
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(55, 65, 81, 0.5)' },
+                        horzLines: { color: 'rgba(55, 65, 81, 0.5)' }
+                    },
+                    handleScroll: {
+                        mouseWheel: true,
+                        pressedMouseMove: true
+                    },
+                    handleScale: {
+                        axisPressedMouseMove: true,
+                        mouseWheel: true,
+                        pinch: true
+                    }
+                });
+
+                // K线
+                const candleSeries = chart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444'
+                });
+                candleSeries.setData(candlestickData);
+
+                // 成交量（底部）
+                const volumeSeries = chart.addHistogramSeries({
+                    priceFormat: { type: 'volume' },
+                    priceScaleId: '',
+                    scaleMargins: { top: 0.8, bottom: 0 }
+                });
+                volumeSeries.setData(volumeData);
+
+                // MA线
+                chart.addLineSeries(ma5Data, { color: '#3b82f6', lineWidth: 1.5, title: 'MA5' });
+                chart.addLineSeries(ma10Data, { color: '#8b5cf6', lineWidth: 1.5, title: 'MA10' });
+                chart.addLineSeries(ma20Data, { color: '#f59e0b', lineWidth: 1.5, title: 'MA20' });
+
+                // 计算并添加威科夫指标
+                addWyckoffIndicators(chart, candleSeries, currentQuotesData, currentAnalysisData);
+
+                chart.timeScale().fitContent();
+
+                console.log('图表渲染成功');
+            } catch (error) {
+                console.error('图表渲染失败:', error);
+                container.innerHTML = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#ef4444; gap:15px;">
+                    <div style="font-size:16px; font-weight:600;">❌ 图表加载失败</div>
+                    <div style="font-size:13px;">错误: ${error.message}</div>
+                    <div style="font-size:12px; color:#9ca3af;">请使用表格模式查看数据</div>
+                </div>`;
+            }
+        }
+
+        // 渲染K线表格
+        function renderKlineTable(quotes) {
+            const klineBody = document.getElementById('klineBody');
+
+            if (!quotes || quotes.length === 0) {
+                klineBody.innerHTML = '';
+                return;
+            }
+
+            // 倒序显示
+            klineBody.innerHTML = quotes.slice().reverse().slice(0, 100).map((q) => {
+                const isRed = q.close < q.open;
+                const closeClass = isRed ? 'kline-red' : 'kline-green';
+
+                // 阶段判断
+                let phase = '震荡';
+                let phaseClass = 'phase-neutral';
+
+                if (q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                    phase = 'U';
+                    phaseClass = 'phase-U';
+                } else if (q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                    phase = 'D';
+                    phaseClass = 'phase-D';
+                } else if (q.volume > q.volume_ma5 * 1.5) {
+                    phase = 'A';
+                    phaseClass = 'phase-A';
+                } else if (q.close < q.ma5 && q.close > q.ma20) {
+                    phase = 'DS';
+                    phaseClass = 'phase-DS';
+                }
+
+                return `
+                    <tr>
+                        <td>${q.date.split(' ')[0]}</td>
+                        <td class="${closeClass}">${q.open.toFixed(2)}</td>
+                        <td>${q.high.toFixed(2)}</td>
+                        <td>${q.low.toFixed(2)}</td>
+                        <td class="${closeClass}">${q.close.toFixed(2)}</td>
+                        <td>${(q.volume / 10000).toFixed(0)}万</td>
+                        <td style="color:#3b82f6;">${q.ma5.toFixed(2)}</td>
+                        <td style="color:#8b5cf6;">${q.ma10.toFixed(2)}</td>
+                        <td style="color:#f59e0b;">${q.ma20.toFixed(2)}</td>
+                        <td style="color:#f97316;">${(q.obv / 1000000).toFixed(1)}M</td>
+                        <td><span class="phase-badge ${phaseClass}">${phase}阶段</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            console.log('K线表格渲染完成');
+        }
+
+        // 渲染技术指标面板
+        function renderIndicatorsPanel(analysis) {
+            const panel = document.getElementById('indicatorsPanel');
+
+            if (!analysis || !analysis.details) {
+                panel.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无指标数据</div>';
+                return;
+            }
+
+            const volume = analysis.details.volume;
+            const trend = analysis.details.trend;
+
+            // 计算OBV和MACD值
+            let obvValue = 0;
+            let obvTrend = '中性';
+            let macdValue = 0;
+            let macdSignal = '中性';
+
+            if (currentQuotesData && currentQuotesData.length > 0) {
+                const latest = currentQuotesData[currentQuotesData.length - 1];
+                obvValue = latest.obv || 0;
+                obvTrend = volume.obv_trend === 'UP' ? '上升' : volume.obv_trend === 'DOWN' ? '下降' : '持平';
+
+                // 简化的MACD计算
+                const closes = currentQuotesData.map(q => q.close);
+                if (closes.length >= 26) {
+                    const ema12 = calculateEMA(closes, 12);
+                    const ema26 = calculateEMA(closes, 26);
+                    const macdLine = ema12.map((v, i) => v - ema26[i]);
+                    const signalLine = calculateEMA(macdLine, 9);
+                    macdValue = macdLine[macdLine.length - 1];
+                    const signalValue = signalLine[signalLine.length - 1];
+                    macdSignal = macdValue > signalValue ? '金叉' : macdValue < signalValue ? '死叉' : '中性';
+                }
+            }
+
+            panel.innerHTML = `
+                <div class="indicator-item">
+                    <div class="indicator-name">成交量</div>
+                    <div class="indicator-value indicator-${volume.direction.toLowerCase()}">${volume.anomaly ? '异常' : '正常'} ${volume.direction}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">OBV</div>
+                    <div class="indicator-value indicator-${obvTrend === '上升' ? 'bullish' : obvTrend === '下降' ? 'bearish' : 'neutral'}">${(obvValue / 1000000).toFixed(1)}M</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">OBV趋势</div>
+                    <div class="indicator-value">${obvTrend}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">趋势</div>
+                    <div class="indicator-value indicator-${trend.direction.toLowerCase()}">${trend.reason}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">MACD</div>
+                    <div class="indicator-value">${macdValue.toFixed(4)}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">MACD信号</div>
+                    <div class="indicator-value indicator-${macdSignal === '金叉' ? 'bullish' : macdSignal === '死叉' ? 'bearish' : 'neutral'}">${macdSignal}</div>
+                </div>
+            `;
+        }
+
+        // 计算MA
+        function calculateMA(data, period) {
+            const k = 2 / (period + 1);
+            let ema = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                ema.push(data[i] * k + ema[i - 1] * (1 - k));
+            }
+            return ema;
+        }
+
+        // 计算EMA
+        function calculateEMA(data, period) {
+            const k = 2 / (period + 1);
+            let ema = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                ema.push(data[i] * k + ema[i - 1] * (1 - k));
+            }
+            return ema;
+        }
+
+        // 渲染威科夫指标面板
+        function renderWyckoffPanel(analysis) {
+            const panel = document.getElementById('wyckoffPanel');
+
+            if (!analysis) {
+                panel.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无分析数据</div>';
+                return;
+            }
+
+            const summary = analysis;
+            const direction = summary.direction || 'NEUTRAL';
+            const directionClass = direction === 'LONG' ? 'bullish' : direction === 'SHORT' ? 'bearish' : 'neutral';
+
+            // 计算当前阶段
+            let phase = '震荡';
+            let phaseClass = 'phase-neutral';
+            if (currentQuotesData && currentQuotesData.length > 0) {
+                const latest = currentQuotesData[currentQuotesData.length - 1];
+                if (latest.close > latest.ma20 && latest.ma5 > latest.ma10 && latest.ma10 > latest.ma20) {
+                    phase = 'U';
+                    phaseClass = 'phase-U';
+                } else if (latest.close < latest.ma20 && latest.ma5 < latest.ma10 && latest.ma10 < latest.ma20) {
+                    phase = 'D';
+                    phaseClass = 'phase-D';
+                } else if (latest.volume > latest.volume_ma5 * 1.5) {
+                    phase = 'A';
+                    phaseClass = 'phase-A';
+                } else if (latest.close < latest.ma5 && latest.close > latest.ma20) {
+                    phase = 'DS';
+                    phaseClass = 'phase-DS';
+                }
+            }
+
+            const sps = summary.details.sps;
+
+            panel.innerHTML = `
+                <div class="indicator-item">
+                    <div class="indicator-name">当前阶段</div>
+                    <div class="indicator-value"><span class="phase-badge ${phaseClass}">${phase}阶段</span></div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">交易方向</div>
+                    <div class="indicator-value indicator-${directionClass}">${direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性'}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">评分</div>
+                    <div class="indicator-value">${summary.score}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">置信度</div>
+                    <div class="indicator-value">${((summary.confidence || 0) * 100).toFixed(0)}%</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">支撑位</div>
+                    <div class="indicator-value" style="color:#10b981;">${sps.support_level ? sps.support_level.toFixed(2) : '-'}</div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">阻力位</div>
+                    <div class="indicator-value" style="color:#ef4444;">${sps.resistance_level ? sps.resistance_level.toFixed(2) : '-'}</div>
+                </div>
+            `;
+        }
+
+        // 分析股票
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            const timeframe = document.getElementById('timeframe').value || 'daily';
+
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            console.log(`开始分析: ${code}`);
+            document.getElementById('analyzeResult').innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+
+            try {
+                const [quotesRes, analysisRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=300`),
+                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    })
+                ]);
+
+                const quotesData = await quotesRes.json();
+                const analysisData = await analysisRes.json();
+
+                currentAnalysisData = analysisData.analysis_summary;
+                currentQuotesData = quotesData.quotes;
+
+                console.log(`K线: ${quotesData.total}条, 分析: ${analysisData.analysis_summary.direction}`);
+
+                document.getElementById('analyzeResult').innerHTML = '';
+
+                // 获取实时行情
+                fetchRealtimeQuote(code);
+
+                renderKlineTable(quotesData.quotes);
+                renderIndicatorsPanel(analysisData.analysis_summary);
+                renderWyckoffPanel(analysisData.analysis_summary);
+
+                if (!useTableMode) {
+                    renderChart();
+                }
+
+            } catch (error) {
+                console.error('分析失败:', error);
+                document.getElementById('analyzeResult').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">分析失败: ${error.message}</div>`;
+            }
+        }
+
+        // 页面加载
+        window.addEventListener('load', () => {
+            console.log('页面加载完成');
+            // 自动分析688234
+            analyzeStock();
+        });
+    </script>
+</body>
+</html>

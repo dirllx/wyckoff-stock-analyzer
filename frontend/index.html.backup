@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>威科夫股票分析系统 - 完整功能版</title>
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            min-height: 100vh;
+            line-height: 1.6;
+            font-size: 14px;
+            padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn-secondary {
+            background: #374151;
+            color: #f9fafb;
+        }
+        
+        /* 主图容器 */
+        .main-chart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 500px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+        
+        /* 副图容器 */
+        .subchart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 200px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+        
+        /* 表格容器 */
+        .kline-table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #374151;
+            max-height: 800px;
+        }
+        
+        .kline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            min-width: 1200px;
+        }
+        .kline-table th,
+        .kline-table td {
+            padding: 4px 3px;
+            text-align: right;
+            border-bottom: 1px solid #374151;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kline-table th {
+            font-weight: 600;
+            color: #9ca3af;
+            font-size: 11px;
+            background: #111827;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .kline-table td:first-child { text-align: left; }
+        .kline-red { color: #ef4444; }
+        .kline-green { color: #10b981; }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .indicator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #1f2937;
+            border-radius: 8px;
+            border: 1px solid #374151;
+        }
+        .indicator-name { font-size: 12px; color: #9ca3af; }
+        .indicator-value { font-size: 14px; font-weight: 600; }
+        .indicator-bullish { color: #10b981; }
+        .indicator-bearish { color: #ef4444; }
+        .indicator-neutral { color: #9ca3af; }
+        
+        /* Tab导航 */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .chart-toggle { display: flex; gap: 8px; }
+        .toggle-btn {
+            padding: 8px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .toggle-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .phase-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .phase-A { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+        .phase-U { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
+        .phase-D { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+        .phase-DS { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid #8b5cf6; }
+        .phase-neutral { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid #374151; }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            gap: 8px;
+        }
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: loading-bounce 1.4s infinite ease-in-out;
+        }
+        @keyframes loading-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        @media (max-width: 768px) {
+            .main-chart-container { height: 400px; }
+            .subchart-container { height: 180px; }
+            .indicators-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            .kline-table { font-size: 10px; min-width: 1200px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tab导航 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">威科夫股票分析系统</h2>
+            </div>
+            <div class="tab-nav">
+                <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+                <button class="tab-btn" id="tabWatchlist" onclick="showTab('watchlist')">我的关注</button>
+                <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
+                <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
+            </div>
+
+            <!-- 分析Tab -->
+            <div id="tab-analyze" class="tab-content active">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                    <select class="form-input" id="timeframe" style="width: 100px;">
+                        <option value="daily">日线</option>
+                        <option value="weekly">周线</option>
+                        <option value="monthly">月线</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="analyzeStock()">开始分析</button>
+                    <button class="btn btn-secondary" onclick="updateStockData()">更新数据</button>
+                </div>
+                <div id="analyzeResult"></div>
+            </div>
+
+            <!-- 我的关注Tab -->
+            <div id="tab-watchlist" class="tab-content">
+                <div class="card-header">
+                    <h2 class="card-title">我的关注</h2>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <select class="form-input" id="watchlistSelect" style="width: 120px; margin-right: 10px;" onchange="analyzeFromWatchlist()">
+                            <option value="">选择股票</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="addToWatchlist()">添加</button>
+                        <button class="btn btn-secondary" onclick="refreshWatchlist()">刷新</button>
+                    </div>
+                </div>
+                <div id="watchlistContent"></div>
+            </div>
+
+            <!-- 多周期Tab -->
+            <div id="tab-multi" class="tab-content">
+                <div class="card-header">
+                    <h2 class="card-title">多周期分析</h2>
+                </div>
+                <div id="multiContent" style="padding: 20px; color: #9ca3af;">多周期分析功能开发中...</div>
+            </div>
+
+            <!-- 系统配置Tab -->
+            <div id="tab-config" class="tab-content">
+                <div class="card-header">
+                    <h2 class="card-title">系统配置</h2>
+                </div>
+                <div class="indicators-grid" style="padding: 20px;">
+                    <div class="indicator-item">
+                        <span class="indicator-name">API状态</span>
+                        <span class="indicator-value indicator-bullish">运行中</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">数据源</span>
+                        <span class="indicator-value">akshare</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">数据库</span>
+                        <span class="indicator-value">SQLite3</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">更新频率</span>
+                        <span class="indicator-value">每日</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">K线数量</span>
+                        <span class="indicator-value">300</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">威科夫评分</span>
+                        <span class="indicator-value">1-10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- K线图表 -->
+        <div class="card" id="klineCard" style="display: none;">
+            <div class="card-header">
+                <h2 class="card-title">K线图表</h2>
+                <div class="chart-toggle">
+                    <button class="toggle-btn active" id="btnTable" onclick="showMode('table')">表格</button>
+                    <button class="toggle-btn" id="btnChart" onclick="showMode('chart')">图表</button>
+                </div>
+            </div>
+
+            <!-- 图表模式 -->
+            <div id="chartMode" style="display: none;">
+                <!-- 主图 -->
+                <div class="card-header">
+                    <h3 style="font-size: 14px; color: #9ca3af;">主图：K线 + MA5/10/15/30/60/90/120/250（500px）</h3>
+                </div>
+                <div id="mainChart" class="main-chart-container">
+                    <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af;">主图正在加载...</div>
+                </div>
+                
+                <!-- 副图1：成交量 -->
+                <div class="card-header">
+                    <h3 style="font-size: 14px; color: #9ca3af;">副图1：成交量（200px）</h3>
+                </div>
+                <div id="volumeChart" class="subchart-container">
+                    <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af;">成交量图正在加载...</div>
+                </div>
+                
+                <!-- 副图2：OBV -->
+                <div class="card-header">
+                    <h3 style="font-size: 14px; color: #9ca3af;">副图2：OBV能量潮（200px）</h3>
+                </div>
+                <div id="obvChart" class="subchart-container">
+                    <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #9ca3af;">OBV图正在加载...</div>
+                </div>
+            </div>
+
+            <!-- 表格模式 -->
+            <div id="tableMode" class="kline-table-container">
+                <table class="kline-table" id="klineTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>开</th>
+                            <th>高</th>
+                            <th>低</th>
+                            <th>收</th>
+                            <th>成交量</th>
+                            <th>MA5</th>
+                            <th>MA10</th>
+                            <th>MA15</th>
+                            <th>MA30</th>
+                            <th>MA60</th>
+                            <th>MA90</th>
+                            <th>MA120</th>
+                            <th>MA250</th>
+                            <th>OBV</th>
+                            <th>阶段</th>
+                        </tr>
+                    </thead>
+                    <tbody id="klineBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 技术指标面板 -->
+        <div class="card" id="indicatorsCard" style="display: none;">
+            <div class="card-header">
+                <h2 class="card-title">技术指标</h2>
+            </div>
+            <div class="indicators-grid" id="indicatorsPanel"></div>
+        </div>
+
+        <!-- 威科夫指标面板 -->
+        <div class="card" id="wyckoffCard" style="display: none;">
+            <div class="card-header">
+                <h2 class="card-title">威科夫指标</h2>
+            </div>
+            <div class="indicators-grid" id="wyckoffPanel"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let currentQuotesData = null;
+        let currentAnalysisData = null;
+        let useTableMode = true;
+        let mainChart = null;
+        let volumeChart = null;
+        let obvChart = null;
+
+        // Tab切换
+        function showTab(tab) {
+            const tabs = ['analyze', 'watchlist', 'multi', 'config'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('active');
+                document.getElementById(`tab-${t.charAt(0).toUpperCase()}${t.slice(1)}`).classList.remove('active');
+                document.getElementById(`tab-${t.charAt(0).toUpperCase()}${t.slice(1)}`).style.display = 'none';
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+        }
+
+        // 显示模式切换
+        function showMode(mode) {
+            const btnTable = document.getElementById('btnTable');
+            const btnChart = document.getElementById('btnChart');
+            const tableMode = document.getElementById('tableMode');
+            const chartMode = document.getElementById('chartMode');
+
+            if (mode === 'table') {
+                btnTable.classList.add('active');
+                btnChart.classList.remove('active');
+                tableMode.style.display = 'block';
+                chartMode.style.display = 'none';
+                useTableMode = true;
+            } else {
+                btnChart.classList.add('active');
+                btnTable.classList.remove('active');
+                tableMode.style.display = 'none';
+                chartMode.style.display = 'block';
+                useTableMode = false;
+                renderCharts();
+            }
+        }
+
+        // 计算MA（按时间顺序，最新的有所有值）
+        function calculateMA(data, period) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += data[i - j];
+                    }
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
+        }
+
+        function calculateEMA(data, period) {
+            const k = 2 / (period + 1);
+            let ema = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                ema.push(data[i] * k + ema[i - 1] * (1 - k));
+            }
+            return ema;
+        }
+
+        function renderCharts() {
+            if (!currentQuotesData || currentQuotesData.length === 0) return;
+
+            try {
+                const mainContainer = document.getElementById('mainChart');
+                const volumeContainer = document.getElementById('volumeChart');
+                const obvContainer = document.getElementById('obvChart');
+                
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+                obvContainer.innerHTML = '';
+
+                if (typeof window.LightweightCharts === 'undefined') {
+                    mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">图表库加载失败，请使用表格模式</div>';
+                    return;
+                }
+
+                const candlestickData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close
+                }));
+
+                const closes = currentQuotesData.map(q => q.close);
+                const ma5 = calculateMA(closes, 5);
+                const ma10 = calculateMA(closes, 10);
+                const ma15 = calculateMA(closes, 15);
+                const ma30 = calculateMA(closes, 30);
+                const ma60 = calculateMA(closes, 60);
+                const ma90 = calculateMA(closes, 90);
+                const ma120 = calculateMA(closes, 120);
+                const ma250 = calculateMA(closes, 250);
+
+                // 主图：K线 + 8条MA
+                const ma5Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma5[i] })).filter(d => d.value !== null);
+                const ma10Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma10[i] })).filter(d => d.value !== null);
+                const ma15Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma15[i] })).filter(d => d.value !== null);
+                const ma30Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma30[i] })).filter(d => d.value !== null);
+                const ma60Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma60[i] })).filter(d => d.value !== null);
+                const ma90Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma90[i] })).filter(d => d.value !== null);
+                const ma120Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma120[i] })).filter(d => d.value !== null);
+                const ma250Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma250[i] })).filter(d => d.value !== null);
+
+                mainChart = window.LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: mainContainer.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#1f2937' },
+                        textColor: '#9ca3af'
+                    },
+                    rightPriceScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        scaleMargins: { top: 0.1, bottom: 0.25 }
+                    },
+                    leftPriceScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        scaleMargins: { top: 0.1, bottom: 0.25 }
+                    },
+                    timeScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        timeVisible: true,
+                        secondsVisible: false
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(55, 65, 81, 0.5)' },
+                        horzLines: { color: 'rgba(55, 65, 81, 0.5)' }
+                    },
+                    handleScroll: { mouseWheel: true, pressedMouseMove: true },
+                    handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true }
+                });
+
+                const candleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444'
+                });
+
+                candleSeries.setData(candlestickData);
+
+                // 添加MA5/10/15/30（粗线）
+                mainChart.addLineSeries(ma5Data, { color: '#3b82f6', lineWidth: 2, title: 'MA5', priceScaleId: '' });
+                mainChart.addLineSeries(ma10Data, { color: '#8b5cf6', lineWidth: 2, title: 'MA10', priceScaleId: '' });
+                mainChart.addLineSeries(ma15Data, { color: '#f59e0b', lineWidth: 2, title: 'MA15', priceScaleId: '' });
+                mainChart.addLineSeries(ma30Data, { color: '#10b981', lineWidth: 2, title: 'MA30', priceScaleId: '' });
+
+                // 添加MA60/90/120/250（细线）
+                mainChart.addLineSeries(ma60Data, { color: '#ec4899', lineWidth: 1, title: 'MA60', priceScaleId: '' });
+                mainChart.addLineSeries(ma90Data, { color: '#14b8a6', lineWidth: 1, title: 'MA90', priceScaleId: '' });
+                mainChart.addLineSeries(ma120Data, { color: '#f97316', lineWidth: 1, title: 'MA120', priceScaleId: '' });
+                mainChart.addLineSeries(ma250Data, { color: '#06b6d4', lineWidth: 1, title: 'MA250', priceScaleId: '' });
+
+                // 添加威科夫指标
+                addWyckoffIndicators(mainChart, candleSeries, currentQuotesData, currentAnalysisData);
+
+                mainChart.timeScale().fitContent();
+
+                // 副图1：成交量
+                volumeChart = window.LightweightCharts.createChart(volumeContainer, {
+                    width: volumeContainer.clientWidth,
+                    height: volumeContainer.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#1f2937' },
+                        textColor: '#9ca3af'
+                    },
+                    rightPriceScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af'
+                    },
+                    timeScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        timeVisible: true,
+                        visible: false
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(55, 65, 81, 0.5)' },
+                        horzLines: { color: 'rgba(55, 65, 81, 0.5)' }
+                    }
+                });
+
+                const volumeData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    value: q.volume,
+                    color: q.close > q.open ? '#26a69a' : '#ef5350'
+                }));
+
+                volumeChart.addHistogramSeries({
+                    priceFormat: { type: 'volume' },
+                    priceScaleId: '',
+                    scaleMargins: { top: 0, bottom: 0 }
+                }, volumeData);
+
+                volumeChart.timeScale().fitContent();
+
+                // 副图2：OBV
+                obvChart = window.LightweightCharts.createChart(obvContainer, {
+                    width: obvContainer.clientWidth,
+                    height: obvContainer.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#1f2937' },
+                        textColor: '#9ca3af'
+                    },
+                    rightPriceScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af'
+                    },
+                    timeScale: {
+                        borderColor: '#374151',
+                        textColor: '#9ca3af',
+                        timeVisible: true,
+                        visible: false
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(55, 65, 81, 0.5)' },
+                        horzLines: { color: 'rgba(55, 65, 81, 0.5)' }
+                    }
+                });
+
+                const obvData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    value: q.obv
+                }));
+
+                obvChart.addLineSeries(obvData, {
+                    color: '#f97316',
+                    lineWidth: 2,
+                    title: 'OBV'
+                });
+
+                obvChart.timeScale().fitContent();
+
+                console.log('图表渲染成功：主图+成交量+OBV+威科夫指标');
+                updatePhaseTag();
+
+            } catch (error) {
+                console.error('图表渲染失败:', error);
+                document.getElementById('mainChart').innerHTML = `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#ef4444;">图表加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 添加威科夫指标标记
+        function addWyckoffIndicators(chart, candleSeries, quotes, analysis) {
+            if (!quotes || quotes.length === 0) return;
+
+            try {
+                const latestQuote = quotes[quotes.length - 1];
+                const recentQuotes = quotes.slice(-30);
+                const highs = recentQuotes.map(q => q.high);
+                const lows = recentQuotes.map(q => q.low);
+                const supportLevel = Math.min(...lows);
+                const resistanceLevel = Math.max(...highs);
+
+                // 支撑位
+                candleSeries.createPriceLine({
+                    price: supportLevel,
+                    color: '#10b981',
+                    lineWidth: 2,
+                    lineStyle: 2,
+                    axisLabelVisible: true,
+                    title: '支撑'
+                });
+
+                // 阻力位
+                candleSeries.createPriceLine({
+                    price: resistanceLevel,
+                    color: '#ef4444',
+                    lineWidth: 2,
+                    lineStyle: 2,
+                    axisLabelVisible: true,
+                    title: '阻力'
+                });
+
+                // 信号点
+                const markers = [];
+                const signalQuotes = quotes.slice(-50);
+
+                signalQuotes.forEach((q, index) => {
+                    if (index === 0) return;
+                    const prev = signalQuotes[index - 1];
+
+                    // 异常成交量标记
+                    if (q.volume > q.volume_ma5 * 2) {
+                        const isBullish = q.close > prev.close;
+                        markers.push({
+                            time: q.date,
+                            position: isBullish ? 'belowBar' : 'aboveBar',
+                            color: isBullish ? '#10b981' : '#ef4444',
+                            shape: 'circle',
+                            text: '🔥'
+                        });
+                    }
+
+                    // MA15金叉/死叉
+                    const ma15Cross = (prev.ma15 < prev.ma30 && q.ma15 > q.ma30) || (prev.ma15 > prev.ma30 && q.ma15 < q.ma30);
+                    if (ma15Cross) {
+                        const isGolden = q.ma15 > q.ma30;
+                        markers.push({
+                            time: q.date,
+                            position: 'belowBar',
+                            color: isGolden ? '#10b981' : '#ef4444',
+                            shape: 'circle',
+                            text: '⚡'
+                        });
+                    }
+                });
+
+                // 当前方向标记
+                if (analysis && analysis.direction) {
+                    if (analysis.direction === 'LONG') {
+                        markers.push({
+                            time: latestQuote.date,
+                            position: 'belowBar',
+                            color: '#10b981',
+                            shape: 'arrowUp',
+                            text: '📈'
+                        });
+                    } else if (analysis.direction === 'SHORT') {
+                        markers.push({
+                            time: latestQuote.date,
+                            position: 'aboveBar',
+                            color: '#ef4444',
+                            shape: 'arrowDown',
+                            text: '📉'
+                        });
+                    }
+                }
+
+                if (markers.length > 0) {
+                    candleSeries.setMarkers(markers);
+                    console.log('添加威科夫标记: 支撑位、阻力位、信号点');
+                }
+
+            } catch (error) {
+                console.error('添加威科夫指标失败:', error);
+            }
+        }
+
+        function updatePhaseTag() {
+            if (!currentQuotesData || currentQuotesData.length === 0) return;
+
+            const latestQuote = currentQuotesData[currentQuotesData.length - 1];
+            let phase = '震荡';
+            let phaseClass = 'phase-neutral';
+            let phaseTooltip = '横盘整理，等待方向选择';
+
+            if (latestQuote.close > latestQuote.ma20 && latestQuote.ma5 > latestQuote.ma10 && latestQuote.ma10 > latestQuote.ma20) {
+                phase = 'U';
+                phaseClass = 'phase-U';
+                phaseTooltip = '上升趋势，均线多头排列，价格强势';
+            } else if (latestQuote.close < latestQuote.ma20 && latestQuote.ma5 < latestQuote.ma10 && latestQuote.ma10 < latestQuote.ma20) {
+                phase = 'D';
+                phaseClass = 'phase-D';
+                phaseTooltip = '下降趋势，均线空头排列，价格弱势';
+            } else if (latestQuote.volume > latestQuote.volume_ma5 * 1.5) {
+                phase = 'A';
+                phaseClass = 'phase-A';
+                phaseTooltip = '成交量大，主力吸筹或派发，关注';
+            } else if (latestQuote.close < latestQuote.ma5 && latestQuote.close > latestQuote.ma20) {
+                phase = 'DS';
+                phaseClass = 'phase-DS';
+                phaseTooltip = '下跌吸筹，价格回调后可能上涨';
+            }
+
+            const phaseTag = document.getElementById('phaseTag');
+            const phaseTooltipText = document.getElementById('phaseTooltipText');
+            phaseTag.textContent = phase + '阶段';
+            phaseTag.className = 'phase-badge ' + phaseClass;
+            phaseTooltipText.textContent = phaseTooltip;
+        }
+
+        function renderKlineTable(quotes) {
+            const klineBody = document.getElementById('klineBody');
+
+            if (!quotes || quotes.length === 0) {
+                klineBody.innerHTML = '';
+                return;
+            }
+
+            // 直接使用后端返回的均线值，不再前端计算
+            // 反转数据，让最新的在上面
+            klineBody.innerHTML = quotes.slice().reverse().slice(0, 100).map((q, i) => {
+                const isRed = q.close < q.open;
+                const closeClass = isRed ? 'kline-red' : 'kline-green';
+
+                let phase = '震荡';
+                let phaseClass = 'phase-neutral';
+
+                // 使用后端返回的ma5, ma10, ma20
+                if (q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20 && q.close > q.ma20) {
+                    phase = 'U'; phaseClass = 'phase-U';
+                } else if (q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20 && q.close < q.ma20) {
+                    phase = 'D'; phaseClass = 'phase-D';
+                } else if (q.volume && q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
+                    phase = 'A'; phaseClass = 'phase-A';
+                } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
+                    phase = 'DS'; phaseClass = 'phase-DS';
+                }
+
+                return `
+                    <tr>
+                        <td>${q.date.split(' ')[0]}</td>
+                        <td class="${closeClass}">${q.open.toFixed(2)}</td>
+                        <td>${q.high.toFixed(2)}</td>
+                        <td>${q.low.toFixed(2)}</td>
+                        <td class="${closeClass}">${q.close.toFixed(2)}</td>
+                        <td>${(q.volume / 10000).toFixed(0)}万</td>
+                        <td style="color:#3b82f6;">${q.ma5 ? q.ma5.toFixed(2) : '-'}</td>
+                        <td style="color:#8b5cf6;">${q.ma10 ? q.ma10.toFixed(2) : '-'}</td>
+                        <td style="color:#f59e0b;">-</td>
+                        <td style="color:#10b981;">${q.ma20 ? q.ma20.toFixed(2) : '-'}</td>
+                        <td style="color:#ec4899;">-</td>
+                        <td style="color:#14b8a6;">-</td>
+                        <td style="color:#f97316;">-</td>
+                        <td style="color:#06b6d4;">-</td>
+                        <td style="color:#f97316;">${q.obv ? (q.obv / 1000000).toFixed(1) + 'M' : '-'}</td>
+                        <td><span class="phase-badge ${phaseClass}">${phase}阶段</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            console.log('K线表格渲染完成（固定表头，最大高度800px，倒序显示）');
+        }
+
+        function renderIndicatorsPanel(analysis) {
+            const panel = document.getElementById('indicatorsPanel');
+
+            if (!analysis || !analysis.details) {
+                panel.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无指标数据</div>';
+                return;
+            }
+
+            const volume = analysis.details.volume;
+            const trend = analysis.details.trend;
+
+            let obvValue = 0;
+            let obvTrend = '中性';
+            let macdValue = 0;
+            let macdSignal = '中性';
+
+            if (currentQuotesData && currentQuotesData.length > 0) {
+                const latest = currentQuotesData[currentQuotesData.length - 1];
+                obvValue = latest.obv || 0;
+                obvTrend = volume.obv_trend === 'UP' ? '上升' : volume.obv_trend === 'DOWN' ? '下降' : '持平';
+
+                const closes = currentQuotesData.map(q => q.close);
+                if (closes.length >= 26) {
+                    const ema12 = calculateEMA(closes, 12);
+                    const ema26 = calculateEMA(closes, 26);
+                    const macdLine = ema12.map((v, i) => v - ema26[i]);
+                    const signalLine = calculateEMA(macdLine, 9);
+                    macdValue = macdLine[macdLine.length - 1];
+                    const signalValue = signalLine[signalLine.length - 1];
+                    macdSignal = macdValue > signalValue ? '金叉' : macdValue < signalValue ? '死叉' : '中性';
+                }
+            }
+
+            panel.innerHTML = `
+                <div class="indicator-item">
+                    <span class="indicator-name">成交量</span>
+                    <span class="indicator-value indicator-${volume.direction.toLowerCase()}">${volume.anomaly ? '异常' : '正常'} ${volume.direction}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">成交量方向</span>
+                    <span class="indicator-value indicator-${volume.direction.toLowerCase()}">${volume.direction}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">OBV</span>
+                    <span class="indicator-value indicator-${obvTrend === '上升' ? 'bullish' : obvTrend === '下降' ? 'bearish' : 'neutral'}">${(obvValue / 1000000).toFixed(1)}M</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">OBV趋势</span>
+                    <span class="indicator-value">${obvTrend}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">趋势方向</span>
+                    <span class="indicator-value indicator-${trend.direction.toLowerCase()}">${trend.direction}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">趋势说明</span>
+                    <span class="indicator-value">${trend.reason}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">MACD</span>
+                    <span class="indicator-value">${macdValue.toFixed(4)}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">MACD信号</span>
+                    <span class="indicator-value indicator-${macdSignal === '金叉' ? 'bullish' : macdSignal === '死叉' ? 'bearish' : 'neutral'}">${macdSignal}</span>
+                </div>
+            `;
+        }
+
+        function renderWyckoffPanel(analysis) {
+            const panel = document.getElementById('wyckoffPanel');
+
+            if (!analysis) {
+                panel.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无分析数据</div>';
+                return;
+            }
+
+            const summary = analysis;
+            const direction = summary.direction || 'NEUTRAL';
+            const sps = summary.details.sps;
+
+            panel.innerHTML = `
+                <div class="indicator-item">
+                    <span class="indicator-name">当前阶段</span>
+                    <span class="indicator-value"><span class="phase-badge phase-neutral">震荡</span></span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">交易方向</span>
+                    <span class="indicator-value indicator-${direction === 'LONG' ? 'bullish' : direction === 'SHORT' ? 'bearish' : 'neutral'}">${direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性'}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">评分</span>
+                    <span class="indicator-value">${summary.score}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">置信度</span>
+                    <span class="indicator-value">${((summary.confidence || 0) * 100).toFixed(0)}%</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">支撑位</span>
+                    <span class="indicator-value" style="color:#10b981;">${sps.support_level ? sps.support_level.toFixed(2) : '-'}</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">阻力位</span>
+                    <span class="indicator-value" style="color:#ef4444;">${sps.resistance_level ? sps.resistance_level.toFixed(2) : '-'}</span>
+                </div>
+            `;
+        }
+
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            const timeframe = document.getElementById('timeframe').value || 'daily';
+
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            console.log(`开始分析: ${code} (${timeframe})`);
+            document.getElementById('analyzeResult').innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+            document.getElementById('klineCard').style.display = 'none';
+            document.getElementById('indicatorsCard').style.display = 'none';
+            document.getElementById('wyckoffCard').style.display = 'none';
+
+            try {
+                const [quotesRes, analysisRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=300`),
+                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    })
+                ]);
+
+                const quotesData = await quotesRes.json();
+                const analysisData = await analysisRes.json();
+
+                currentAnalysisData = analysisData.analysis_summary;
+                currentQuotesData = quotesData.quotes;
+
+                console.log(`K线: ${quotesData.total}条, 分析: ${analysisData.analysis_summary.direction}`);
+
+                document.getElementById('analyzeResult').innerHTML = '';
+
+                renderKlineTable(quotesData.quotes);
+                renderIndicatorsPanel(analysisData.analysis_summary);
+                renderWyckoffPanel(analysisData.analysis_summary);
+
+                document.getElementById('klineCard').style.display = 'block';
+                document.getElementById('indicatorsCard').style.display = 'block';
+                document.getElementById('wyckoffCard').style.display = 'block';
+
+                if (!useTableMode) {
+                    showMode('chart');
+                }
+
+            } catch (error) {
+                console.error('分析失败:', error);
+                document.getElementById('analyzeResult').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">分析失败: ${error.message}</div>`;
+            }
+        }
+
+        async function updateStockData() {
+            const code = document.getElementById('stockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            console.log(`更新股票数据: ${code}`);
+            alert(`股票 ${code} 数据更新请求已发送，请稍后刷新查看最新数据`);
+        }
+
+        async function refreshWatchlist() {
+            console.log('刷新关注列表');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist`);
+                const data = await response.json();
+
+                const content = document.getElementById('watchlistContent');
+                if (data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无关注股票</div>';
+                    return;
+                }
+
+                const select = document.getElementById('watchlistSelect');
+                select.innerHTML = '<option value="">选择股票</option>';
+                data.items.forEach(item => {
+                    select.innerHTML += `<option value="${item.stock_code}">${item.stock_code}</option>`;
+                });
+
+                content.innerHTML = data.items.map(item => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #1f2937; border-radius: 8px; margin-bottom: 8px; border: 1px solid #374151;">
+                        <div style="font-weight: 600;">${item.stock_code}</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" onclick="analyzeFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">分析</button>
+                            <button class="btn btn-secondary" onclick="deleteFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                console.log(`关注列表刷新完成，共${data.total}只股票`);
+            } catch (error) {
+                console.error('刷新关注列表失败:', error);
+            }
+        }
+
+        function analyzeFromWatchlist(code) {
+            document.getElementById('stockCode').value = code;
+            showTab('analyze');
+            analyzeStock();
+        }
+
+        async function addToWatchlist() {
+            const code = document.getElementById('stockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            console.log(`添加到关注列表: ${code}`);
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                alert(`添加成功: ${data.message}`);
+                refreshWatchlist();
+            } catch (error) {
+                console.error('添加失败:', error);
+                alert(`添加失败: ${error.message}`);
+            }
+        }
+
+        async function deleteFromWatchlist(code) {
+            if (!confirm(`确定删除 ${code}?`)) return;
+            console.log(`删除: ${code}`);
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, { method: 'DELETE' });
+                alert('删除成功');
+                refreshWatchlist();
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert(`删除失败: ${error.message}`);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('页面加载完成');
+            refreshWatchlist();
+        });
+    </script>
+</body>
+</html>
