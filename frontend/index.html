@@ -307,6 +307,26 @@
             font-size: 10px;
             font-weight: 600;
             margin-left: 4px;
+            cursor: help;
+            position: relative;
+        }
+        .phase-badge:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #374151;
+            pointer-events: none;
         }
         .phase-A { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
         .phase-U { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
@@ -755,15 +775,20 @@
 
                 let phase = '震荡';
                 let phaseClass = 'phase-neutral';
+                let phaseTooltip = '市场横盘整理，等待方向选择';
 
                 if (q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
                     phase = 'U'; phaseClass = 'phase-U';
+                    phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
                 } else if (q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
                     phase = 'D'; phaseClass = 'phase-D';
+                    phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
                 } else if (q.volume > q.volume_ma5 * 1.5) {
                     phase = 'A'; phaseClass = 'phase-A';
+                    phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
                 } else if (q.close < q.ma5 && q.close > q.ma20) {
                     phase = 'DS'; phaseClass = 'phase-DS';
+                    phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
                 }
 
                 // 动态生成表格行，只显示有值的列
@@ -784,7 +809,7 @@
                 if (hasMa120) rowHtml += `<td style="color:#f97316;">${q.ma120 != null ? q.ma120.toFixed(2) : '-'}</td>`;
                 if (hasMa250) rowHtml += `<td style="color:#06b6d4;">${q.ma250 != null ? q.ma250.toFixed(2) : '-'}</td>`;
                 if (hasObv) rowHtml += `<td style="color:#f97316;">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>`;
-                rowHtml += `<td><span class="phase-badge ${phaseClass}">${phase}阶段</span></td>`;
+                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase}阶段</span></td>`;
                 rowHtml += '</tr>';
 
                 return rowHtml;
