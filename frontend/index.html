@@ -12,18 +12,17 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
-            background: #ffffff;
-            color: #1f2937;
+            background: #0a0e27;
+            color: #f9fafb;
             padding: 20px;
             padding-top: 80px;
         }
         .card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #111827;
+            border: 1px solid #374151;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 16px;
+            margin-bottom: 16px;
         }
         .card-header {
             display: flex;
@@ -42,53 +41,40 @@
             font-size: 14px;
         }
         .btn {
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        .btn:active {
-            transform: translateY(0) scale(0.98);
-        }
+        .btn:active { transform: scale(0.98); }
         .btn-secondary {
-            background: #f3f4f6;
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-        }
-        .btn-secondary:hover {
-            background: #e5e7eb;
+            background: #374151;
+            color: #f9fafb;
         }
 
         /* 主图容器 */
         .main-chart-container {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 20px;
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
             height: 500px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #374151;
+            margin-bottom: 12px;
         }
 
         /* 副图容器 */
         .subchart-container {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
             height: 200px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #374151;
+            margin-bottom: 12px;
         }
 
         /* 表格容器 */
@@ -269,11 +255,11 @@
             border-radius: 8px;
             border: 1px solid #374151;
         }
-        .indicator-name { font-size: 12px; color: #6b7280; }
-        .indicator-value { font-size: 14px; font-weight: 600; color: #1f2937; }
+        .indicator-name { font-size: 12px; color: #9ca3af; }
+        .indicator-value { font-size: 14px; font-weight: 600; }
         .indicator-bullish { color: #10b981; }
         .indicator-bearish { color: #ef4444; }
-        .indicator-neutral { color: #6b7280; }
+        .indicator-neutral { color: #9ca3af; }
         
         /* Tab导航 */
         .tab-nav {
