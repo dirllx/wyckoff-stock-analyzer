@@ -737,16 +737,16 @@
                         <td>${q.low.toFixed(2)}</td>
                         <td class="${closeClass}">${q.close.toFixed(2)}</td>
                         <td>${(q.volume / 10000).toFixed(0)}万</td>
-                        <td style="color:#3b82f6;">${q.ma5 !== null ? q.ma5.toFixed(2) : '-'}</td>
-                        <td style="color:#8b5cf6;">${q.ma10 !== null ? q.ma10.toFixed(2) : '-'}</td>
-                        <td style="color:#f59e0b;">${q.ma15 !== null ? q.ma15.toFixed(2) : '-'}</td>
-                        <td style="color:#10b981;">${q.ma30 !== null ? q.ma30.toFixed(2) : '-'}</td>
-                        <td style="color:#10b981;">${q.ma20 !== null ? q.ma20.toFixed(2) : '-'}</td>
-                        <td style="color:#ec4899;">${q.ma60 !== null ? q.ma60.toFixed(2) : '-'}</td>
-                        <td style="color:#14b8a6;">${q.ma90 !== null ? q.ma90.toFixed(2) : '-'}</td>
-                        <td style="color:#f97316;">${q.ma120 !== null ? q.ma120.toFixed(2) : '-'}</td>
-                        <td style="color:#06b6d4;">${q.ma250 !== null ? q.ma250.toFixed(2) : '-'}</td>
-                        <td style="color:#f97316;">${(q.obv / 1000000).toFixed(1)}M</td>
+                        <td style="color:#3b82f6;">${q.ma5 != null ? q.ma5.toFixed(2) : '-'}</td>
+                        <td style="color:#8b5cf6;">${q.ma10 != null ? q.ma10.toFixed(2) : '-'}</td>
+                        <td style="color:#f59e0b;">${q.ma15 != null ? q.ma15.toFixed(2) : '-'}</td>
+                        <td style="color:#10b981;">${q.ma30 != null ? q.ma30.toFixed(2) : '-'}</td>
+                        <td style="color:#10b981;">${q.ma20 != null ? q.ma20.toFixed(2) : '-'}</td>
+                        <td style="color:#ec4899;">${q.ma60 != null ? q.ma60.toFixed(2) : '-'}</td>
+                        <td style="color:#14b8a6;">${q.ma90 != null ? q.ma90.toFixed(2) : '-'}</td>
+                        <td style="color:#f97316;">${q.ma120 != null ? q.ma120.toFixed(2) : '-'}</td>
+                        <td style="color:#06b6d4;">${q.ma250 != null ? q.ma250.toFixed(2) : '-'}</td>
+                        <td style="color:#f97316;">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>
                         <td><span class="phase-badge ${phaseClass}">${phase}阶段</span></td>
                     </tr>
                 `;
