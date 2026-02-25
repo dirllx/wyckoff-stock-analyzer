@@ -36,20 +36,18 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
         storage = DataStorage(db)
         stock = storage.get_or_create_stock(request.code)
 
-        # 获取K线数据
+        # 先更新数据到最新（每次分析都先更新）
+        logger.info(f"股票{request.code}开始分析，先更新数据...")
+        update_success = storage.update_stock_quotes(request.code, request.timeframe)
+
+        # 获取K线数据（更新后获取）
         quotes = storage.get_quotes(request.code, request.timeframe, limit=300)
 
         if not quotes:
-            # 尝试更新数据
-            logger.info(f"股票{request.code}没有K线数据，尝试更新...")
-            storage.update_stock_quotes(request.code, request.timeframe)
-            quotes = storage.get_quotes(request.code, request.timeframe, limit=300)
-
-            if not quotes:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"股票{request.code}暂无数据，请稍后再试"
-                )
+            raise HTTPException(
+                status_code=400,
+                detail=f"股票{request.code}暂无数据，请稍后再试"
+            )
 
         # 执行威科夫分析
         analyzer = WyckoffAnalyzer()
