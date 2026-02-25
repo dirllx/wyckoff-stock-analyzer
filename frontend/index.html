@@ -921,6 +921,34 @@
                 const analysisData = await analysisRes.json();
 
                 currentQuotesData = quotesData.quotes;
+                const summary = analysisData.analysis_summary;
+
+                // 分析结果 HTML
+                const analysisHtml = `
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <h3 class="card-title">分析结果</h3>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 16px; background: #1f2937; border-radius: 8px;">
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">方向</span>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${summary.direction}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">评分</span>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${summary.score}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">置信度</span>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${((summary.confidence || 0) * 100).toFixed(0)}%</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">建议</span>
+                                <div style="color: #f9fafb; font-size: 14px;">${summary.suggestion || '无'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
 
                 // 渲染界面
                 const tableHtml = `
