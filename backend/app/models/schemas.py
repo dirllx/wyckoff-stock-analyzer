@@ -96,6 +96,8 @@ class HealthResponse(BaseModel):
     timestamp: datetime
     database: str
     redis: str
+    services: Optional[dict] = None  # 各服务状态详情
+    version: Optional[str] = None  # 系统版本
 
 
 # ============== 通用响应 ==============

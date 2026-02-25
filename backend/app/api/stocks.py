@@ -232,12 +232,12 @@ async def get_stock_quotes(
                     "ma5": q.ma5,
                     "ma10": q.ma10,
                     "ma20": q.ma20,
-                    "ma20": ma20[i],
-                    "ma30": ma30[i],
-                    "ma60": ma60[i],
-                    "ma90": ma90[i],
-                    "ma120": ma120[i],
-                    "ma250": ma250[i],
+                    "ma20": ma20[i] if i < len(ma20) else None,
+                    "ma30": ma30[i] if i < len(ma30) else None,
+                    "ma60": ma60[i] if i < len(ma60) else None,
+                    "ma90": ma90[i] if i < len(ma90) else None,
+                    "ma120": ma120[i] if i < len(ma120) else None,
+                    "ma250": ma250[i] if i < len(ma250) else None,
                     "volume_ma5": q.volume_ma5,
                     "obv": q.obv
                 }
