@@ -1,0 +1,9 @@
+/* 评分颜色 */
+.score-high { color: #10b981; font-weight: 600; }
+.score-medium { color: #f59e0b; font-weight: 600; }
+.score-low { color: #ef4444; font-weight: 600; }
+
+/* 信号颜色 */
+.signal-bullish { color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; }
+.signal-bearish { color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px; }
+.signal-neutral { color: #9ca3af; font-weight: 600; background: rgba(156, 163, 175, 0.1); padding: 4px 8px; border-radius: 4px; }

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步骤1 - 最基础HTML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        p { color: #666; margin: 10px 0; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>步骤1 - 最基础HTML测试</h1>
+        <p>这是一个最基础的HTML页面，不包含任何JavaScript。</p>
+        <p class="success">✓ 如果你看到这个页面，说明HTML加载正常。</p>
+        <p>下一步：访问步骤2页面，测试基本的JavaScript功能。</p>
+    </div>
+
+    <div class="card">
+        <h2>测试页面列表</h2>
+        <ul>
+            <li>步骤1：当前页面（基础HTML）</li>
+            <li><a href="step2-basic-js.html">步骤2：基本JavaScript</a></li>
+            <li><a href="step3-dom.html">步骤3：DOM操作</a></li>
+            <li><a href="step4-events.html">步骤4：事件处理</a></li>
+            <li><a href="step5-fetch.html">步骤5：API请求</a></li>
+            <li><a href="step6-chart-lib.html">步骤6：图表库引用</a></li>
+            <li><a href="step7-chart-create.html">步骤7：图表创建</a></li>
+            <li><a href="step8-chart-full.html">步骤8：完整图表</a></li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>诊断说明</h2>
+        <p>这套测试页面按照功能复杂度逐步增加，帮助你定位问题：</p>
+        <ol>
+            <li><strong>步骤1</strong>：最基础HTML，无JavaScript</li>
+            <li><strong>步骤2</strong>：添加基本JavaScript</li>
+            <li><strong>步骤3</strong>：添加DOM操作</li>
+            <li><strong>步骤4</strong>：添加事件处理</li>
+            <li><strong>步骤5</strong>：添加API请求</li>
+            <li><strong>步骤6</strong>：引用图表库（不使用）</li>
+            <li><strong>步骤7</strong>：创建简单图表</li>
+            <li><strong>步骤8</strong>：完整图表功能</li>
+        </ol>
+        <p><strong>使用方法</strong>：按顺序访问每个页面，从第一个失败的页面开始排查问题。</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步骤6 - 图表库引用</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:active { background: #2563eb; }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: #3b82f6; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>步骤6 - 图表库引用测试</h1>
+        <p>测试图表库的加载和引用，但不创建图表。</p>
+
+        <button onclick="test1()">测试1: 图表库加载</button>
+        <button onclick="test2()">测试2: 图表库版本</button>
+        <button onclick="test3()">测试3: 图表库对象</button>
+        <button onclick="test4()">测试4: 图表库方法</button>
+        <button onclick="test5()">测试5: 图表库配置</button>
+        <button onclick="clearStatus()">清空</button>
+
+        <div id="status">等待测试...</div>
+    </div>
+
+    <div class="card">
+        <h2>测试页面导航</h2>
+        <ul>
+            <li><a href="step1-basic-html.html">步骤1：基础HTML</a></li>
+            <li><a href="step2-basic-js.html">步骤2：基本JavaScript</a></li>
+            <li><a href="step3-dom.html">步骤3：DOM操作</a></li>
+            <li><a href="step4-events.html">步骤4：事件处理</a></li>
+            <li><a href="step5-fetch.html">步骤5：API请求</a></li>
+            <li><strong>步骤6：图表库引用（当前）</strong></li>
+            <li><a href="step7-chart-create.html">步骤7：图表创建</a></li>
+            <li><a href="step8-chart-full.html">步骤8：完整图表</a></li>
+        </ul>
+    </div>
+
+    <!-- 引用图表库 -->
+    <script src="./lightweight-charts.standalone.production.js"></script>
+
+    <script>
+        function log(test, result, message, detail = '') {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const statusDiv = document.getElementById('status');
+            const color = result ? 'success' : 'error';
+            const text = result ? '✓' : '✗';
+            const type = result ? 'success' : result === 'info' ? 'info' : 'error';
+
+            statusDiv.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; background: ${type === 'info' ? '#eff6ff' : type === 'error' ? '#fef2f2' : '#f0fdf4'}; border-radius: 4px;">
+                    <span class="${color}">${text}</span>
+                    <strong>${test}</strong>: ${message}
+                    ${detail ? `<br><small style="color: #666;">${detail}</small>` : ''}
+                    <br><small style="color: #999;">[${time}]</small>
+                </div>
+            ` + statusDiv.innerHTML;
+
+            console.log(`${text} ${test}: ${message}`);
+        }
+
+        function test1() {
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    log('测试1: 图表库加载', false, '图表库未加载');
+                } else {
+                    log('测试1: 图表库加载', true, '图表库加载成功');
+                }
+            } catch (error) {
+                log('测试1: 图表库加载', false, error.message);
+            }
+        }
+
+        function test2() {
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    log('测试2: 图表库版本', false, '图表库未加载');
+                } else {
+                    const version = window.LightweightCharts.version;
+                    log('测试2: 图表库版本', true, `版本: ${version}`);
+                }
+            } catch (error) {
+                log('测试2: 图表库版本', false, error.message);
+            }
+        }
+
+        function test3() {
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    log('测试3: 图表库对象', false, '图表库未加载');
+                } else {
+                    const types = Object.keys(window.LightweightCharts);
+                    log('测试3: 图表库对象', true, `可用类型: ${types.join(', ')}`);
+                }
+            } catch (error) {
+                log('测试3: 图表库对象', false, error.message);
+            }
+        }
+
+        function test4() {
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    log('测试4: 图表库方法', false, '图表库未加载');
+                } else if (typeof window.LightweightCharts.createChart === 'function') {
+                    log('测试4: 图表库方法', true, 'createChart方法存在');
+                } else {
+                    log('测试4: 图表库方法', false, 'createChart方法不存在');
+                }
+            } catch (error) {
+                log('测试4: 图表库方法', false, error.message);
+            }
+        }
+
+        function test5() {
+            try {
+                if (typeof window.LightweightCharts === 'undefined') {
+                    log('测试5: 图表库配置', false, '图表库未加载');
+                } else {
+                    const isCrosshairModeDefined = typeof window.LightweightCharts.CrosshairMode !== 'undefined';
+                    log('测试5: 图表库配置', true,
+                        isCrosshairModeDefined ? 'CrosshairMode已定义' : 'CrosshairMode未定义',
+                        `CrosshairMode: ${isCrosshairModeDefined ? Object.keys(window.LightweightCharts.CrosshairMode).join(', ') : 'undefined'}`);
+                }
+            } catch (error) {
+                log('测试5: 图表库配置', false, error.message);
+            }
+        }
+
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '等待测试...';
+        }
+
+        // 页面加载时的自动测试
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            log('系统启动', '步骤6页面加载完成');
+
+            setTimeout(() => {
+                log('自动测试', 'info', '开始自动测试图表库...');
+                test1();
+                test2();
+                test3();
+                test4();
+                test5();
+            }, 1000);
+        });
+
+        window.addEventListener('load', () => {
+            log('页面加载', 'info', '页面完全加载完成');
+        });
+
+        window.addEventListener('error', (event) => {
+            log('页面错误', false, event.error ? event.error.message : '未知错误');
+            console.error(event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log('Promise错误', false, event.reason ? event.reason.message : '未知错误');
+            console.error(event.reason);
+        });
+    </script>
+</body>
+</html>

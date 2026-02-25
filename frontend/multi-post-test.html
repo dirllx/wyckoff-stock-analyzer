@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多周期分析测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #0a0e27; color: #f9fafb; }
+        .card { background: #111827; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #374151; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .result { background: #1f2937; padding: 15px; border-radius: 6px; margin-top: 15px; font-family: monospace; white-space: pre-wrap; }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>多周期分析测试</h1>
+        <button onclick="testMulti()">测试多周期分析（POST）</button>
+        <div id="result">点击按钮开始测试...</div>
+    </div>
+
+    <script>
+        async function testMulti() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试...';
+
+            try {
+                const response = await fetch('http://45.153.246.2:8000/api/v1/stocks/688234/analyze-multi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                resultDiv.innerHTML = '<span class="success">API调用成功！</span>\n\n';
+                resultDiv.innerHTML += '数据类型: ' + typeof data + '\n';
+                resultDiv.innerHTML += '有timeframes字段: ' + ('timeframes' in data) + '\n';
+                resultDiv.innerHTML += 'timeframes类型: ' + typeof data.timeframes + '\n';
+
+                if (data.timeframes) {
+                    const timeframesArray = Object.values(data.timeframes);
+                    resultDiv.innerHTML += '\n<span class="success">转换完成，数组长度: ' + timeframesArray.length + '</span>\n\n';
+
+                    if (timeframesArray.length > 0) {
+                        resultDiv.innerHTML += '周期列表:\n';
+                        timeframesArray.forEach((tf, index) => {
+                            resultDiv.innerHTML += '  ' + (index + 1) + '. ' + (tf.timeframe || '未知') + ': ' + (tf.direction || 'NEUTRAL') + '\n';
+                        });
+                        resultDiv.innerHTML += '\n<span class="success">测试成功！显示' + timeframesArray.length + '个周期</span>';
+                    } else {
+                        resultDiv.innerHTML += '\n<span class="error">数组长度为0，没有数据</span>';
+                    }
+                } else {
+                    resultDiv.innerHTML += '\n<span class="error">没有timeframes字段</span>';
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = '<span class="error">测试失败: ' + error.message + '</span>';
+            }
+        }
+    </script>
+</body>
+</html>

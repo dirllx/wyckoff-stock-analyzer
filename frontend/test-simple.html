@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>简单测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            margin: 10px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-btn:hover {
+            background: #3a8eef;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            background: #0f0f1a;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript 功能测试</h1>
+
+    <button class="test-btn" onclick="testAlert()">测试 Alert</button>
+    <button class="test-btn" onclick="testLog()">测试 Console</button>
+    <button class="test-btn" onclick="testDOM()">测试 DOM</button>
+
+    <div class="result" id="result">
+        点击按钮测试功能...
+    </div>
+
+    <script>
+        console.log('页面加载成功');
+
+        function testAlert() {
+            console.log('testAlert 被调用');
+            alert('JavaScript 工作正常！');
+            document.getElementById('result').innerHTML = '<p style="color: #4ade80;">✓ Alert 测试通过</p>';
+        }
+
+        function testLog() {
+            console.log('testLog 被调用');
+            console.log('这是控制台日志');
+            document.getElementById('result').innerHTML = '<p style="color: #4ade80;">✓ Console 测试通过，请查看浏览器控制台</p>';
+        }
+
+        function testDOM() {
+            console.log('testDOM 被调用');
+            const result = document.getElementById('result');
+            result.innerHTML = '<p style="color: #4ade80;">✓ DOM 操作测试通过</p>';
+            result.style.background = '#1a2e1a';
+        }
+
+        window.addEventListener('load', () => {
+            console.log('window load 事件触发');
+            document.getElementById('result').innerHTML += '<p style="color: #fbbf24;">页面加载完成，点击按钮测试功能</p>';
+        });
+    </script>
+</body>
+</html>

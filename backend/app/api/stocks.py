@@ -199,8 +199,16 @@ async def get_stock_quotes(
         closes = [q.close for q in quotes]
 
         def calculate_ma(data, window):
+            """计算移动平均线"""
             if len(data) < window:
-                return [None] * len(data)
+                # 数据不足时，使用可用数据计算部分值
+                ma = []
+                for i in range(len(data)):
+                    if i < len(data):
+                        ma.append(sum(data[:i+1]) / (i+1))
+                    else:
+                        ma.append(sum(data[i-window+1:i+1]) / window)
+                return ma
             ma = []
             for i in range(len(data)):
                 if i < window - 1:
@@ -231,13 +239,13 @@ async def get_stock_quotes(
                     "volume": q.volume,
                     "ma5": q.ma5,
                     "ma10": q.ma10,
-                    "ma20": q.ma20,
-                    "ma20": ma20[i] if i < len(ma20) else None,
-                    "ma30": ma30[i] if i < len(ma30) else None,
-                    "ma60": ma60[i] if i < len(ma60) else None,
-                    "ma90": ma90[i] if i < len(ma90) else None,
-                    "ma120": ma120[i] if i < len(ma120) else None,
-                    "ma250": ma250[i] if i < len(ma250) else None,
+                    "ma15": calculate_ma(closes[:i+1], 15)[-1] if i >= 14 else None,
+                    "ma20": ma20[i],
+                    "ma30": ma30[i],
+                    "ma60": ma60[i],
+                    "ma90": ma90[i],
+                    "ma120": ma120[i],
+                    "ma250": ma250[i],
                     "volume_ma5": q.volume_ma5,
                     "obv": q.obv
                 }

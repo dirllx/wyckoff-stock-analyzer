@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>多周期分析测试 - 绕过缓存</title>
+    <script src="./lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        .indicator-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 8px;
+            background: #1f2937;
+            border-radius: 6px;
+        }
+        .indicator-name { color: #9ca3af; font-size: 12px; }
+        .indicator-value { font-size: 12px; font-weight: 600; }
+        .indicator-bullish { color: #10b981; }
+        .indicator-bearish { color: #ef4444; }
+        .indicator-neutral { color: #9ca3af; }
+    </style>
+        
+        /* 多周期评分和信号颜色 */
+        .score-high { color: #10b981; font-weight: 600; font-size: 16px; }
+        .score-medium { color: #f59e0b; font-weight: 600; font-size: 16px; }
+        .score-low { color: #ef4444; font-weight: 600; font-size: 16px; }
+        .signal-bullish { color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #10b981; }
+        .signal-bearish { color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #ef4444; }
+        .signal-neutral { color: #9ca3af; font-weight: 600; background: rgba(156, 163, 175, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #9ca3af; }
+
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">多周期分析测试 - 绕过缓存</h2>
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="000001">
+            <button class="btn btn-primary" onclick="analyzeMultiTimeframe()">开始多周期分析</button>
+        </div>
+        <div id="multiContent" style="color: #9ca3af;">点击"开始多周期分析"按钮查看结果</div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+            <h2 class="card-title">调试信息</h2>
+        </div>
+        <div id="debugInfo" style="padding: 20px; font-size: 12px; font-family: monospace; color: #d1d5db; line-height: 1.8;">
+            等待操作...
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        // ========== 多周期分析 ==========
+        async function analyzeMultiTimeframe() {
+            const code = document.getElementById('multiStockCode').value;
+            const debugDiv = document.getElementById('debugInfo');
+
+            debugDiv.innerHTML = `<div>[${new Date().toLocaleTimeString()}] 开始分析: ${code}</div>`;
+
+            if (!code) {
+                alert('请输入股票代码');
+                debugDiv.innerHTML += `<div style="color: #ef4444;">错误: 股票代码为空</div>`;
+                return;
+            }
+
+            debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 正在请求API...</div>`;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/analyze-multi`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] API响应已接收</div>`;
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 数据类型: ${typeof data}</div>`;
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] data.timeframes类型: ${typeof data.timeframes}</div>`;
+
+                const content = document.getElementById('multiContent');
+
+                if (!data || !data.timeframes) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">API返回数据格式错误</div>';
+                    debugDiv.innerHTML += `<div style="color: #ef4444;">错误: data或data.timeframes不存在</div>`;
+                    return;
+                }
+
+                // ✅ 修复：将对象转换为数组
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 开始转换对象为数组...</div>`;
+                const timeframesArray = Object.values(data.timeframes);
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 转换完成，数组长度: ${timeframesArray.length}</div>`;
+
+                if (timeframesArray.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无多周期分析数据</div>';
+                    debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 数组长度为0</div>`;
+                    return;
+                }
+
+                debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 开始生成HTML...</div>`;
+
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">';
+
+                timeframesArray.forEach((tf, index) => {
+                    debugDiv.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 处理周期 ${index + 1}: ${JSON.stringify(tf)}</div>`;
+
+                    const direction = tf.direction || 'NEUTRAL';
+                    const directionClass = direction === 'LONG' ? 'indicator-bullish' : direction === 'SHORT' ? 'indicator-bearish' : 'indicator-neutral';
+                    const directionText = direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 16px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #f9fafb;">${tf.timeframe || tf.name || tf.timeframe_name || '未知周期'}</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+                                <div style="color: #9ca3af; font-size: 12px;">方向</div>
+                                <div class="${direction === 'LONG' ? 'signal-bullish' : direction === 'SHORT' ? 'signal-bearish' : 'signal-neutral'}">${directionText}</div>
+                                <div class="${tf.score >= 7 ? 'score-high' : tf.score >= 4 ? 'score-medium' : 'score-low'}" style="font-size: 14px; font-weight: 600;">评分: ${tf.score || 0}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">信号</div>
+                                <div style="color: #f9fafb;">${tf.signal || '无'}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">当前价</div>
+                                <div style="color: #f9fafb;">${tf.close || 0}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">涨跌</div>
+                                <div style="color: #f9fafb;">${tf.change_percent || 0}%</div>
+                            </div>
+                            ${tf.suggestion ? `<div style="margin-top: 12px; padding: 12px; background: #0a0e27; border-radius: 8px; font-size: 13px; color: #d1d5db;"><strong>建议：</strong>${tf.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+
+                content.innerHTML = html;
+                debugDiv.innerHTML += `<div style="color: #10b981;">[${new Date().toLocaleTimeString()}] 分析完成，共${timeframesArray.length}个周期</div>`;
+            } catch (error) {
+                console.error('多周期分析失败:', error);
+                document.getElementById('multiContent').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">分析失败: ${error.message}</div>`;
+                debugDiv.innerHTML += `<div style="color: #ef4444;">[${new Date().toLocaleTimeString()}] 错误: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

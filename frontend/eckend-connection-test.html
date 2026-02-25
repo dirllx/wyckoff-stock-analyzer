@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端连接测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #0a0e27; color: #f9fafb; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: #111827; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #374151; }
+        button { padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        .result { margin-top: 15px; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; }
+        .success { background: #064e3b; color: white; }
+        .error { background: #991b1b; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>后端连接测试</h1>
+            <p style="margin-bottom: 15px; color: #9ca3af;">测试前端能否连接到后端API</p>
+            <button onclick="testBackend()">测试后端连接</button>
+            <div id="result" class="result">点击按钮开始测试...</div>
+        </div>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试后端连接...\n';
+
+            try {
+                const response = await fetch('http://45.153.246.2:8000/api/v1/health');
+                const data = await response.json();
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '<strong>测试成功！</strong>\n\n';
+                resultDiv.innerHTML += 'HTTP状态: ' + response.status + '\n';
+                resultDiv.innerHTML += '后端状态: ' + data.status + '\n';
+                resultDiv.innerHTML += '数据库: ' + data.database + '\n';
+                resultDiv.innerHTML += 'Redis: ' + data.redis + '\n';
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<strong>测试失败！</strong>\n\n';
+                resultDiv.innerHTML += '错误: ' + error.message + '\n';
+                resultDiv.innerHTML += '\n可能的原因:\n';
+                resultDiv.innerHTML += '1. 后端服务未启动\n';
+                resultDiv.innerHTML += '2. 网络连接问题\n';
+                resultDiv.innerHTML += '3. CORS（跨域）问题\n';
+                resultDiv.innerHTML += '4. 防火墙阻止连接\n';
+            }
+        }
+    </script>
+</body>
+</html>

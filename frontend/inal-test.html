@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最终测试</title>
+    <script>
+        // ========== 所有函数定义在最前面 ==========
+        
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        async function loadPatternsConfig() {
+            console.log('函数: loadPatternsConfig');
+            document.getElementById('result').innerHTML = '正在加载形态识别配置...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/patterns`);
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.items && data.items.length > 0) {
+                    document.getElementById('result').innerHTML += `✓ 加载成功，共 ${data.total} 种形态\n`;
+                    data.items.forEach(item => {
+                        document.getElementById('result').innerHTML += `- ${item.pattern_type} (${item.enabled ? '已启用' : '已禁用'})\n`;
+                    });
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂无形态识别配置\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 加载失败: ${error.message}\n`;
+            }
+        }
+
+        async function loadTimeframesConfig() {
+            console.log('函数: loadTimeframesConfig');
+            document.getElementById('result').innerHTML = '正在加载时间周期配置...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/timeframes`);
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.items && data.items.length > 0) {
+                    document.getElementById('result').innerHTML += `✓ 加载成功，共 ${data.total} 个周期\n`;
+                    data.items.forEach(item => {
+                        document.getElementById('result').innerHTML += `- ${item.timeframe} (${item.enabled ? '已启用' : '已禁用'})\n`;
+                    });
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂无时间周期配置\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 加载失败: ${error.message}\n`;
+            }
+        }
+
+        async function loadFeishuConfig() {
+            console.log('函数: loadFeishuConfig');
+            document.getElementById('result').innerHTML = '正在加载飞书通知配置...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu`);
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.webhook_url) {
+                    document.getElementById('result').innerHTML += '✓ 加载成功\n';
+                    document.getElementById('result').innerHTML += `Webhook URL: ${data.webhook_url}\n`;
+                    document.getElementById('result').innerHTML += `启用通知: ${data.enabled ? '启用' : '禁用'}\n`;
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂无飞书通知配置\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 加载失败: ${error.message}\n`;
+            }
+        }
+
+        async function loadRiskConfig() {
+            console.log('函数: loadRiskConfig');
+            document.getElementById('result').innerHTML = '正在加载风险监控配置...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/risk`);
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.threshold) {
+                    document.getElementById('result').innerHTML += '✓ 加载成功\n';
+                    document.getElementById('result').innerHTML += `风险阈值: ${data.threshold}\n`;
+                    document.getElementById('result').innerHTML += `启用风险监控: ${data.enabled ? '启用' : '禁用'}\n`;
+                    document.getElementById('result').innerHTML += `风险等级: ${data.risk_level || '低'}\n`;
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂无风险监控配置\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 加载失败: ${error.message}\n`;
+            }
+        }
+
+        async function getRealtimeQuote() {
+            console.log('函数: getRealtimeQuote');
+            document.getElementById('result').innerHTML = '正在查询实时行情 (688234)...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/realtime/quote/688234`);
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.price) {
+                    document.getElementById('result').innerHTML += '✓ 查询成功\n';
+                    document.getElementById('result').innerHTML += `当前价: ${data.price}\n`;
+                    document.getElementById('result').innerHTML += `涨跌额: ${data.change}\n`;
+                    document.getElementById('result').innerHTML += `涨跌幅: ${data.change_percent}%\n`;
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂无实时行情数据\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 查询失败: ${error.message}\n`;
+            }
+        }
+
+        async function recognizePatterns() {
+            console.log('函数: recognizePatterns');
+            document.getElementById('result').innerHTML = '正在识别形态 (688234, 日线)...\n';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/688234/patterns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ timeframe: 'daily' })
+                });
+                const data = await response.json();
+                
+                document.getElementById('result').innerHTML += '✓ API调用成功\n';
+                
+                if (data.patterns && data.patterns.length > 0) {
+                    document.getElementById('result').innerHTML += `✓ 识别成功，共 ${data.patterns.length} 个形态\n`;
+                    data.patterns.forEach(item => {
+                        document.getElementById('result').innerHTML += `- ${item.pattern} (${item.type === 'bullish' ? '看涨' : '看跌'})\n`;
+                    });
+                } else {
+                    document.getElementById('result').innerHTML += '✗ 暂未识别到任何形态\n';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML += `✗ 识别失败: ${error.message}\n`;
+            }
+        }
+
+        // ========== 页面加载完成后 ==========
+        window.onload = function() {
+            const functions = [
+                'loadPatternsConfig',
+                'loadTimeframesConfig',
+                'loadFeishuConfig',
+                'loadRiskConfig',
+                'getRealtimeQuote',
+                'recognizePatterns'
+            ];
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '========== 页面加载完成 ==========\n';
+            resultDiv.innerHTML += '正在检查所有函数是否定义...\n';
+            
+            let allDefined = true;
+            
+            functions.forEach(funcName => {
+                const isDefined = typeof window[funcName] === 'function';
+                const status = isDefined ? '✓ 已定义' : '✗ 未定义';
+                resultDiv.innerHTML += `${status} ${funcName}\n`;
+                if (!isDefined) allDefined = false;
+            });
+            
+            resultDiv.innerHTML += '\n========== 检查完成 ==========\n';
+            
+            if (allDefined) {
+                resultDiv.innerHTML += '\n✓ 所有函数都已定义，请点击下方按钮测试功能\n';
+            } else {
+                resultDiv.innerHTML += '\n✗ 有函数未定义，请清除浏览器缓存并强制刷新（Ctrl + F5）\n';
+                resultDiv.innerHTML += '\n建议：使用隐私模式访问\n';
+                resultDiv.innerHTML += '\n快捷键：Ctrl + Shift + N (Chrome) 或 Command + Shift + N (Mac)\n';
+            }
+        };
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0a0e27;
+            color: #f9fafb;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .title { font-size: 20px; margin-bottom: 16px; color: #f9fafb; }
+        .subtitle { color: #9ca3af; margin-bottom: 20px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        button:hover { background: #2563eb; }
+        .result {
+            padding: 16px;
+            background: #1f2937;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            margin-top: 16px;
+            line-height: 1.6;
+        }
+        .success { color: #10b981; font-weight: 600; }
+        .error { color: #ef4444; font-weight: 600; }
+        .warning { color: #f59e0b; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">最终测试 - 函数定义</h1>
+            <p class="subtitle">所有JavaScript函数都定义在&lt;script&gt;标签的最前面，避免加载顺序问题</p>
+            
+            <div class="grid">
+                <button onclick="loadPatternsConfig()">1. 测试形态识别配置</button>
+                <button onclick="loadTimeframesConfig()">2. 测试时间周期配置</button>
+                <button onclick="loadFeishuConfig()">3. 测试飞书通知配置</button>
+            </div>
+            
+            <div class="grid">
+                <button onclick="loadRiskConfig()">4. 测试风险监控配置</button>
+                <button onclick="getRealtimeQuote()">5. 测试实时行情</button>
+                <button onclick="recognizePatterns()">6. 测试形态识别</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h1 class="title">测试结果</h1>
+            <div id="result">正在初始化...</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>威科夫股票分析系统 - 完整功能版</title>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="./lightweight-charts.standalone.production.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -315,6 +315,7 @@
                 <button class="tab-btn" id="tabWatchlist" onclick="showTab('watchlist')">我的关注</button>
                 <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
                 <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
+                <button class="tab-btn" id="tabStatus" onclick="showTab('status')">测试状态</button>
             </div>
 
             <!-- 分析Tab -->
@@ -352,7 +353,11 @@
                 <div class="card-header">
                     <h2 class="card-title">多周期分析</h2>
                 </div>
-                <div id="multiContent" style="padding: 20px; color: #9ca3af;">多周期分析功能开发中...</div>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="000001">
+                    <button class="btn btn-primary" onclick="analyzeMultiTimeframe()">开始多周期分析</button>
+                </div>
+                <div id="multiContent"></div>
             </div>
 
             <!-- 系统配置Tab -->
@@ -360,6 +365,8 @@
                 <div class="card-header">
                     <h2 class="card-title">系统配置</h2>
                 </div>
+
+                <!-- 系统信息 -->
                 <div class="indicators-grid" style="padding: 20px;">
                     <div class="indicator-item">
                         <span class="indicator-name">API状态</span>
@@ -385,6 +392,78 @@
                         <span class="indicator-name">威科夫评分</span>
                         <span class="indicator-value">1-10</span>
                     </div>
+                </div>
+
+                <!-- 形态配置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">形态识别配置</h3>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadPatternsConfig()">刷新</button>
+                    </div>
+                    <div id="patternsConfig" style="padding: 20px;">
+                        <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                    </div>
+                </div>
+
+                <!-- 周期配置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">时间周期配置</h3>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadTimeframesConfig()">刷新</button>
+                    </div>
+                    <div id="timeframesConfig" style="padding: 20px;">
+                        <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                    </div>
+                </div>
+
+                <!-- 飞书通知配置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">飞书通知配置</h3>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadFeishuConfig()">刷新</button>
+                    </div>
+                    <div id="feishuConfig" style="padding: 20px;">
+                        <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                    </div>
+                </div>
+
+                <!-- 风险监控配置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">风险监控配置</h3>
+                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadRiskConfig()">刷新</button>
+                    </div>
+                    <div id="riskConfig" style="padding: 20px;">
+                        <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                    </div>
+                </div>
+
+                <!-- 实时行情配置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">实时行情</h3>
+                    </div>
+                    <div class="form-group" style="padding: 20px;">
+                        <input type="text" class="form-input" id="realtimeCode" value="000001" placeholder="股票代码" style="width: 150px;">
+                        <button class="btn btn-primary" onclick="getRealtimeQuote()">查询实时行情</button>
+                    </div>
+                    <div id="realtimeResult" style="padding: 0 20px 20px;"></div>
+                </div>
+
+                <!-- 形态识别 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">形态识别</h3>
+                    </div>
+                    <div class="form-group" style="padding: 20px;">
+                        <input type="text" class="form-input" id="patternCode" value="000001" placeholder="股票代码" style="width: 150px;">
+                        <select class="form-input" id="patternTimeframe" style="width: 100px;">
+                            <option value="daily">日线</option>
+                            <option value="weekly">周线</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="recognizePatterns()">识别形态</button>
+                    </div>
+                    <div id="patternResult" style="padding: 0 20px 20px;"></div>
                 </div>
             </div>
         </div>
@@ -671,7 +750,7 @@
 
         // Tab切换
         function showTab(tab) {
-            const tabs = ['analyze', 'watchlist', 'multi', 'config'];
+            const tabs = ['analyze', 'watchlist', 'multi', 'config', 'status'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).classList.remove('active');
                 const tabContent = document.getElementById(`tab-${t}`);
@@ -1055,6 +1134,13 @@
 
             const phaseTag = document.getElementById('phaseTag');
             const phaseTooltipText = document.getElementById('phaseTooltipText');
+
+            // 安全检查：如果元素不存在则跳过
+            if (!phaseTag || !phaseTooltipText) {
+                console.warn('phaseTag 或 phaseTooltipText 元素不存在，跳过更新');
+                return;
+            }
+
             phaseTag.textContent = phase + '阶段';
             phaseTag.className = 'phase-badge ' + phaseClass;
             phaseTooltipText.textContent = phaseTooltip;
@@ -1398,12 +1484,438 @@
             }
         }
 
+        // ========== 多周期分析 ==========
+        async function analyzeMultiTimeframe() {
+            const code = document.getElementById('multiStockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`多周期分析: ${code}`);
+            addLog('多周期分析', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/analyze-multi`);
+                const data = await response.json();
+
+                console.log('多周期分析结果:', data);
+
+                const content = document.getElementById('multiContent');
+
+                if (!data || !data.timeframes) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无多周期分析数据</div>';
+                    addLog('分析完成', '暂无多周期分析数据');
+                    return;
+                }
+
+                // ✅ 修复：将对象转换为数组
+                const timeframesArray = Object.values(data.timeframes);
+
+                if (timeframesArray.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无多周期分析数据</div>';
+                    addLog('分析完成', '暂无多周期分析数据');
+                    return;
+                }
+
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">';
+
+                timeframesArray.forEach(tf => {
+                    const direction = tf.direction || 'NEUTRAL';
+                    const directionClass = direction === 'LONG' ? 'indicator-bullish' : direction === 'SHORT' ? 'indicator-bearish' : 'indicator-neutral';
+                    const directionText = direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 16px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #f9fafb;">${tf.timeframe || tf.name || tf.timeframe_name}</h3>
+                            <div class="indicators-grid" style="padding: 0;">
+                                <div class="indicator-item">
+                                    <span class="indicator-name">方向</span>
+                                    <span class="indicator-value ${directionClass}">${directionText}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-name">评分</span>
+                                    <span class="indicator-value">${tf.score || 0}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-name">信号</span>
+                                    <span class="indicator-value">${tf.signal || '无'}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-name">当前价</span>
+                                    <span class="indicator-value">${tf.close || 0}</span>
+                                </div>
+                                <div class="indicator-item">
+                                    <span class="indicator-name">涨跌</span>
+                                    <span class="indicator-value">${tf.change_percent || 0}%</span>
+                                </div>
+                            </div>
+                            ${tf.suggestion ? `<div style="margin-top: 12px; padding: 12px; background: #0a0e27; border-radius: 8px; font-size: 13px; color: #d1d5db;"><strong>建议：</strong>${tf.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+
+                content.innerHTML = html;
+                addLog('分析完成', `多周期分析完成，共${timeframesArray.length}个周期`);
+            } catch (error) {
+                console.error('多周期分析失败:', error);
+                document.getElementById('multiContent').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">分析失败: ${error.message}</div>`;
+                addLog('分析失败', `错误: ${error.message}`);
+            }
+        }
+
+        // ========== 配置管理 ==========
+        async function loadPatternsConfig() {
+            console.log('加载形态配置');
+            addLog('加载配置', '形态识别配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/patterns`);
+                const data = await response.json();
+
+                const content = document.getElementById('patternsConfig');
+
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无形态配置</div>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">';
+
+                data.items.forEach(pattern => {
+                    const statusClass = pattern.enabled ? 'indicator-bullish' : 'indicator-neutral';
+                    const statusText = pattern.enabled ? '已启用' : '已禁用';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600;">${pattern.pattern_type}</span>
+                                <span class="indicator-value ${statusClass}" style="font-size: 12px;">${statusText}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #9ca3af;">精度模式: ${pattern.accuracy_mode || '默认'}</div>
+                            <div style="font-size: 12px; color: #9ca3af;">最小置信度: ${pattern.min_confidence || 0.5}</div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                content.innerHTML = html;
+                addLog('加载完成', `共 ${data.total} 种形态配置`);
+            } catch (error) {
+                console.error('加载形态配置失败:', error);
+                document.getElementById('patternsConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadTimeframesConfig() {
+            console.log('加载周期配置');
+            addLog('加载配置', '时间周期配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/timeframes`);
+                const data = await response.json();
+
+                const content = document.getElementById('timeframesConfig');
+
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无周期配置</div>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">';
+
+                data.items.forEach(tf => {
+                    const statusClass = tf.enabled ? 'indicator-bullish' : 'indicator-neutral';
+                    const statusText = tf.enabled ? '已启用' : '已禁用';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600;">${tf.timeframe_name}</span>
+                                <span class="indicator-value ${statusClass}" style="font-size: 12px;">${statusText}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #9ca3af;">优先级: ${tf.priority}</div>
+                            <div style="font-size: 12px; color: #9ca3af;">数据保留: ${tf.data_retention_days}天</div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                content.innerHTML = html;
+                addLog('加载完成', `共 ${data.total} 个周期配置`);
+            } catch (error) {
+                console.error('加载周期配置失败:', error);
+                document.getElementById('timeframesConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadFeishuConfig() {
+            console.log('加载飞书配置');
+            addLog('加载配置', '飞书通知配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu`);
+                const data = await response.json();
+
+                const content = document.getElementById('feishuConfig');
+
+                const statusClass = data.enabled ? 'indicator-bullish' : 'indicator-neutral';
+                const statusText = data.enabled ? '已启用' : '已禁用';
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                        <div class="indicator-item">
+                            <span class="indicator-name">状态</span>
+                            <span class="indicator-value ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">信号触发</span>
+                            <span class="indicator-value">${data.trigger_on_signal ? '是' : '否'}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">风险触发</span>
+                            <span class="indicator-value">${data.trigger_on_risk ? '是' : '否'}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">最小评分</span>
+                            <span class="indicator-value">${data.min_signal_score || 0}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">限流(分钟)</span>
+                            <span class="indicator-value">${data.rate_limit_minutes || 0}</span>
+                        </div>
+                        <div class="indicator-item" style="grid-column: 1 / -1;">
+                            <span class="indicator-name">Webhook URL</span>
+                            <span class="indicator-value" style="font-size: 11px; word-break: break-all;">${data.webhook_url || '未设置'}</span>
+                        </div>
+                    </div>
+                `;
+
+                addLog('加载完成', '飞书配置加载成功');
+            } catch (error) {
+                console.error('加载飞书配置失败:', error);
+                document.getElementById('feishuConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadRiskConfig() {
+            console.log('加载风险监控配置');
+            addLog('加载配置', '风险监控配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/risk`);
+                const data = await response.json();
+
+                const content = document.getElementById('riskConfig');
+
+                const statusClass = data.enabled ? 'indicator-bullish' : 'indicator-neutral';
+                const statusText = data.enabled ? '已启用' : '已禁用';
+
+                const stopLossClass = data.stop_loss_enabled ? 'indicator-bullish' : 'indicator-neutral';
+                const stopLossText = data.stop_loss_enabled ? '已启用' : '已禁用';
+
+                content.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                        <div class="indicator-item">
+                            <span class="indicator-name">状态</span>
+                            <span class="indicator-value ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">止损功能</span>
+                            <span class="indicator-value ${stopLossClass}">${stopLossText}</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">最大亏损比例</span>
+                            <span class="indicator-value">${(data.max_loss_ratio || 0) * 100}%</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">最大仓位比例</span>
+                            <span class="indicator-value">${(data.max_position_ratio || 0) * 100}%</span>
+                        </div>
+                        <div class="indicator-item">
+                            <span class="indicator-name">预警亏损比例</span>
+                            <span class="indicator-value">${(data.warning_loss_ratio || 0) * 100}%</span>
+                        </div>
+                    </div>
+                `;
+
+                addLog('加载完成', '风险监控配置加载成功');
+            } catch (error) {
+                console.error('加载风险监控配置失败:', error);
+                document.getElementById('riskConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        // ========== 实时行情 ==========
+        async function getRealtimeQuote() {
+            const code = document.getElementById('realtimeCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`查询实时行情: ${code}`);
+            addLog('查询行情', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/realtime/quote/${code}`);
+                const data = await response.json();
+
+                console.log('实时行情结果:', data);
+
+                const content = document.getElementById('realtimeResult');
+
+                if (!data || !data.quote) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无实时行情数据</div>';
+                    addLog('查询完成', '暂无实时行情数据');
+                    return;
+                }
+
+                const quote = data.quote;
+                const changeClass = quote.change >= 0 ? 'indicator-bullish' : 'indicator-bearish';
+
+                content.innerHTML = `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                            <div class="indicator-item">
+                                <span class="indicator-name">股票代码</span>
+                                <span class="indicator-value">${quote.code || code}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">股票名称</span>
+                                <span class="indicator-value">${quote.name || '-'}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">当前价</span>
+                                <span class="indicator-value">${quote.price || 0}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">涨跌</span>
+                                <span class="indicator-value ${changeClass}">${quote.change || 0}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">涨跌幅</span>
+                                <span class="indicator-value ${changeClass}">${quote.change_percent || 0}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">成交量</span>
+                                <span class="indicator-value">${quote.volume || 0}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">成交额</span>
+                                <span class="indicator-value">${quote.amount || 0}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-name">更新时间</span>
+                                <span class="indicator-value" style="font-size: 12px;">${quote.time || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                addLog('查询完成', `当前价: ${quote.price}, 涨跌: ${quote.change_percent}%`);
+            } catch (error) {
+                console.error('查询实时行情失败:', error);
+                document.getElementById('realtimeResult').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">查询失败: ${error.message}</div>`;
+                addLog('查询失败', `错误: ${error.message}`);
+            }
+        }
+
+        // ========== 形态识别 ==========
+        async function recognizePatterns() {
+            const code = document.getElementById('patternCode').value;
+            const timeframe = document.getElementById('patternTimeframe').value;
+
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`形态识别: ${code}, 周期: ${timeframe}`);
+            addLog('形态识别', `股票代码: ${code}, 周期: ${timeframe}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/patterns?timeframe=${timeframe}`);
+                const data = await response.json();
+
+                console.log('形态识别结果:', data);
+
+                const content = document.getElementById('patternResult');
+
+                if (!data || !data.patterns || data.patterns.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">未识别到任何形态</div>';
+                    addLog('识别完成', '未识别到任何形态');
+                    return;
+                }
+
+                let html = `<div style="margin-bottom: 12px; color: #f9fafb;">共识别到 ${data.total} 种形态：</div>`;
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px;">';
+
+                data.patterns.forEach(pattern => {
+                    const confidenceClass = pattern.confidence >= 0.7 ? 'indicator-bullish' : pattern.confidence >= 0.5 ? 'indicator-neutral' : 'indicator-bearish';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600;">${pattern.pattern_name}</span>
+                                <span class="indicator-value ${confidenceClass}">${(pattern.confidence || 0) * 100}%</span>
+                            </div>
+                            <div style="font-size: 12px; color: #9ca3af; margin-bottom: 6px;">类型: ${pattern.pattern_type}</div>
+                            <div style="font-size: 12px; color: #9ca3af; margin-bottom: 6px;">信号: ${pattern.signal || '无'}</div>
+                            <div style="font-size: 12px; color: #9ca3af;">日期: ${pattern.date || '-'}</div>
+                            ${pattern.description ? `<div style="margin-top: 8px; padding: 8px; background: #0a0e27; border-radius: 6px; font-size: 12px; color: #d1d5db;">${pattern.description}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                content.innerHTML = html;
+                addLog('识别完成', `共识别 ${data.total} 种形态`);
+            } catch (error) {
+                console.error('形态识别失败:', error);
+                document.getElementById('patternResult').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">识别失败: ${error.message}</div>`;
+                addLog('识别失败', `错误: ${error.message}`);
+            }
+        }
+
+        function updateTestStatus(test, result, message) {
+            const statusTab = document.getElementById('tab-status');
+            if (statusTab) {
+                let currentHtml = statusTab.innerHTML;
+                const color = result ? 'green' : 'red';
+                const icon = result ? '✓' : '✗';
+                const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+                const line = `<div style="padding: 8px 0; border-bottom: 1px solid #374151;">
+                    <span style="color: #999;">[${time}]</span>
+                    <span style="color: ${color}; margin: 0 10px;">${icon}</span>
+                    <strong>${test}:</strong> ${message}
+                </div>`;
+                statusTab.innerHTML = line + currentHtml;
+            }
+        }
+
         // 页面加载完成时刷新关注列表
         window.addEventListener('load', () => {
             console.log('页面加载完成');
-            refreshWatchlist();
+            // 暂时禁用自动刷新，测试是否是这里导致的问题
+            // refreshWatchlist();
+            console.log('刷新关注列表已禁用');
         });
     </script>
+
+    <!-- 测试状态Tab -->
+    <div id="tab-status" class="tab-content">
+        <div style="padding: 20px; color: #9ca3af;">这里是测试结果汇总区域...</div>
+    </div>
 
     <!-- 日志区域 -->
     <div class="card" style="margin-top: 20px;">

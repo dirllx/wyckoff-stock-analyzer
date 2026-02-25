@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #results {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript功能测试</h1>
+
+    <div class="test-section">
+        <h2>1. DOM元素访问测试</h2>
+        <button onclick="testDOM()">测试DOM</button>
+        <div id="results1"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API请求测试</h2>
+        <button onclick="testAPI()">测试API</button>
+        <div id="results2"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 事件监听测试</h2>
+        <button onclick="testEvent()">测试事件</button>
+        <div id="results3"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 异步函数测试</h2>
+        <button onclick="testAsync()">测试异步</button>
+        <div id="results4"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 错误处理测试</h2>
+        <button onclick="testError()">测试错误</button>
+        <div id="results5"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        function showResult(id, message, isSuccess = true) {
+            const div = document.getElementById(id);
+            div.innerHTML = `<span class="${isSuccess ? 'success' : 'error'}">${message}</span>`;
+        }
+
+        function testDOM() {
+            try {
+                // 测试元素是否存在
+                const body = document.body;
+                const testDiv = document.createElement('div');
+                body.appendChild(testDiv);
+                body.removeChild(testDiv);
+
+                showResult('results1', '✓ DOM元素访问正常', true);
+            } catch (error) {
+                showResult('results1', `✗ DOM错误: ${error.message}`, false);
+            }
+        }
+
+        async function testAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                showResult('results2', `✓ API正常: ${data.status}, 数据库: ${data.database}`, true);
+            } catch (error) {
+                showResult('results2', `✗ API错误: ${error.message}`, false);
+            }
+        }
+
+        function testEvent() {
+            try {
+                let eventFired = false;
+
+                const testButton = document.createElement('button');
+                testButton.textContent = '测试按钮';
+                testButton.addEventListener('click', () => {
+                    eventFired = true;
+                    showResult('results3', '✓ 事件监听正常', true);
+                });
+
+                document.body.appendChild(testButton);
+                testButton.click();
+                document.body.removeChild(testButton);
+
+                if (!eventFired) {
+                    throw new Error('事件未触发');
+                }
+            } catch (error) {
+                showResult('results3', `✗ 事件错误: ${error.message}`, false);
+            }
+        }
+
+        async function testAsync() {
+            try {
+                const result = await new Promise((resolve) => {
+                    setTimeout(() => resolve('异步操作完成'), 100);
+                });
+                showResult('results4', `✓ 异步函数正常: ${result}`, true);
+            } catch (error) {
+                showResult('results4', `✗ 异步错误: ${error.message}`, false);
+            }
+        }
+
+        function testError() {
+            try {
+                try {
+                    throw new Error('测试错误');
+                } catch (error) {
+                    if (error.message === '测试错误') {
+                        showResult('results5', '✓ 错误处理正常', true);
+                    } else {
+                        throw error;
+                    }
+                }
+            } catch (error) {
+                showResult('results5', `✗ 错误处理失败: ${error.message}`, false);
+            }
+        }
+
+        // 页面加载时的测试
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('测试页面加载完成');
+            showResult('results1', '页面已加载，等待测试...', true);
+        });
+
+        // 全局错误捕获
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+        });
+    </script>
+</body>
+</html>

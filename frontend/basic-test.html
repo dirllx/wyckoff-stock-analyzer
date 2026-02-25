@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基础JavaScript测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:active {
+            background: #2563eb;
+        }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        #console {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>基础JavaScript功能测试</h1>
+        <p>这是一个最基础的测试页面，用于验证JavaScript是否正常运行</p>
+
+        <div style="margin: 20px 0;">
+            <h3>测试按钮</h3>
+            <button onclick="testClick()">点击测试</button>
+            <button onclick="testAlert()">Alert测试</button>
+            <button onclick="testDOM()">DOM操作测试</button>
+            <button onclick="testAPI()">API请求测试</button>
+            <button onclick="clearConsole()">清空控制台</button>
+        </div>
+
+        <div id="status">等待测试...</div>
+
+        <div class="test-card">
+            <h3>控制台输出</h3>
+            <div id="console">控制台初始化完成</div>
+        </div>
+
+        <div class="test-card">
+            <h3>自动测试结果</h3>
+            <div id="autoTestResults">等待自动测试...</div>
+        </div>
+    </div>
+
+    <script>
+        // 控制台输出函数
+        function consoleLog(message) {
+            const consoleDiv = document.getElementById('console');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            consoleDiv.innerHTML = `[${time}] ${message}<br>` + consoleDiv.innerHTML;
+            console.log(message);
+        }
+
+        function updateStatus(message, isSuccess = true) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<span class="${isSuccess ? 'success' : 'error'}">${message}</span>`;
+        }
+
+        // 测试1: 基本点击
+        function testClick() {
+            consoleLog('✓ 点击测试成功 - JavaScript正常运行');
+            updateStatus('✓ 点击测试成功');
+        }
+
+        // 测试2: Alert
+        function testAlert() {
+            alert('Alert测试成功！如果你看到这个弹窗，说明JavaScript正常工作。');
+            consoleLog('✓ Alert测试成功');
+            updateStatus('✓ Alert测试成功');
+        }
+
+        // 测试3: DOM操作
+        function testDOM() {
+            try {
+                const testDiv = document.createElement('div');
+                testDiv.textContent = '测试文本';
+                testDiv.style.color = 'blue';
+                document.body.appendChild(testDiv);
+                setTimeout(() => document.body.removeChild(testDiv), 1000);
+                consoleLog('✓ DOM操作测试成功');
+                updateStatus('✓ DOM操作测试成功');
+            } catch (error) {
+                consoleLog(`✗ DOM操作失败: ${error.message}`);
+                updateStatus(`✗ DOM操作失败: ${error.message}`, false);
+            }
+        }
+
+        // 测试4: API请求
+        async function testAPI() {
+            try {
+                consoleLog('正在测试API请求...');
+                updateStatus('正在测试API请求...', false);
+
+                const response = await fetch('http://45.153.246.2:8000/api/v1/health');
+                const data = await response.json();
+
+                consoleLog(`✓ API测试成功: ${data.status}`);
+                updateStatus(`✓ API测试成功: ${data.status}`);
+            } catch (error) {
+                consoleLog(`✗ API测试失败: ${error.message}`);
+                updateStatus(`✗ API测试失败: ${error.message}`, false);
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '控制台已清空';
+        }
+
+        // 自动测试
+        async function runAutoTests() {
+            const resultsDiv = document.getElementById('autoTestResults');
+            let results = [];
+
+            // 测试1: document对象
+            try {
+                if (typeof document !== 'undefined') {
+                    results.push('✓ document对象存在');
+                    consoleLog('✓ document对象存在');
+                } else {
+                    results.push('✗ document对象不存在');
+                    consoleLog('✗ document对象不存在');
+                }
+            } catch (error) {
+                results.push(`✗ document测试失败: ${error.message}`);
+                consoleLog(`✗ document测试失败: ${error.message}`);
+            }
+
+            // 测试2: querySelector
+            try {
+                const body = document.querySelector('body');
+                if (body) {
+                    results.push('✓ querySelector工作正常');
+                    consoleLog('✓ querySelector工作正常');
+                } else {
+                    results.push('✗ querySelector失败');
+                    consoleLog('✗ querySelector失败');
+                }
+            } catch (error) {
+                results.push(`✗ querySelector测试失败: ${error.message}`);
+                consoleLog(`✗ querySelector测试失败: ${error.message}`);
+            }
+
+            // 测试3: getElementById
+            try {
+                const statusDiv = document.getElementById('status');
+                if (statusDiv) {
+                    results.push('✓ getElementById工作正常');
+                    consoleLog('✓ getElementById工作正常');
+                } else {
+                    results.push('✗ getElementById失败');
+                    consoleLog('✗ getElementById失败');
+                }
+            } catch (error) {
+                results.push(`✗ getElementById测试失败: ${error.message}`);
+                consoleLog(`✗ getElementById测试失败: ${error.message}`);
+            }
+
+            // 测试4: fetch API
+            try {
+                const response = await fetch('http://45.153.246.2:8000/api/v1/health');
+                if (response.ok) {
+                    results.push('✓ fetch API工作正常');
+                    consoleLog('✓ fetch API工作正常');
+                } else {
+                    results.push('✗ fetch API返回错误');
+                    consoleLog('✗ fetch API返回错误');
+                }
+            } catch (error) {
+                results.push(`✗ fetch API测试失败: ${error.message}`);
+                consoleLog(`✗ fetch API测试失败: ${error.message}`);
+            }
+
+            resultsDiv.innerHTML = results.map(r => `<div>${r}</div>`).join('');
+        }
+
+        // 页面加载时的日志
+        consoleLog('页面开始加载...');
+
+        // DOM加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            consoleLog('✓ DOMContentLoaded事件触发');
+            consoleLog('✓ 页面DOM加载完成');
+            updateStatus('页面加载完成');
+        });
+
+        // 页面完全加载
+        window.addEventListener('load', () => {
+            consoleLog('✓ load事件触发');
+            consoleLog('✓ 页面完全加载完成');
+
+            // 延迟1秒后运行自动测试
+            setTimeout(() => {
+                consoleLog('开始自动测试...');
+                runAutoTests();
+            }, 1000);
+        });
+
+        // 全局错误捕获
+        window.addEventListener('error', (event) => {
+            const errorMsg = `全局错误: ${event.error ? event.error.message : event.message}`;
+            consoleLog(`✗ ${errorMsg}`);
+            console.error(errorMsg, event.error);
+        });
+
+        // Promise错误捕获
+        window.addEventListener('unhandledrejection', (event) => {
+            const errorMsg = `Promise错误: ${event.reason ? event.reason.message : event.reason}`;
+            consoleLog(`✗ ${errorMsg}`);
+            console.error(errorMsg, event.reason);
+        });
+
+        // 页面加载完成后的日志
+        consoleLog('JavaScript初始化完成');
+    </script>
+</body>
+</html>

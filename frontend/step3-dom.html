@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步骤3 - DOM操作</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:active { background: #2563eb; }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        #testArea {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>步骤3 - DOM操作测试</h1>
+        <p>测试基本的DOM操作功能是否正常工作。</p>
+
+        <button onclick="test1()">测试1: getElementById</button>
+        <button onclick="test2()">测试2: createElement</button>
+        <button onclick="test3()">测试3: innerHTML</button>
+        <button onclick="test4()">测试4: appendChild</button>
+        <button onclick="test5()">测试5: removeChild</button>
+        <button onclick="test6()">测试6: style操作</button>
+        <button onclick="clearStatus()">清空</button>
+
+        <div id="status">等待测试...</div>
+    </div>
+
+    <div class="card">
+        <h2>测试区域</h2>
+        <div id="testArea">DOM操作结果将在这里显示</div>
+    </div>
+
+    <div class="card">
+        <h2>测试页面导航</h2>
+        <ul>
+            <li><a href="step1-basic-html.html">步骤1：基础HTML</a></li>
+            <li><a href="step2-basic-js.html">步骤2：基本JavaScript</a></li>
+            <li><strong>步骤3：DOM操作（当前）</strong></li>
+            <li><a href="step4-events.html">步骤4：事件处理</a></li>
+            <li><a href="step5-fetch.html">步骤5：API请求</a></li>
+            <li><a href="step6-chart-lib.html">步骤6：图表库引用</a></li>
+            <li><a href="step7-chart-create.html">步骤7：图表创建</a></li>
+            <li><a href="step8-chart-full.html">步骤8：完整图表</a></li>
+        </ul>
+    </div>
+
+    <script>
+        function log(test, result, message) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const statusDiv = document.getElementById('status');
+            const color = result ? 'success' : 'error';
+            const text = result ? '✓' : '✗';
+
+            statusDiv.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                    <span class="${color}">${text}</span>
+                    <strong>${test}</strong>: ${message}
+                    <br><small style="color: #999;">[${time}]</small>
+                </div>
+            ` + statusDiv.innerHTML;
+
+            console.log(`${text} ${test}: ${message}`);
+        }
+
+        function test1() {
+            try {
+                const elem = document.getElementById('status');
+                if (elem) {
+                    log('测试1: getElementById', true, '找到status元素');
+                } else {
+                    log('测试1: getElementById', false, '找不到status元素');
+                }
+            } catch (error) {
+                log('测试1: getElementById', false, error.message);
+            }
+        }
+
+        function test2() {
+            try {
+                const testArea = document.getElementById('testArea');
+                const newElem = document.createElement('div');
+                newElem.textContent = '新创建的元素';
+                testArea.appendChild(newElem);
+                log('测试2: createElement', true, '成功创建并添加元素');
+            } catch (error) {
+                log('测试2: createElement', false, error.message);
+            }
+        }
+
+        function test3() {
+            try {
+                const testArea = document.getElementById('testArea');
+                testArea.innerHTML = '<p style="color: blue;">通过innerHTML设置的内容</p>';
+                log('测试3: innerHTML', true, '成功设置innerHTML');
+            } catch (error) {
+                log('测试3: innerHTML', false, error.message);
+            }
+        }
+
+        function test4() {
+            try {
+                const testArea = document.getElementById('testArea');
+                const p = document.createElement('p');
+                p.textContent = '通过appendChild添加的内容';
+                testArea.appendChild(p);
+                log('测试4: appendChild', true, '成功添加子元素');
+            } catch (error) {
+                log('测试4: appendChild', false, error.message);
+            }
+        }
+
+        function test5() {
+            try {
+                const testArea = document.getElementById('testArea');
+                const p = testArea.querySelector('p');
+                if (p) {
+                    testArea.removeChild(p);
+                    log('测试5: removeChild', true, '成功移除子元素');
+                } else {
+                    log('测试5: removeChild', false, '找不到可移除的元素');
+                }
+            } catch (error) {
+                log('测试5: removeChild', false, error.message);
+            }
+        }
+
+        function test6() {
+            try {
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.color = 'blue';
+                statusDiv.style.fontSize = '16px';
+                statusDiv.style.fontWeight = 'bold';
+                log('测试6: style操作', true, '成功修改样式');
+                
+                // 1秒后恢复
+                setTimeout(() => {
+                    statusDiv.style.color = '';
+                    statusDiv.style.fontSize = '';
+                    statusDiv.style.fontWeight = '';
+                }, 1000);
+            } catch (error) {
+                log('测试6: style操作', false, error.message);
+            }
+        }
+
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '等待测试...';
+            document.getElementById('testArea').innerHTML = 'DOM操作结果将在这里显示';
+        }
+
+        // 页面加载时的自动测试
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            log('系统启动', '步骤3页面加载完成');
+
+            setTimeout(() => {
+                test1();
+                test2();
+                test3();
+                test4();
+                test6();
+            }, 500);
+        });
+
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+            log('页面错误', false, event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise错误:', event.reason);
+            log('异步错误', false, event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</body>
+</html>

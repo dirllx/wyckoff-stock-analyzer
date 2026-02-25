@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票分析 - 简化版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        #result {
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 200px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        #logArea {
+            background: #0a0e27;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <!-- 健康状态栏 -->
+    <div style="position: fixed; top: 0; right: 20px; background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 8px 16px; display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <div id="statusDot" style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div>
+            <span id="statusText" style="color: #9ca3af;">检查中...</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 style="margin-bottom: 16px;">威科夫股票分析系统 - 简化版</h2>
+            <div class="form-group">
+                <input type="text" id="stockCode" class="form-input" value="688234" placeholder="股票代码">
+                <select id="timeframe" class="form-input">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                    <option value="monthly">月线</option>
+                </select>
+                <button class="btn" onclick="analyzeStock()">开始分析</button>
+                <button class="btn" onclick="clearResult()" style="background: #374151;">清空</button>
+            </div>
+            <div id="result">等待分析...</div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 12px;">操作日志</h2>
+            <button class="btn" onclick="toggleLog()" style="background: #374151; padding: 6px 12px; font-size: 12px;">收起/展开</button>
+            <div id="logArea" style="margin-top: 12px;">
+                <div style="color: #9ca3af;">等待操作...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let operationLogs = [];
+
+        function log(action, detail) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const logEntry = { time: timeStr, action: action, detail: detail };
+            operationLogs.unshift(logEntry);
+
+            if (operationLogs.length > 100) {
+                operationLogs = operationLogs.slice(0, 100);
+            }
+
+            updateLogDisplay();
+            console.log(`[${timeStr}] ${action}: ${detail}`);
+        }
+
+        function updateLogDisplay() {
+            const logArea = document.getElementById('logArea');
+            if (!logArea) {
+                console.error('logArea 元素不存在');
+                return;
+            }
+
+            if (operationLogs.length === 0) {
+                logArea.innerHTML = '<div style="color: #9ca3af;">等待操作...</div>';
+                return;
+            }
+
+            const html = operationLogs.map(l => {
+                const color = l.action.includes('错误') ? '#ef4444' :
+                           l.action.includes('成功') ? '#10b981' : '#10b981';
+                return `<div class="log-entry">
+                    <span style="color: #6b7280; margin-right: 10px;">[${l.time}]</span>
+                    <span style="color: ${color}; font-weight: 600;">${l.action}</span>
+                    <span style="color: #d1d5db;">${l.detail}</span>
+                </div>`;
+            }).join('');
+
+            logArea.innerHTML = html;
+        }
+
+        function toggleLog() {
+            const logArea = document.getElementById('logArea');
+            if (logArea) {
+                logArea.style.display = logArea.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                const data = await response.json();
+
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+
+                if (dot && text) {
+                    const newStatus = data.status === 'healthy' ? '正常' : '降级';
+                    const color = data.status === 'healthy' ? '#10b981' : '#ef4444';
+                    dot.style.background = color;
+                    text.textContent = newStatus;
+
+                    if (text.textContent !== newStatus || text.textContent === '检查中...') {
+                        log('健康检查', `系统: ${newStatus}, 数据库: ${data.database}, Redis: ${data.redis}`);
+                    }
+                }
+            } catch (error) {
+                console.error('健康检查失败:', error);
+                log('健康检查失败', error.message);
+            }
+        }
+
+        async function analyzeStock() {
+            try {
+                const code = document.getElementById('stockCode').value;
+                const timeframe = document.getElementById('timeframe').value || 'daily';
+                const resultDiv = document.getElementById('result');
+
+                if (!code) {
+                    alert('请输入股票代码');
+                    log('错误', '股票代码为空');
+                    return;
+                }
+
+                log('开始分析', `股票: ${code}, 周期: ${timeframe}`);
+                resultDiv.innerHTML = '<p style="color: #3b82f6;">正在分析...</p>';
+
+                const [quotesRes, analysisRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=300`),
+                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    })
+                ]);
+
+                if (!quotesRes.ok || !analysisRes.ok) {
+                    throw new Error('API请求失败');
+                }
+
+                const quotesData = await quotesRes.json();
+                const analysisData = await analysisRes.json();
+
+                const summary = analysisData.analysis_summary;
+
+                resultDiv.innerHTML = `
+                    <p class="success">分析成功！</p>
+                    <p><strong>股票代码:</strong> ${code}</p>
+                    <p><strong>时间周期:</strong> ${timeframe}</p>
+                    <p><strong>K线数据:</strong> ${quotesData.total}条</p>
+                    <p><strong>分析方向:</strong> ${summary.direction}</p>
+                    <p><strong>评分:</strong> ${summary.score}</p>
+                    <p><strong>置信度:</strong> ${((summary.confidence || 0) * 100).toFixed(0)}%</p>
+                    <p><strong>建议:</strong> ${summary.suggestion || '无'}</p>
+                `;
+
+                log('分析成功', `K线: ${quotesData.total}条, 方向: ${summary.direction}`);
+
+            } catch (error) {
+                console.error('分析失败:', error);
+                document.getElementById('result').innerHTML = `<p class="error">分析失败: ${error.message}</p>`;
+                log('分析失败', error.message);
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '等待分析...';
+        }
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            log('系统启动', '页面加载完成');
+
+            setTimeout(() => {
+                checkHealth();
+            }, 500);
+
+            setInterval(checkHealth, 30000);
+        });
+
+        // 错误捕获
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+            log('页面错误', event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise错误:', event.reason);
+            log('异步错误', event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</body>
+</html>

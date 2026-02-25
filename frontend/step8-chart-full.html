@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>步骤8 - 完整图表</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary {
+            background: #374151;
+            color: #f9fafb;
+        }
+
+        /* 主图容器 */
+        .main-chart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 500px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+
+        /* 副图容器 */
+        .subchart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 200px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            overflow-x: auto;
+            max-height: 800px;
+            border: 1px solid #374151;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            min-width: 1200px;
+        }
+        th, td {
+            padding: 6px 4px;
+            text-align: right;
+            border-bottom: 1px solid #374151;
+        }
+        th {
+            font-weight: 600;
+            color: #9ca3af;
+            font-size: 10px;
+            background: #111827;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .red { color: #ef4444; }
+        .green { color: #10b981; }
+
+        /* 健康状态栏 */
+        .health-status-bar {
+            position: fixed;
+            top: 0;
+            right: 20px;
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            font-size: 12px;
+        }
+
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .health-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .health-dot.healthy { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .health-dot.error { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+        .health-label { color: #9ca3af; }
+        .health-value { color: #f9fafb; font-weight: 600; }
+        .health-divider { width: 1px; height: 16px; background: #374151; }
+
+        /* Tab导航 */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 模式切换 */
+        .mode-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .toggle-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        #logArea {
+            background: #0a0e27;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            gap: 8px;
+            color: #3b82f6;
+        }
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: loading-bounce 1.4s infinite ease-in-out;
+        }
+        @keyframes loading-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 健康状态栏 -->
+    <div class="health-status-bar">
+        <div class="health-indicator">
+            <div class="health-dot" id="overallStatusDot"></div>
+            <span class="health-label">系统:</span>
+            <span class="health-value" id="overallStatusText">检查中...</span>
+        </div>
+        <div class="health-divider"></div>
+        <div class="health-indicator">
+            <div class="health-dot" id="dbStatusDot"></div>
+            <span class="health-label">数据库:</span>
+            <span class="health-value" id="dbStatusText">-</span>
+        </div>
+        <div class="health-divider"></div>
+        <div class="health-indicator">
+            <div class="health-dot" id="redisStatusDot"></div>
+            <span class="health-label">Redis:</span>
+            <span class="health-value" id="redisStatusText">-</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">步骤8 - 完整图表测试</h2>
+        </div>
+
+        <!-- Tab导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+                <button class="tab-btn" id="tab-watchlist" onclick="showTab('watchlist')">我的关注</button>
+            <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
+
+            <button class="tab-btn" id="tabStatus" onclick="showTab('status')">测试状态</button>
+        </div>
+
+        <!-- 分析Tab -->
+        <div id="tab-analyze" class="tab-content active">
+            <div class="form-group">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                <select class="form-input" id="timeframe" style="width: 100px;">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                    <option value="monthly">月线</option>
+                </select>
+                <button class="btn" onclick="analyzeStock()">开始分析</button>
+                <button class="btn btn-secondary" onclick="clearResult()">清空</button>
+            </div>
+            <div id="analyzeResult"></div>
+        </div>
+
+        <!-- 我的关注Tab -->
+        <div id="tab-watchlist" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">我的关注</h2>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select class="form-input" id="watchlistSelect" style="width: 120px; margin-right: 10px;" onchange="analyzeFromWatchlist()">
+                        <option value="">选择股票</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addToWatchlist()">添加</button>
+                    <button class="btn btn-secondary" onclick="refreshWatchlist()">刷新</button>
+                </div>
+            </div>
+            <div id="watchlistContent"></div>
+        </div>
+
+        <!-- 多周期Tab -->
+        <div id="tab-multi" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">多周期分析</h2>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="000001">
+                <button class="btn btn-primary" onclick="analyzeMultiTimeframe()">开始多周期分析</button>
+            </div>
+            <div id="multiContent"></div>
+        </div>
+
+        <!-- 测试状态Tab -->
+        <div id="tab-status" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">这里是测试结果汇总区域...</div>
+        </div>
+    </div>
+
+    <!-- 日志卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">操作日志</h2>
+            <button class="btn btn-secondary" style="float: right; padding: 6px 12px; font-size: 12px;" onclick="toggleLog()">收起/展开</button>
+        </div>
+        <div id="logArea" style="margin-top: 12px;">
+            <div style="color: #9ca3af;">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let currentQuotesData = null;
+        let operationLogs = [];
+        let healthCheckInterval = null;
+        let mainChart = null;
+        let volumeChart = null;
+        let useTableMode = true;
+
+        // ========== 日志系统 ==========
+        function addLog(action, detail) {
+            console.log('addLog:', action, detail);
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const logEntry = { time: timeStr, action: action, detail: detail };
+            operationLogs.unshift(logEntry);
+
+            if (operationLogs.length > 100) {
+                operationLogs = operationLogs.slice(0, 100);
+            }
+
+            updateLogDisplay();
+            console.log(`[${timeStr}] ${action}: ${detail}`);
+        }
+
+        function updateLogDisplay() {
+            const logArea = document.getElementById('logArea');
+            console.log('updateLogDisplay, logs:', operationLogs.length);
+
+            if (!logArea) {
+                console.warn('logArea 元素不存在');
+                return;
+            }
+
+            if (operationLogs.length === 0) {
+                logArea.innerHTML = '<div style="color: #9ca3af;">等待操作...</div>';
+                return;
+            }
+
+            const logsHtml = operationLogs.map(log => {
+                const actionColor = log.action.includes('错误') ? '#ef4444' :
+                                   log.action.includes('成功') ? '#10b981' : '#10b981';
+                return `<div style="padding: 4px 0; border-bottom: 1px solid #1f2937;">
+                    <span style="color: #6b7280; margin-right: 10px;">[${log.time}]</span>
+                    <span style="color: ${actionColor}; font-weight: 600;">${log.action}</span>
+                    <span style="color: #d1d5db;">${log.detail}</span>
+                </div>`;
+            }).join('');
+
+            logArea.innerHTML = logsHtml;
+        }
+
+        function toggleLog() {
+            const logArea = document.getElementById('logArea');
+            if (logArea) {
+                logArea.style.display = logArea.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // ========== 健康检查 ==========
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                const overallDot = document.getElementById('overallStatusDot');
+                const overallText = document.getElementById('overallStatusText');
+
+                if (overallDot && overallText) {
+                    const newStatus = data.status === 'healthy' ? '正常' : '降级';
+                    const color = data.status === 'healthy' ? 'healthy' : 'error';
+                    overallDot.className = 'health-dot ' + color;
+                    overallText.textContent = newStatus;
+
+                    if (overallText.textContent !== newStatus || overallText.textContent === '检查中...') {
+                        addLog('健康检查', `系统: ${newStatus}, 数据库: ${data.database}, Redis: ${data.redis}`);
+                    updateTestStatus('健康检查', true, `系统: ${newStatus}`);
+                    updateTestStatus('数据库', data.database === 'connected', data.database);
+                    updateTestStatus('Redis', data.redis === 'connected', data.redis);
+                }
+                }
+
+                const dbDot = document.getElementById('dbStatusDot');
+                const dbText = document.getElementById('dbStatusText');
+
+                if (dbDot && dbText) {
+                    const dbStatus = data.database === 'connected' ? '已连接' : '未连接';
+                    const color = data.database === 'connected' ? 'healthy' : 'error';
+                    dbDot.className = 'health-dot ' + color;
+                    dbText.textContent = dbStatus;
+                }
+
+                const redisDot = document.getElementById('redisStatusDot');
+                const redisText = document.getElementById('redisStatusText');
+
+                if (redisDot && redisText) {
+                    const redisStatus = data.redis === 'connected' ? '已连接' : '未连接';
+                    const color = data.redis === 'connected' ? 'healthy' : 'error';
+                    redisDot.className = 'health-dot ' + color;
+                    redisText.textContent = redisStatus;
+                }
+
+            } catch (error) {
+                console.error('健康检查失败:', error);
+                addLog('健康检查失败', error.message);
+            }
+        }
+
+        function startHealthCheck() {
+            checkHealth();
+            if (healthCheckInterval) {
+                clearInterval(healthCheckInterval);
+            }
+            healthCheckInterval = setInterval(checkHealth, 30000);
+        }
+
+        // ========== Tab切换 ==========
+        function showTab(tab) {
+            const tabs = ['analyze', 'watchlist', 'multi', 'status'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.remove('active');
+                document.getElementById(`tab-${t}`).style.display = 'none';
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+            addLog('切换标签', `切换到: ${tab}`);
+        }
+
+        // ========== 图表相关 ==========
+        function calculateMA(data, period) {
+            const ma = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    ma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += data[i - j];
+                    }
+                    ma.push(sum / period);
+                }
+            }
+            return ma;
+        }
+
+        function renderCharts() {
+            if (!currentQuotesData || currentQuotesData.length === 0) return;
+
+            try {
+                const mainContainer = document.getElementById('mainChart');
+                const volumeContainer = document.getElementById('volumeChart');
+
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+
+                if (typeof window.LightweightCharts === 'undefined') {
+                    mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">图表库加载失败</div>';
+                    addLog('图表渲染', false, '图表库未加载');
+                    return;
+                }
+
+                // 创建主图
+                mainChart = window.LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: 500,
+                    layout: {
+                        background: { color: '#ffffff' },
+                        textColor: '#333333',
+                    },
+                    grid: {
+                        vertLines: { color: '#e1e1e1', style: 1, visible: true },
+                        horzLines: { color: '#e1e1e1', style: 1, visible: true },
+                    },
+                    rightPriceScale: {
+                        borderColor: '#cccccc',
+                        visible: true,
+                    },
+                    timeScale: {
+                        borderColor: '#cccccc',
+                        visible: true,
+                        timeVisible: true,
+                    },
+                });
+
+                // 添加K线数据
+                const candlestickData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close
+                }));
+
+                const candleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444',
+                });
+
+                candleSeries.setData(candlestickData);
+
+                // 添加MA线
+                const closes = currentQuotesData.map(q => q.close);
+                const ma5 = calculateMA(closes, 5);
+                const ma10 = calculateMA(closes, 10);
+                const ma20 = calculateMA(closes, 20);
+
+                const ma5Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma5[i] })).filter(d => d.value);
+                const ma10Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma10[i] })).filter(d => d.value);
+                const ma20Data = currentQuotesData.map((q, i) => ({ time: q.date, value: ma20[i] })).filter(d => d.value);
+
+                mainChart.addLineSeries(ma5Data, { color: '#3b82f6', lineWidth: 2, title: 'MA5' });
+                mainChart.addLineSeries(ma10Data, { color: '#8b5cf6', lineWidth: 2, title: 'MA10' });
+                mainChart.addLineSeries(ma20Data, { color: '#10b981', lineWidth: 2, title: 'MA20' });
+
+                // 创建成交量图
+                volumeChart = window.LightweightCharts.createChart(volumeContainer, {
+                    width: volumeContainer.clientWidth,
+                    height: 200,
+                    layout: {
+                        background: { color: '#ffffff' },
+                        textColor: '#333333',
+                    },
+                    grid: {
+                        vertLines: { visible: false },
+                        horzLines: { color: '#e1e1e1', style: 1, visible: true },
+                    },
+                    timeScale: {
+                        visible: false,
+                    },
+                });
+
+                const volumeData = currentQuotesData.map(q => ({
+                    time: q.date,
+                    value: q.volume,
+                    color: q.close < q.open ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)',
+                }));
+
+                const volumeSeries = volumeChart.addHistogramSeries({
+                    color: '#26a69a',
+                    priceFormat: {
+                        type: 'volume',
+                    },
+                    priceScaleId: '',
+                });
+
+                volumeSeries.setData(volumeData);
+
+                // 同步时间轴
+                mainChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                    volumeChart.timeScale().setVisibleLogicalRange(range);
+                });
+
+                mainChart.timeScale().fitContent();
+                addLog('图表渲染', true, '主图和成交量图渲染完成');
+                updateTestStatus('图表渲染', true, '主图和成交量图成功');
+                updateTestStatus('总体状态', true, '所有功能正常');
+
+            } catch (error) {
+                console.error('图表渲染失败:', error);
+                addLog('图表渲染', false, error.message);
+                updateTestStatus('图表渲染', false, error.message);
+            }
+        }
+
+        // ========== 分析功能 ==========
+        async function analyzeStock() {
+            try {
+                const code = document.getElementById('stockCode').value;
+                const timeframe = document.getElementById('timeframe').value || 'daily';
+                const resultDiv = document.getElementById('analyzeResult');
+
+                if (!code) {
+                    alert('请输入股票代码');
+                    addLog('错误', '股票代码为空');
+                    return;
+                }
+
+                addLog('开始分析', `股票: ${code}, 周期: ${timeframe}`);
+                updateTestStatus('股票分析', false, '正在分析...');
+                resultDiv.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+
+                // 销毁旧图表
+                if (mainChart) {
+                    mainChart.remove();
+                    mainChart = null;
+                }
+                if (volumeChart) {
+                    volumeChart.remove();
+                    volumeChart = null;
+                }
+
+                const [quotesRes, analysisRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=100`),
+                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    })
+                ]);
+
+                if (!quotesRes.ok || !analysisRes.ok) {
+                    throw new Error('API请求失败');
+                }
+
+                const quotesData = await quotesRes.json();
+                const analysisData = await analysisRes.json();
+
+                currentQuotesData = quotesData.quotes;
+                const summary = analysisData.analysis_summary;
+
+                resultDiv.innerHTML = '';
+                addLog('数据获取', true, `K线: ${quotesData.total}条, 分析: ${summary.direction}`);
+                updateTestStatus('API请求', true, 'K线和分析数据获取成功');
+
+                // 渲染表格
+                let tableHtml = `
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <button class="btn" onclick="showMode('table')" id="btnTable">表格</button>
+                        <button class="btn btn-secondary" onclick="showMode('chart')" id="btnChart">图表</button>
+                    </div>
+                    <div id="tableMode" style="display: ${useTableMode ? 'block' : 'none'};">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>开盘</th>
+                                        <th>最高</th>
+                                        <th>最低</th>
+                                        <th>收盘</th>
+                                        <th>成交量</th>
+                                        <th>MA5</th>
+                                        <th>MA10</th>
+                                        <th>MA20</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                quotesData.quotes.slice(0, 30).forEach(q => {
+                    const isRed = q.close < q.open;
+                    const color = isRed ? 'red' : 'green';
+                    tableHtml += `
+                        <tr class="${color}">
+                            <td>${q.date.split(' ')[0]}</td>
+                            <td>${q.open.toFixed(2)}</td>
+                            <td>${q.high.toFixed(2)}</td>
+                            <td>${q.low.toFixed(2)}</td>
+                            <td>${q.close.toFixed(2)}</td>
+                            <td>${q.volume ? q.volume.toFixed(0) : '-'}</td>
+                            <td>${q.ma5 ? q.ma5.toFixed(2) : '-'}</td>
+                            <td>${q.ma10 ? q.ma10.toFixed(2) : '-'}</td>
+                            <td>${q.ma20 ? q.ma20.toFixed(2) : '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="chartMode" style="display: ${!useTableMode ? 'block' : 'none'};">
+                        <div class="main-chart-container" id="mainChart">图表将在这里显示</div>
+                        <div class="subchart-container" id="volumeChart">成交量图</div>
+                    </div>
+                `;
+
+                // 分析结果
+                const analysisHtml = `
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <h3 class="card-title">分析结果</h3>
+                        </div>
+                        <p><strong>方向:</strong> ${summary.direction}</p>
+                        <p><strong>评分:</strong> ${summary.score}</p>
+                        <p><strong>置信度:</strong> ${((summary.confidence || 0) * 100).toFixed(0)}%</p>
+                        <p><strong>建议:</strong> ${summary.suggestion || '无'}</p>
+                    </div>
+                `;
+
+                resultDiv.innerHTML = tableHtml + analysisHtml;
+                addLog('分析成功', `K线: ${quotesData.total}条, 方向: ${summary.direction}`);
+                updateTestStatus('分析完成', true, '分析成功完成');
+
+                // 渲染图表
+                if (!useTableMode) {
+                    renderCharts();
+                }
+
+            } catch (error) {
+                console.error('分析失败:', error);
+                document.getElementById('analyzeResult').innerHTML = `<p class="red">分析失败: ${error.message}</p>`;
+                addLog('分析失败', error.message);
+                updateTestStatus('分析失败', false, error.message);
+            }
+        }
+
+        function showMode(mode) {
+            const btnTable = document.getElementById('btnTable');
+            const btnChart = document.getElementById('btnChart');
+            const tableMode = document.getElementById('tableMode');
+            const chartMode = document.getElementById('chartMode');
+
+            if (mode === 'table') {
+                btnTable.classList.add('active');
+                btnChart.classList.remove('active');
+                tableMode.style.display = 'block';
+                chartMode.style.display = 'none';
+                useTableMode = true;
+            } else {
+                btnChart.classList.add('active');
+                btnTable.classList.remove('active');
+                chartMode.style.display = 'block';
+                tableMode.style.display = 'none';
+                useTableMode = false;
+                renderCharts();
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('analyzeResult').innerHTML = '';
+            addLog('清空结果', '已清空分析结果');
+        }
+
+        // ========== 多周期分析 ==========
+        async function analyzeMultiTimeframe() {
+            const code = document.getElementById('multiStockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`多周期分析: ${code}`);
+            addLog('多周期分析', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/analyze-multi`);
+                const data = await response.json();
+
+                console.log('多周期分析结果:', data);
+
+                const content = document.getElementById('multiContent');
+
+                if (!data || !data.timeframes) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无多周期分析数据</div>';
+                    addLog('分析完成', '暂无多周期分析数据');
+                    return;
+                }
+
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">';
+
+                data.timeframes.forEach(tf => {
+                    const direction = tf.direction || 'NEUTRAL';
+                    const directionClass = direction === 'LONG' ? 'indicator-bullish' : direction === 'SHORT' ? 'indicator-bearish' : 'indicator-neutral';
+                    const directionText = direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性';
+
+                    html += `
+                        <div style="background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 16px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #f9fafb;">${tf.timeframe || tf.name || tf.timeframe_name}</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+                                <div style="color: #9ca3af; font-size: 12px;">方向</div>
+                                <div style="color: ${directionClass === 'indicator-bullish' ? '#10b981' : directionClass === 'indicator-bearish' ? '#ef4444' : '#9ca3af'}; font-weight: 600;">${directionText}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">评分</div>
+                                <div style="color: #f9fafb; font-weight: 600;">${tf.score || 0}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">信号</div>
+                                <div style="color: #f9fafb;">${tf.signal || '无'}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">当前价</div>
+                                <div style="color: #f9fafb;">${tf.close || 0}</div>
+                                <div style="color: #9ca3af; font-size: 12px;">涨跌</div>
+                                <div style="color: #f9fafb;">${tf.change_percent || 0}%</div>
+                            </div>
+                            ${tf.suggestion ? `<div style="margin-top: 12px; padding: 12px; background: #0a0e27; border-radius: 8px; font-size: 13px; color: #d1d5db;"><strong>建议：</strong>${tf.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+
+                content.innerHTML = html;
+                addLog('分析完成', `多周期分析完成，共${data.timeframes.length}个周期`);
+            } catch (error) {
+                console.error('多周期分析失败:', error);
+                document.getElementById('multiContent').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">分析失败: ${error.message}</div>`;
+                addLog('分析失败', `错误: ${error.message}`);
+            }
+        }
+
+        // ========== 关注列表 ==========
+        async function refreshWatchlist() {
+            console.log('刷新关注列表');
+            addLog('操作', '刷新关注列表');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist`);
+                const data = await response.json();
+
+                const content = document.getElementById('watchlistContent');
+                if (data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无关注股票</div>';
+                    addLog('刷新完成', '关注列表为空');
+                    return;
+                }
+
+                const select = document.getElementById('watchlistSelect');
+                select.innerHTML = '<option value="">选择股票</option>';
+                data.items.forEach(item => {
+                    select.innerHTML += `<option value="${item.stock_code}">${item.stock_code}</option>`;
+                });
+
+                content.innerHTML = data.items.map(item => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #1f2937; border-radius: 8px; margin-bottom: 8px; border: 1px solid #374151;">
+                        <div style="font-weight: 600;">${item.stock_code}</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-primary" onclick="analyzeFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">分析</button>
+                            <button class="btn btn-secondary" onclick="deleteFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                console.log(`关注列表刷新完成，共${data.total}只股票`);
+                addLog('刷新完成', `共 ${data.total} 只股票`);
+            } catch (error) {
+                console.error('刷新关注列表失败:', error);
+                addLog('刷新失败', `错误: ${error.message}`);
+            }
+        }
+
+        function analyzeFromWatchlist(code) {
+            document.getElementById('stockCode').value = code;
+            showTab('analyze');
+            addLog('从关注列表分析', `股票代码: ${code}`);
+            analyzeStock();
+        }
+
+        async function addToWatchlist() {
+            const code = document.getElementById('stockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`添加到关注列表: ${code}`);
+            addLog('添加关注', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                alert(`添加成功: ${data.message}`);
+                addLog('添加成功', data.message);
+                refreshWatchlist();
+            } catch (error) {
+                console.error('添加失败:', error);
+                alert(`添加失败: ${error.message}`);
+                addLog('添加失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function deleteFromWatchlist(code) {
+            if (!confirm('确定删除 ' + code + '?')) return;
+            console.log(`删除: ${code}`);
+            addLog('删除关注', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, { method: 'DELETE' });
+                alert('删除成功');
+                addLog('删除成功', `已删除 ${code}`);
+                refreshWatchlist();
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert(`删除失败: ${error.message}`);
+                addLog('删除失败', `错误: ${error.message}`);
+            }
+        }
+
+        function updateTestStatus(test, result, message) {
+            const statusTab = document.getElementById('tab-status');
+            if (statusTab) {
+                let currentHtml = statusTab.innerHTML;
+                const color = result ? 'green' : 'red';
+                const icon = result ? '✓' : '✗';
+                const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+                const line = `<div style="padding: 8px 0; border-bottom: 1px solid #374151;">
+                    <span style="color: #999;">[${time}]</span>
+                    <span style="color: ${color}; margin: 0 10px;">${icon}</span>
+                    <strong>${test}:</strong> ${message}
+                </div>`;
+                statusTab.innerHTML = line + currentHtml;
+            }
+        }
+
+        // ========== 页面加载 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            addLog('系统启动', '步骤8页面加载完成');
+
+            setTimeout(() => {
+                startHealthCheck();
+                updateTestStatus('系统启动', true, '页面加载完成，健康检查已启动');
+            }, 500);
+        });
+
+        window.addEventListener('load', () => {
+            console.log('页面完全加载');
+            addLog('页面加载', '页面完全加载完成');
+            refreshWatchlist();
+        });
+
+        window.addEventListener('error', (event) => {
+            console.error('页面错误:', event.error);
+            addLog('页面错误', event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise错误:', event.reason);
+            addLog('异步错误', event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</body>
+</html>

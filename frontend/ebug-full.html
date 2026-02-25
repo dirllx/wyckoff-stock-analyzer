@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多周期分析 - 完整调试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #f9fafb; }
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .debug-section {
+            background: #1f2937;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+        .debug-section pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #0a0e27;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        .success { color: #10b981; font-weight: 600; }
+        .error { color: #ef4444; font-weight: 600; }
+        .info { color: #3b82f6; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="card-title">多周期分析 - 完整调试</h1>
+            <p style="color: #9ca3af; margin-bottom: 16px;">显示所有API返回的字段，验证数据结构</p>
+            <button class="btn" onclick="debugAPI()">完整调试</button>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">调试信息</h2>
+            <div class="debug-section" id="debugInfo">点击"完整调试"按钮开始...</div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">API响应完整数据</h2>
+            <div class="debug-section" id="rawData">等待API响应...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        async function debugAPI() {
+            const debugDiv = document.getElementById('debugInfo');
+            const rawDataDiv = document.getElementById('rawData');
+
+            debugDiv.innerHTML = '[开始调试]\n';
+
+            try {
+                debugDiv.innerHTML += '[步骤1] 正在调用API...\n';
+                const response = await fetch(`${API_BASE}/api/v1/stocks/688234/analyze-multi`);
+                const data = await response.json();
+
+                debugDiv.innerHTML += '[步骤2] API响应成功\n';
+                debugDiv.innerHTML += '----------------------------------------\n';
+
+                // 检查data的所有字段
+                debugDiv.innerHTML += '[步骤3] 检查data的所有字段:\n';
+                const dataKeys = Object.keys(data);
+                dataKeys.forEach((key, index) => {
+                    debugDiv.innerHTML += `  [${index + 1}] ${key}: ${typeof data[key]}\n`;
+                });
+                debugDiv.innerHTML += '----------------------------------------\n';
+
+                // 检查是否有timeframes字段
+                debugDiv.innerHTML += '[步骤4] 检查timeframes字段:\n';
+                if ('timeframes' in data) {
+                    debugDiv.innerHTML += `  [success] ✓ timeframes字段存在\n`;
+                    debugDiv.innerHTML += `  [info] ✓ data.timeframes类型: ${typeof data.timeframes}\n`;
+                    debugDiv.innerHTML += `  [info] ✓ data.timeframes是否为null: ${data.timeframes === null}\n`;
+                    debugDiv.innerHTML += `  [info] ✓ data.timeframes是否为undefined: ${data.timeframes === undefined}\n`;
+                    debugDiv.innerHTML += '----------------------------------------\n';
+
+                    // 检查timeframes的所有字段
+                    debugDiv.innerHTML += '[步骤5] 检查data.timeframes的所有字段:\n';
+                    const tfKeys = Object.keys(data.timeframes);
+                    tfKeys.forEach((key, index) => {
+                        debugDiv.innerHTML += `  [${index + 1}] ${key}: ${typeof data.timeframes[key]}\n`;
+                    });
+                    debugDiv.innerHTML += '----------------------------------------\n';
+
+                    // 转换为数组
+                    debugDiv.innerHTML += '[步骤6] 将data.timeframes转换为数组:\n';
+                    const timeframesArray = Object.values(data.timeframes);
+                    debugDiv.innerHTML += `  [success] ✓ 数组长度: ${timeframesArray.length}\n`;
+                    debugDiv.innerHTML += '----------------------------------------\n';
+
+                    // 显示每个周期的信息
+                    debugDiv.innerHTML += '[步骤7] 显示每个周期的信息:\n';
+                    timeframesArray.forEach((tf, index) => {
+                        debugDiv.innerHTML += `  [周期 ${index + 1}] ${tf.timeframe || '未知'}: ${tf.direction || 'NEUTRAL'}, 评分: ${tf.score || 0}\n`;
+                    });
+                    debugDiv.innerHTML += '----------------------------------------\n';
+
+                } else {
+                    debugDiv.innerHTML += `  [error] ✗ timeframes字段不存在\n`;
+                    debugDiv.innerHTML += '----------------------------------------\n';
+                }
+
+                // 显示原始数据
+                rawDataDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+                debugDiv.innerHTML += '\n[完成] 调试完成\n';
+
+            } catch (error) {
+                debugDiv.innerHTML += `[错误] ${error.message}\n`;
+                debugDiv.innerHTML += `错误堆栈: ${error.stack}\n`;
+            }
+        }
+    </script>
+</body>
+</html>

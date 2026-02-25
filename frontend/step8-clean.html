@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>步骤8 - 完整图表（完全重写版本）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 18px; color: #f9fafb; font-weight: 600; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #374151;
+            color: #d1d5db;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab-btn.active { background: #3b82f6; color: white; }
+        .tab-btn:hover { background: #4b5563; }
+        .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+        input[type="text"], select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            background: #1f2937;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn:hover { background: #2563eb; }
+        .btn-secondary {
+            background: #6b7280;
+        }
+        .btn-secondary:hover { background: #4b5563; }
+        .result { padding: 16px; background: #1f2937; border-radius: 6px; margin-top: 16px; }
+        .log {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-item { padding: 8px; border-bottom: 1px solid #374151; font-size: 13px; font-family: monospace; }
+        .log-time { color: #6b7280; margin-right: 8px; }
+        .log-action { color: #3b82f6; font-weight: 600; margin-right: 8px; }
+        .log-detail { color: #9ca3af; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .watchlist-item {
+            padding: 12px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .system-item {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .system-label { color: #9ca3af; font-size: 12px; margin-bottom: 4px; }
+        .system-value { color: #f9fafb; font-size: 14px; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+    </style>
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        function addLog(action, detail) {
+            const logDiv = document.getElementById('log');
+            if (!logDiv) return;
+
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+            logItem.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-action">${action}</span>
+                <span class="log-detail">${detail}</span>
+            `;
+            logDiv.insertBefore(logItem, logDiv.firstChild);
+        }
+
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('log');
+            const logToggle = document.getElementById('logToggle');
+            if (!logDiv) return;
+
+            if (logDiv.style.display === 'none') {
+                logDiv.style.display = 'block';
+                logToggle.textContent = '收起/展开';
+            } else {
+                logDiv.style.display = 'none';
+                logToggle.textContent = '收起/展开';
+            }
+        }
+
+        function toggleLog() {
+            updateLogDisplay();
+        }
+
+        function showTab(tab) {
+            const tabs = ['analyze', 'watchlist', 'multi', 'config', 'status'];
+            tabs.forEach(t => {
+                const tabDiv = document.getElementById(`tab-${t}`);
+                const tabBtn = document.getElementById(`tab-${t}-btn`);
+                if (tabDiv && tabBtn) {
+                    tabDiv.style.display = 'none';
+                    tabBtn.classList.remove('active');
+                }
+            });
+            const tabDiv = document.getElementById(`tab-${tab}`);
+            const tabBtn = document.getElementById(`tab-${tab}-btn`);
+            if (tabDiv && tabBtn) {
+                tabDiv.style.display = 'block';
+                tabBtn.classList.add('active');
+            }
+            addLog('切换标签', `切换到: ${tab}`);
+        }
+
+        function clearResult() {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.innerHTML = '';
+            }
+        }
+
+        async function loadPatternsConfig() {
+            console.log('========== loadPatternsConfig 被调用 ==========');
+            addLog('加载配置', '形态识别配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/patterns`);
+                const data = await response.json();
+
+                const content = document.getElementById('patternsConfig');
+                if (!content) return;
+
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无形态识别配置</div>';
+                    addLog('加载完成', '暂无形态识别配置');
+                    return;
+                }
+
+                const html = data.items.map(pattern => `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${pattern.pattern_type}</strong>
+                            <span style="color: ${pattern.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${pattern.enabled ? '已启用' : '已禁用'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">精度模式: ${pattern.accuracy_mode || '默认'}</div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">最小置信度: ${pattern.min_confidence || 0.5}</div>
+                    </div>
+                `).join('');
+
+                content.innerHTML = html;
+                addLog('加载完成', `共 ${data.total} 种形态识别配置`);
+            } catch (error) {
+                console.error('加载形态识别配置失败:', error);
+                const content = document.getElementById('patternsConfig');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                }
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadTimeframesConfig() {
+            console.log('========== loadTimeframesConfig 被调用 ==========');
+            addLog('加载配置', '时间周期配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/timeframes`);
+                const data = await response.json();
+
+                const content = document.getElementById('timeframesConfig');
+                if (!content) return;
+
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无时间周期配置</div>';
+                    addLog('加载完成', '暂无时间周期配置');
+                    return;
+                }
+
+                const html = data.items.map(tf => `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${tf.timeframe}</strong>
+                            <span style="color: ${tf.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${tf.enabled ? '已启用' : '已禁用'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">优先级: ${tf.priority}</div>
+                    </div>
+                `).join('');
+
+                content.innerHTML = html;
+                addLog('加载完成', `共 ${data.total} 个时间周期配置`);
+            } catch (error) {
+                console.error('加载时间周期配置失败:', error);
+                const content = document.getElementById('timeframesConfig');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                }
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadFeishuConfig() {
+            console.log('========== loadFeishuConfig 被调用 ==========');
+            addLog('加载配置', '飞书通知配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu`);
+                const data = await response.json();
+
+                const content = document.getElementById('feishuConfig');
+                if (!content) return;
+
+                if (!data || !data.webhook_url) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无飞书通知配置</div>';
+                    addLog('加载完成', '暂无飞书通知配置');
+                    return;
+                }
+
+                const html = `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">Webhook URL</span>
+                            <div style="color: #f9fafb; font-size: 13px; margin-top: 4px; word-break: break-all; background: #0a0e27; padding: 8px; border-radius: 4px;">${data.webhook_url}</div>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">启用通知</span>
+                            <span style="color: ${data.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; margin-left: 8px;">${data.enabled ? '启用' : '禁用'}</span>
+                        </div>
+                    </div>
+                `;
+
+                content.innerHTML = html;
+                addLog('加载完成', '飞书通知配置加载成功');
+            } catch (error) {
+                console.error('加载飞书通知配置失败:', error);
+                const content = document.getElementById('feishuConfig');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                }
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function loadRiskConfig() {
+            console.log('========== loadRiskConfig 被调用 ==========');
+            addLog('加载配置', '风险监控配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/risk`);
+                const data = await response.json();
+
+                const content = document.getElementById('riskConfig');
+                if (!content) return;
+
+                if (!data || !data.threshold) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无风险监控配置</div>';
+                    addLog('加载完成', '暂无风险监控配置');
+                    return;
+                }
+
+                const html = `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">风险阈值</span>
+                            <div style="color: #f9fafb; font-size: 14px; margin-top: 4px;">${data.threshold}</div>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">启用风险监控</span>
+                            <span style="color: ${data.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; margin-left: 8px;">${data.enabled ? '启用' : '禁用'}</span>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">风险等级</span>
+                            <span style="color: #f9fafb; font-size: 14px; margin-left: 8px;">${data.risk_level || '低'}</span>
+                        </div>
+                    </div>
+                `;
+
+                content.innerHTML = html;
+                addLog('加载完成', '风险监控配置加载成功');
+            } catch (error) {
+                console.error('加载风险监控配置失败:', error);
+                const content = document.getElementById('riskConfig');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
+                }
+                addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function getRealtimeQuote() {
+            console.log('========== getRealtimeQuote 被调用 ==========');
+            const code = document.getElementById('realtimeCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`查询实时行情: ${code}`);
+            addLog('实时行情', `股票代码: ${code}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/realtime/quote/${code}`);
+                const data = await response.json();
+
+                const content = document.getElementById('realtimeResult');
+                if (!content) return;
+
+                if (!data || !data.price) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无实时行情数据</div>';
+                    addLog('查询完成', '暂无实时行情数据');
+                    return;
+                }
+
+                const html = `
+                    <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">当前价</span>
+                                <div style="color: #f9fafb; font-size: 18px; font-weight: 600;">${data.price}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">涨跌额</span>
+                                <div style="color: ${data.change >= 0 ? '#10b981' : '#ef4444'}; font-size: 16px; font-weight: 600;">${data.change >= 0 ? '+' : ''}${data.change}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">涨跌幅</span>
+                                <div style="color: ${data.change_percent >= 0 ? '#10b981' : '#ef4444'}; font-size: 16px; font-weight: 600;">${data.change_percent >= 0 ? '+' : ''}${data.change_percent}%</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">成交量</span>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${data.volume || 0}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">时间</span>
+                                <div style="color: #9ca3af; font-size: 13px;">${data.time || ''}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px; padding: 12px; background: #0a0e27; border-radius: 8px; font-size: 13px; color: #d1d5db;">
+                            <strong>更新时间：</strong>${data.update_time || ''}
+                        </div>
+                    </div>
+                `;
+
+                content.innerHTML = html;
+                addLog('查询完成', `实时行情: ${code}, 价格: ${data.price}`);
+            } catch (error) {
+                console.error('查询实时行情失败:', error);
+                const content = document.getElementById('realtimeResult');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">查询失败: ${error.message}</div>`;
+                }
+                addLog('查询失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function recognizePatterns() {
+            console.log('========== recognizePatterns 被调用 ==========');
+            const code = document.getElementById('patternCode').value;
+            const timeframe = document.getElementById('patternTimeframe').value;
+            
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            console.log(`识别形态: ${code} (${timeframe})`);
+            addLog('形态识别', `股票代码: ${code}, 周期: ${timeframe}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/patterns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ timeframe })
+                });
+                const data = await response.json();
+
+                const content = document.getElementById('patternResult');
+                if (!content) return;
+
+                if (!data || !data.patterns || data.patterns.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂未识别到任何形态</div>';
+                    addLog('识别完成', '暂未识别到任何形态');
+                    return;
+                }
+
+                const html = data.patterns.map(pattern => `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid ${pattern.type === 'bullish' ? '#10b981' : '#ef4444'};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${pattern.pattern}</strong>
+                            <span style="color: ${pattern.type === 'bullish' ? '#10b981' : '#ef4444'}; font-weight: 600; font-size: 12px;">${pattern.type === 'bullish' ? '看涨' : '看跌'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">${pattern.description || '无描述'}</div>
+                        <div style="color: #9ca3af; font-size: 12px;">置信度: ${pattern.confidence || 0}</div>
+                    </div>
+                `).join('');
+
+                content.innerHTML = html;
+                addLog('识别完成', `识别到 ${data.patterns.length} 个形态`);
+            } catch (error) {
+                console.error('形态识别失败:', error);
+                const content = document.getElementById('patternResult');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">识别失败: ${error.message}</div>`;
+                }
+                addLog('识别失败', `错误: ${error.message}`);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('页面完全加载');
+            addLog('页面加载', '页面完全加载完成');
+            console.log('========== 所有配置管理函数已定义 ==========');
+            console.log('loadPatternsConfig:', typeof window.loadPatternsConfig);
+            console.log('loadTimeframesConfig:', typeof window.loadTimeframesConfig);
+            console.log('loadFeishuConfig:', typeof window.loadFeishuConfig);
+            console.log('loadRiskConfig:', typeof window.loadRiskConfig);
+            console.log('getRealtimeQuote:', typeof window.getRealtimeQuote);
+            console.log('recognizePatterns:', typeof window.recognizePatterns);
+            
+            // 自动加载所有配置
+            loadPatternsConfig();
+            loadTimeframesConfig();
+            loadFeishuConfig();
+            loadRiskConfig();
+        });
+
+        window.addEventListener('error', (event) => {
+            console.error('页面错误:', event.error);
+            addLog('页面错误', event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise错误:', event.reason);
+            addLog('异步错误', event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #f9fafb; margin-bottom: 20px;">步骤8 - 完整图表（完全重写版本）</h1>
+        
+        <div class="tabs">
+            <button id="tab-analyze-btn" class="tab-btn active" onclick="showTab('analyze')">分析</button>
+            <button id="tab-watchlist-btn" class="tab-btn" onclick="showTab('watchlist')">关注列表</button>
+            <button id="tab-multi-btn" class="tab-btn" onclick="showTab('multi')">多周期</button>
+            <button id="tab-config-btn" class="tab-btn" onclick="showTab('config')">系统配置</button>
+            <button id="tab-status-btn" class="tab-btn" onclick="showTab('status')">测试状态</button>
+        </div>
+
+        <!-- 分析Tab -->
+        <div id="tab-analyze" style="display: block;" class="card">
+            <h2 class="card-title">股票分析</h2>
+            <div class="input-group">
+                <input type="text" id="stockCode" placeholder="请输入股票代码（如：688234）">
+                <button class="btn" onclick="showTab('analyze')">分析</button>
+            </div>
+            <div id="result" class="result"></div>
+        </div>
+
+        <!-- 关注列表Tab -->
+        <div id="tab-watchlist" style="display: none;" class="card">
+            <h2 class="card-title">关注列表</h2>
+            <div class="input-group">
+                <input type="text" id="watchlistCode" placeholder="请输入股票代码">
+                <button class="btn" onclick="addToWatchlist()">添加到关注列表</button>
+            </div>
+            <div id="watchlistContent" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- 多周期Tab -->
+        <div id="tab-multi" style="display: none;" class="card">
+            <h2 class="card-title">多周期分析</h2>
+            <div class="input-group">
+                <input type="text" id="multiStockCode" placeholder="请输入股票代码">
+                <button class="btn" onclick="analyzeMultiTimeframe()">多周期分析</button>
+            </div>
+            <div id="multiResult" class="result"></div>
+        </div>
+
+        <!-- 系统配置Tab -->
+        <div id="tab-config" style="display: none;" class="card">
+            <h2 class="card-title">系统配置</h2>
+            
+            <!-- 形态识别配置 -->
+            <div class="system-item">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 16px;">形态识别配置</h3>
+                    <button class="btn btn-secondary" onclick="loadPatternsConfig()">刷新</button>
+                </div>
+                <div id="patternsConfig"></div>
+            </div>
+
+            <!-- 时间周期配置 -->
+            <div class="system-item">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 16px;">时间周期配置</h3>
+                    <button class="btn btn-secondary" onclick="loadTimeframesConfig()">刷新</button>
+                </div>
+                <div id="timeframesConfig"></div>
+            </div>
+
+            <!-- 飞书通知配置 -->
+            <div class="system-item">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 16px;">飞书通知配置</h3>
+                    <button class="btn btn-secondary" onclick="loadFeishuConfig()">刷新</button>
+                </div>
+                <div id="feishuConfig"></div>
+            </div>
+
+            <!-- 风险监控配置 -->
+            <div class="system-item">
+                <div class="card-header">
+                    <h3 class="card-title" style="font-size: 16px;">风险监控配置</h3>
+                    <button class="btn btn-secondary" onclick="loadRiskConfig()">刷新</button>
+                </div>
+                <div id="riskConfig"></div>
+            </div>
+
+            <!-- 实时行情 -->
+            <div class="system-item">
+                <h3 class="card-title" style="font-size: 16px;">实时行情</h3>
+                <div class="input-group">
+                    <input type="text" id="realtimeCode" placeholder="请输入股票代码（如：688234）">
+                    <button class="btn" onclick="getRealtimeQuote()">查询实时行情</button>
+                </div>
+                <div id="realtimeResult"></div>
+            </div>
+
+            <!-- 形态识别 -->
+            <div class="system-item">
+                <h3 class="card-title" style="font-size: 16px;">形态识别</h3>
+                <div class="input-group">
+                    <input type="text" id="patternCode" placeholder="请输入股票代码（如：688234）">
+                    <select id="patternTimeframe">
+                        <option value="daily">日线</option>
+                        <option value="weekly">周线</option>
+                    </select>
+                    <button class="btn" onclick="recognizePatterns()">识别形态</button>
+                </div>
+                <div id="patternResult"></div>
+            </div>
+        </div>
+
+        <!-- 测试状态Tab -->
+        <div id="tab-status" style="display: none;" class="card">
+            <h2 class="card-title">测试状态</h2>
+            <div class="grid">
+                <div class="system-item">
+                    <div class="system-label">loadPatternsConfig()</div>
+                    <div class="system-value" id="status-loadPatternsConfig">检查中...</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-label">loadTimeframesConfig()</div>
+                    <div class="system-value" id="status-loadTimeframesConfig">检查中...</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-label">loadFeishuConfig()</div>
+                    <div class="system-value" id="status-loadFeishuConfig">检查中...</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-label">loadRiskConfig()</div>
+                    <div class="system-value" id="status-loadRiskConfig">检查中...</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-label">getRealtimeQuote()</div>
+                    <div class="system-value" id="status-getRealtimeQuote">检查中...</div>
+                </div>
+                <div class="system-item">
+                    <div class="system-label">recognizePatterns()</div>
+                    <div class="system-value" id="status-recognizePatterns">检查中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="card">
+            <h2 class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                操作日志
+                <button id="logToggle" class="btn btn-secondary" onclick="toggleLog()">收起/展开</button>
+            </h2>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+</body>
+</html>

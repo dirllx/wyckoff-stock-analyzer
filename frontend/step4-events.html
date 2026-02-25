@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步骤4 - 事件处理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:active { background: #2563eb; transform: scale(0.98); }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>步骤4 - 事件处理测试</h1>
+        <p>测试各种事件处理功能是否正常工作。</p>
+
+        <button id="btn1" onclick="handleClick1()">测试1: onclick</button>
+        <button id="btn2">测试2: addEventListener</button>
+        <button id="btn3">测试3: 移除事件</button>
+        <button id="btn4" data-action="test4">测试4: 自定义事件</button>
+        <button onclick="clearStatus()">清空</button>
+        <button onclick="autoTest()">自动测试</button>
+
+        <div id="status">等待测试...</div>
+    </div>
+
+    <div class="card">
+        <h2>测试页面导航</h2>
+        <ul>
+            <li><a href="step1-basic-html.html">步骤1：基础HTML</a></li>
+            <li><a href="step2-basic-js.html">步骤2：基本JavaScript</a></li>
+            <li><a href="step3-dom.html">步骤3：DOM操作</a></li>
+            <li><strong>步骤4：事件处理（当前）</strong></li>
+            <li><a href="step5-fetch.html">步骤5：API请求</a></li>
+            <li><a href="step6-chart-lib.html">步骤6：图表库引用</a></li>
+            <li><a href="step7-chart-create.html">步骤7：图表创建</a></li>
+            <li><a href="step8-chart-full.html">步骤8：完整图表</a></li>
+        </ul>
+    </div>
+
+    <script>
+        let eventCount = 0;
+
+        function log(test, result, message) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const statusDiv = document.getElementById('status');
+            const color = result ? 'success' : 'error';
+            const text = result ? '✓' : '✗';
+
+            statusDiv.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                    <span class="${color}">${text}</span>
+                    <strong>${test}</strong>: ${message}
+                    <br><small style="color: #999;">[${time}]</small>
+                </div>
+            ` + statusDiv.innerHTML;
+
+            console.log(`${text} ${test}: ${message}`);
+        }
+
+        function handleClick1() {
+            eventCount++;
+            log('测试1: onclick', true, `按钮被点击（第${eventCount}次）`);
+        }
+
+        function handleClick2() {
+            eventCount++;
+            log('测试2: addEventListener', true, `按钮被点击（第${eventCount}次）`);
+        }
+
+        function handleClick3() {
+            if (eventCount > 0) {
+                eventCount--;
+                log('测试3: 事件统计', true, `事件计数减到${eventCount}`);
+            } else {
+                log('测试3: 事件统计', true, '事件计数已经是0');
+            }
+        }
+
+        function handleClick4(event) {
+            const action = event.target.getAttribute('data-action');
+            log('测试4: 自定义事件', true, `data-action: ${action}`);
+        }
+
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '等待测试...';
+            eventCount = 0;
+        }
+
+        function autoTest() {
+            log('自动测试', true, '开始自动测试所有事件');
+            
+            setTimeout(() => {
+                document.getElementById('btn1').click();
+            }, 500);
+
+            setTimeout(() => {
+                document.getElementById('btn2').click();
+            }, 1500);
+
+            setTimeout(() => {
+                document.getElementById('btn3').click();
+            }, 2500);
+
+            setTimeout(() => {
+                document.getElementById('btn4').click();
+            }, 3500);
+
+            setTimeout(() => {
+                log('自动测试', true, '所有事件测试完成');
+            }, 4500);
+        }
+
+        // 页面加载时的事件绑定
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            log('系统启动', '步骤4页面加载完成');
+
+            const btn2 = document.getElementById('btn2');
+            if (btn2) {
+                btn2.addEventListener('click', handleClick2);
+                log('事件绑定', true, 'btn2点击事件已绑定');
+            }
+
+            const btn3 = document.getElementById('btn3');
+            if (btn3) {
+                btn3.addEventListener('click', handleClick3);
+                log('事件绑定', true, 'btn3点击事件已绑定');
+            }
+
+            const btn4 = document.getElementById('btn4');
+            if (btn4) {
+                btn4.addEventListener('click', handleClick4);
+                log('事件绑定', true, 'btn4点击事件已绑定');
+            }
+        });
+
+        window.addEventListener('load', () => {
+            log('页面加载', true, '页面完全加载完成');
+        });
+
+        window.addEventListener('error', (event) => {
+            log('全局错误', false, event.error ? event.error.message : '未知错误');
+            console.error(event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log('Promise错误', false, event.reason ? event.reason.message : '未知错误');
+            console.error(event.reason);
+        });
+    </script>
+</body>
+</html>

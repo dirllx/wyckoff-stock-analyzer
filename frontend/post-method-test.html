@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多周期分析 - POST方法</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #f9fafb; }
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { transform: scale(1.02); }
+        .debug-section {
+            background: #1f2937;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+        .debug-section pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .result-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f9fafb;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+        .info-item {
+            padding: 8px;
+            background: #0a0e27;
+            border-radius: 6px;
+        }
+        .info-label { color: #9ca3af; font-size: 12px; }
+        .info-value { font-weight: 600; font-size: 13px; }
+        .info-bullish { color: #10b981; }
+        .info-bearish { color: #ef4444; }
+        .info-neutral { color: #9ca3af; }
+        .success { color: #10b981; font-weight: 600; }
+        .error { color: #ef4444; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="card-title">多周期分析 - POST方法</h1>
+            <p style="color: #9ca3af; margin-bottom: 16px;">使用POST方法调用API</p>
+            <button class="btn" onclick="testAPI()">测试多周期分析（POST）</button>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">调试信息</h2>
+            <div class="debug-section" id="debugInfo">点击"测试多周期分析（POST）"按钮开始...</div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">API原始数据</h2>
+            <div class="debug-section" id="rawData">等待API响应...</div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">多周期结果</h2>
+            <div id="resultGrid" style="color: #9ca3af;">等待数据...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        async function testAPI() {
+            const debugInfo = document.getElementById('debugInfo');
+            const rawData = document.getElementById('rawData');
+            const resultGrid = document.getElementById('resultGrid');
+
+            debugInfo.innerHTML = '[开始] 正在测试API（POST方法）...\n';
+
+            try {
+                debugInfo.innerHTML += '[步骤1] 正在调用API（POST方法）...\n';
+
+                const response = await fetch(`${API_BASE}/api/v1/stocks/688234/analyze-multi`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+
+                debugInfo.innerHTML += '[步骤2] API响应已接收\n';
+                debugInfo.innerHTML += '[步骤2] HTTP状态: ' + response.status + '\n';
+                debugInfo.innerHTML += '[步骤2] 数据类型: ' + typeof data + '\n';
+                debugInfo.innerHTML += '[步骤2] data.timeframes类型: ' + typeof data.timeframes + '\n';
+                debugInfo.innerHTML += '[步骤2] data.timeframes是否为对象: ' + (data.timeframes !== null && typeof data.timeframes === 'object') + '\n';
+                debugInfo.innerHTML += '[步骤2] data.timeframes是否为数组: ' + (Array.isArray(data.timeframes)) + '\n';
+
+                // 显示原始数据
+                rawData.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+                // 检查是否有错误
+                if (data.detail) {
+                    debugInfo.innerHTML += '[步骤2] <span class="error">API返回错误:</span> ' + data.detail + '\n';
+                    resultGrid.innerHTML = '<div class="error" style="padding: 20px; text-align: center;">API错误: ' + data.detail + '</div>';
+                    return;
+                }
+
+                debugInfo.innerHTML += '[步骤2] <span class="success">API返回成功，没有错误</span>\n';
+
+                if (!data || !data.timeframes) {
+                    debugInfo.innerHTML += '[步骤2] <span class="error">错误: data或data.timeframes不存在</span>\n';
+                    resultGrid.innerHTML = '<div class="error" style="padding: 20px; text-align: center;">API返回数据格式错误</div>';
+                    return;
+                }
+
+                debugInfo.innerHTML += '[步骤2] <span class="success">数据格式正确</span>\n';
+
+                // 转换为数组
+                debugInfo.innerHTML += '[步骤3] 开始转换对象为数组...\n';
+                const timeframesArray = Object.values(data.timeframes);
+                debugInfo.innerHTML += '[步骤3] 转换完成，数组长度: ' + timeframesArray.length + '\n';
+
+                if (timeframesArray.length === 0) {
+                    resultGrid.innerHTML = '<div class="error" style="padding: 20px; text-align: center;">暂无多周期分析数据</div>';
+                    debugInfo.innerHTML += '[步骤3] <span class="error">数组长度为0，没有数据</span>\n';
+                    return;
+                }
+
+                debugInfo.innerHTML += '[步骤3] <span class="success">数组长度: ' + timeframesArray.length + '</span>\n';
+
+                // 生成结果
+                debugInfo.innerHTML += '[步骤4] 开始生成HTML...\n';
+
+                let html = '<div class="result-grid">\n';
+
+                timeframesArray.forEach((tf, index) => {
+                    debugInfo.innerHTML += '[步骤4] 处理周期 ' + (index + 1) + ': ' + (tf.timeframe || '未知周期') + '\n';
+
+                    const direction = tf.direction || 'NEUTRAL';
+                    const directionClass = direction === 'LONG' ? 'info-bullish' : direction === 'SHORT' ? 'info-bearish' : 'info-neutral';
+                    const directionText = direction === 'LONG' ? '做多' : direction === 'SHORT' ? '做空' : '中性';
+
+                    html += '                <div class="result-card">\n';
+                    html += '                    <div class="result-title">' + (tf.timeframe || '未知周期') + '</div>\n';
+                    html += '                    <div class="info-grid">\n';
+                    html += '                        <div class="info-item"><span class="info-label">方向</span><span class="info-value ' + directionClass + '">' + directionText + '</span></div>\n';
+                    html += '                        <div class="info-item"><span class="info-label">评分</span><span class="info-value">' + (tf.score || 0) + '</span></div>\n';
+                    html += '                        <div class="info-item"><span class="info-label">信号</span><span class="info-value">' + (tf.signal || '无') + '</span></div>\n';
+                    html += '                        <div class="info-item"><span class="info-label">当前价</span><span class="info-value">' + (tf.close || 0) + '</span></div>\n';
+                    html += '                        <div class="info-item"><span class="info-label">涨跌</span><span class="info-value">' + (tf.change_percent || 0) + '%</span></div>\n';
+
+                    if (tf.suggestion) {
+                        html += '                        <div style="grid-column: 1 / -1; padding: 12px; background: #0a0e27; border-radius: 8px; margin-top: 12px; font-size: 13px;"><strong>建议：</strong>' + tf.suggestion + '</div>\n';
+                    }
+
+                    html += '                    </div>\n';
+                    html += '                </div>\n';
+                });
+
+                html += '            </div>\n';
+
+                resultGrid.innerHTML = html;
+                debugInfo.innerHTML += '[步骤4] <span class="success">HTML生成完成</span>\n';
+                debugInfo.innerHTML += '[步骤4] <span class="success">多周期分析完成，共' + timeframesArray.length + '个周期</span>\n';
+
+            } catch (error) {
+                console.error('多周期分析失败:', error);
+                debugInfo.innerHTML += '[步骤1] <span class="error">错误: ' + error.message + '</span>\n';
+                debugInfo.innerHTML += '[步骤1] 错误堆栈: ' + error.stack + '\n';
+                resultGrid.innerHTML = '<div class="error" style="padding: 20px; text-align: center;">API调用失败: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

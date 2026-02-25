@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络连接诊断</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0a0e27;
+            color: #f9fafb;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .title { font-size: 18px; margin-bottom: 16px; }
+        .result {
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .success { background: #064e3b; color: #10b981; }
+        .error { background: #7f1d1d; color: #ef4444; }
+        .warning { background: #78350f; color: #f59e0b; }
+        .info { background: #1e3a8a; color: #3b82f6; }
+        button {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1 class="title">网络连接诊断</h1>
+            <p style="color: #9ca3af; margin-bottom: 16px;">诊断前端和后端之间的网络连接问题</p>
+            
+            <div id="results"></div>
+            
+            <button onclick="startDiagnosis()">开始诊断</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_LOCAL = 'http://localhost:8000';
+        const API_BASE_REMOTE = 'http://45.153.246.2:8000';
+
+        async function startDiagnosis() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            // 诊断1: 检查本地连接
+            resultsDiv.innerHTML += '<div class="result info">诊断1: 检查本地连接...</div>';
+            try {
+                const response = await fetch(`${API_BASE_LOCAL}/api/v1/health`);
+                if (response.ok) {
+                    resultsDiv.innerHTML += '<div class="result success">✓ 本地连接正常：可以连接到 localhost:8000</div>';
+                resultsDiv.innerHTML += '<div class="result info">说明：前端和后端在同一台服务器上，网络连接正常</div>';
+                resultsDiv.innerHTML += '<div class="result success">建议：如果前端从外部访问，请确保后端服务监听在 0.0.0.0:8000</div>';
+                resultsDiv.innerHTML += '<div class="result info">检查命令：ps aux | grep uvicorn</div>';
+                resultsDiv.innerHTML += '<div class="result info">启动命令：cd backend && source venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000</div>';
+                resultsDiv.innerHTML += '<div class="result success">解决方案：如果后端没有运行，请重启后端服务</div>';
+                return;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML += '<div class="result error">✗ 本地连接失败：无法连接到 localhost:8000</div>';
+                resultsDiv.innerHTML += '<div class="result warning">错误信息：' + e.message + '</div>';
+            }
+
+            // 诊断2: 检查远程连接
+            resultsDiv.innerHTML += '<div class="result info">诊断2: 检查远程连接...</div>';
+            try {
+                const response = await fetch(`${API_BASE_REMOTE}/api/v1/health`);
+                if (response.ok) {
+                    resultsDiv.innerHTML += '<div class="result success">✓ 远程连接正常：可以连接到 45.153.246.2:8000</div>';
+                    return;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML += '<div class="result error">✗ 远程连接失败：无法连接到 45.153.246.2:8000</div>';
+                resultsDiv.innerHTML += '<div class="result warning">错误信息：' + e.message + '</div>';
+            }
+
+            // 诊断3: 检查CORS
+            resultsDiv.innerHTML += '<div class="result info">诊断3: 检查CORS配置...</div>';
+            resultsDiv.innerHTML += '<div class="result info">后端CORS配置：allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]</div>';
+            resultsDiv.innerHTML += '<div class="result success">CORS配置看起来正常，但网络连接可能仍有问题</div>';
+            resultsDiv.innerHTML += '<div class="result warning">如果仍然有Failed to fetch错误，可能是防火墙阻止了连接</div>';
+        }
+
+        // 自动开始诊断
+        window.onload = function() {
+            setTimeout(startDiagnosis, 1000);
+        };
+    </script>
+</body>
+</html>

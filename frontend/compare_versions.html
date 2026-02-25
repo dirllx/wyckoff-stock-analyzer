@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>威科夫股票分析系统 - 版本对比</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        h1 { text-align: center; margin-bottom: 20px; color: #8b5cf6; }
+        .compare-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+        .version-panel {
+            background: #111827;
+            border: 2px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .version-panel.stable {
+            border-color: #10b981;
+        }
+        .version-panel.current {
+            border-color: #3b82f6;
+        }
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #374151;
+        }
+        .version-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .version-tag {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .tag-stable {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        .tag-current {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        .version-info {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: #1f2937;
+            border-radius: 8px;
+        }
+        .version-info div {
+            margin: 4px 0;
+        }
+        iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            background: #1f2937;
+        }
+        .feature-list {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #1f2937;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .feature-list h3 {
+            color: #f9fafb;
+            margin-bottom: 8px;
+        }
+        .feature-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .feature-list li {
+            padding: 2px 0;
+            color: #d1d5db;
+        }
+        .feature-list li::before {
+            content: "✓ ";
+            color: #10b981;
+        }
+        @media (max-width: 1200px) {
+            .compare-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 威科夫股票分析系统 - 版本对比</h1>
+
+    <div class="compare-container">
+        <!-- 稳定版本 -->
+        <div class="version-panel stable">
+            <div class="version-header">
+                <div>
+                    <div class="version-title">稳定版本 v1.0.0</div>
+                    <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">基于index.html.backup，仅修复图表库引用</div>
+                </div>
+                <span class="version-tag tag-stable">稳定版</span>
+            </div>
+
+            <div class="version-info">
+                <div>📁 文件: index_stable.html</div>
+                <div>📊 大小: 60K (1419行)</div>
+                <div>🌐 端口: 3001</div>
+                <div>✅ 状态: 正常运行</div>
+            </div>
+
+            <div class="feature-list">
+                <h3>✨ 功能列表</h3>
+                <ul>
+                    <li>股票分析（Tab 1）</li>
+                    <li>关注列表（Tab 2）</li>
+                    <li>多周期分析（Tab 3 - 占位）</li>
+                    <li>系统配置（Tab 4 - 基础信息）</li>
+                    <li>K线表格（50行完整数据）</li>
+                    <li>K线图表（主图+成交量+OBV）</li>
+                    <li>MA指标（9条线）</li>
+                    <li>技术指标面板</li>
+                    <li>威科夫信号面板</li>
+                    <li>健康状态栏</li>
+                    <li>操作日志</li>
+                </ul>
+            </div>
+
+            <iframe src="http://45.153.246.2:3001/index_stable.html"></iframe>
+        </div>
+
+        <!-- 当前版本 -->
+        <div class="version-panel current">
+            <div class="version-header">
+                <div>
+                    <div class="version-title">当前版本 v1.1.0</div>
+                    <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">基于稳定版，迁移新增功能</div>
+                </div>
+                <span class="version-tag tag-current">当前版</span>
+            </div>
+
+            <div class="version-info">
+                <div>📁 文件: index.html</div>
+                <div>📊 大小: 85K (1891行)</div>
+                <div>🌐 端口: 3000</div>
+                <div>✅ 状态: 正常运行</div>
+            </div>
+
+            <div class="feature-list">
+                <h3>✨ 功能列表（稳定版 + 新增）</h3>
+                <ul>
+                    <li>股票分析（Tab 1）</li>
+                    <li>关注列表（Tab 2）</li>
+                    <li><strong>多周期分析（Tab 3 - 完整功能）✨</strong></li>
+                    <li><strong>系统配置（Tab 4 - 7个卡片）✨</strong></li>
+                    <li>K线表格（50行完整数据）</li>
+                    <li>K线图表（主图+成交量+OBV）</li>
+                    <li>MA指标（9条线）</li>
+                    <li>技术指标面板</li>
+                    <li>威科夫信号面板</li>
+                    <li><strong>形态识别配置 ✨</strong></li>
+                    <li><strong>时间周期配置 ✨</strong></li>
+                    <li><strong>飞书通知配置 ✨</strong></li>
+                    <li><strong>风险监控配置 ✨</strong></li>
+                    <li><strong>实时行情查询 ✨</strong></li>
+                    <li><strong>形态识别功能 ✨</strong></li>
+                    <li>健康状态栏</li>
+                    <li>操作日志</li>
+                </ul>
+            </div>
+
+            <iframe src="http://45.153.246.2:3000/index.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成时打印提示
+        console.log('=== 版本对比页面已加载 ===');
+        console.log('左侧: 稳定版本 v1.0.0 (端口3001)');
+        console.log('右侧: 当前版本 v1.1.0 (端口3000)');
+        console.log('请测试两个版本的功能，找出问题所在');
+    </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>超级简化测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 10px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .status-line {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        #console {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>超级简化测试</h1>
+        <p>这是最基础的HTML页面，只测试JavaScript基本功能。</p>
+    </div>
+
+    <div class="card">
+        <h2>JavaScript测试</h2>
+        <div class="status-line">
+            <strong>测试1: JavaScript基础</strong> - <span id="test1Status">未测试</span>
+        </div>
+        <div class="status-line">
+            <strong>测试2: DOM操作</strong> - <span id="test2Status">未测试</span>
+        </div>
+        <div class="status-line">
+            <strong>测试3: 定时器</strong> - <span id="test3Status">未测试</span>
+        </div>
+        <button onclick="runTests()">运行所有测试</button>
+        <button onclick="clearConsole()">清空控制台</button>
+    </div>
+
+    <div class="card">
+        <h2>控制台</h2>
+        <div id="console">等待测试...</div>
+    </div>
+
+    <script>
+        function log(message) {
+            const consoleDiv = document.getElementById('console');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            consoleDiv.innerHTML = `[${time}] ${message}<br>` + consoleDiv.innerHTML;
+        }
+
+        function updateStatus(id, message, color) {
+            document.getElementById(id).textContent = message;
+            document.getElementById(id).style.color = color;
+        }
+
+        function test1() {
+            try {
+                let x = 10;
+                let y = 20;
+                let z = x + y;
+                updateStatus('test1Status', '成功 (x=' + x + ', y=' + y + ', z=' + z + ')', 'green');
+                log('✓ 测试1: JavaScript基础 - 成功');
+            } catch (error) {
+                updateStatus('test1Status', '失败: ' + error.message, 'red');
+                log('✗ 测试1: JavaScript基础 - 失败: ' + error.message);
+            }
+        }
+
+        function test2() {
+            try {
+                const consoleDiv = document.getElementById('console');
+                if (consoleDiv) {
+                    updateStatus('test2Status', '成功 (找到console元素)', 'green');
+                    log('✓ 测试2: DOM操作 - 成功 (找到console元素)');
+                } else {
+                    throw new Error('找不到console元素');
+                }
+            } catch (error) {
+                updateStatus('test2Status', '失败: ' + error.message, 'red');
+                log('✗ 测试2: DOM操作 - 失败: ' + error.message);
+            }
+        }
+
+        function test3() {
+            try {
+                const now = Date.now();
+                updateStatus('test3Status', '成功 (时间戳: ' + now + ')', 'green');
+                log('✓ 测试3: 定时器 - 成功');
+            } catch (error) {
+                updateStatus('test3Status', '失败: ' + error.message, 'red');
+                log('✗ 测试3: 定时器 - 失败: ' + error.message);
+            }
+        }
+
+        function runTests() {
+            log('开始运行所有测试...');
+
+            setTimeout(() => {
+                test1();
+                setTimeout(() => {
+                    test2();
+                    setTimeout(() => {
+                        test3();
+                        startTimer();
+                    }, 500);
+                }, 500);
+            }, 500);
+        }
+
+        function startTimer() {
+            let counter = 0;
+            setInterval(() => {
+                counter++;
+                log(`定时器触发: ${counter}次`);
+                if (counter > 5) {
+                    updateStatus('test1Status', '定时器运行中 (' + counter + '次)', 'blue');
+                    updateStatus('test2Status', '定时器运行中 (' + counter + '次)', 'blue');
+                    updateStatus('test3Status', '定时器运行中 (' + counter + '次)', 'blue');
+                }
+            }, 3000);
+
+            log('定时器已启动 (每3秒触发一次)');
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '控制台已清空';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            log('=== 页面加载完成 ===');
+            updateStatus('test1Status', '页面加载完成', 'blue');
+            updateStatus('test2Status', '页面加载完成', 'blue');
+            updateStatus('test3Status', '页面加载完成', 'blue');
+        });
+
+        window.addEventListener('load', () => {
+            log('=== 页面完全加载 ===');
+        });
+
+        window.addEventListener('error', (event) => {
+            log('全局错误: ' + (event.error ? event.error.message : '未知错误'));
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log('Promise错误: ' + (event.reason ? event.reason.message : '未知错误'));
+        });
+    </script>
+</body>
+</html>

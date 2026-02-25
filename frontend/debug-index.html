@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,1.0, maximum-scale=1.0, user-scalable=no">
+    <title>威科夫股票分析系统 - 调试版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        .tab-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        #debugLog {
+            background: #0a0e27;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h2 style="font-size: 16px; font-weight: 600; color: #f9fafb;">威科夫股票分析系统 - 调试版</h2>
+        </div>
+
+        <!-- Tab导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+            <button class="tab-btn" id="tabWatchlist" onclick="showTab('watchlist')">我的关注</button>
+            <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
+            <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
+            <button class="tab-btn" id="tabStatus" onclick="showTab('status')">测试状态</button>
+        </div>
+
+        <!-- 分析Tab -->
+        <div id="tab-analyze" class="tab-content active">
+            <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center;">
+                <input type="text" id="stockCode" value="688234" placeholder="000001"
+                    style="padding: 10px 14px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #f9fafb; font-size: 14px;">
+                <button class="btn" onclick="testButtonClick('开始分析按钮')">开始分析</button>
+            </div>
+            <div id="analyzeResult"></div>
+        </div>
+
+        <!-- 我的关注Tab -->
+        <div id="tab-watchlist" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">我的关注内容...</div>
+        </div>
+
+        <!-- 多周期Tab -->
+        <div id="tab-multi" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">多周期分析内容...</div>
+        </div>
+
+        <!-- 系统配置Tab -->
+        <div id="tab-config" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">系统配置内容...</div>
+        </div>
+
+        <!-- 测试状态Tab -->
+        <div id="tab-status" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">测试状态内容...</div>
+        </div>
+    </div>
+
+    <!-- 调试日志 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 style="font-size: 16px; font-weight: 600; color: #f9fafb;">调试日志</h2>
+        </div>
+        <div id="debugLog">
+            <div style="color: #9ca3af;">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        // ========== 调试日志 ==========
+        function addDebugLog(message) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const debugLog = document.getElementById('debugLog');
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #6b7280;">[${timeStr}]</span> <span style="color: #10b981;">${message}</span>`;
+            debugLog.insertBefore(logEntry, debugLog.firstChild);
+
+            // 限制日志数量
+            while (debugLog.children.length > 50) {
+                debugLog.removeChild(debugLog.lastChild);
+            }
+
+            console.log(message);
+        }
+
+        // ========== Tab切换 ==========
+        function showTab(tab) {
+            addDebugLog(`切换到标签: ${tab}`);
+
+            try {
+                const tabs = ['analyze', 'watchlist', 'multi', 'config', 'status'];
+                tabs.forEach(t => {
+                    const tabElement = document.getElementById(`tab-${t}`);
+                    if (tabElement) {
+                        tabElement.classList.remove('active');
+                        tabElement.style.display = 'none';
+                    }
+                });
+
+                const targetTab = document.getElementById(`tab-${tab}`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                    targetTab.style.display = 'block';
+                } else {
+                    addDebugLog(`错误: 找不到 tab-${tab} 元素`);
+                }
+
+                // 更新按钮状态
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                    if (btn) {
+                        if (t === tab) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    }
+                });
+            } catch (error) {
+                addDebugLog(`切换标签失败: ${error.message}`);
+            }
+        }
+
+        // ========== 按钮测试 ==========
+        function testButtonClick(buttonName) {
+            addDebugLog(`按钮被点击: ${buttonName}`);
+
+            const code = document.getElementById('stockCode').value;
+            addDebugLog(`股票代码: ${code}`);
+
+            const resultDiv = document.getElementById('analyzeResult');
+            resultDiv.innerHTML = `<div style="color: #10b981; padding: 20px;">✓ 按钮响应正常！股票代码: ${code}</div>`;
+        }
+
+        // ========== 页面加载 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            addDebugLog('页面 DOM 加载完成');
+
+            // 检查关键元素是否存在
+            const elementsToCheck = ['tab-analyze', 'tab-watchlist', 'tab-multi', 'tab-config', 'tab-status', 'stockCode', 'analyzeResult', 'debugLog'];
+            elementsToCheck.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    addDebugLog(`✓ 找到元素: ${id}`);
+                } else {
+                    addDebugLog(`✗ 未找到元素: ${id}`);
+                }
+            });
+        });
+
+        window.addEventListener('load', () => {
+            addDebugLog('页面完全加载');
+        });
+
+        // 错误处理
+        window.addEventListener('error', (event) => {
+            addDebugLog(`页面错误: ${event.error ? event.error.message : '未知错误'}`);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            addDebugLog(`Promise 错误: ${event.reason ? event.reason.message : '未知错误'}`);
+        });
+    </script>
+</body>
+</html>

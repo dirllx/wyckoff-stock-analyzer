@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步骤2 - 基本JavaScript</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:active { background: #2563eb; }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>步骤2 - 基本JavaScript测试</h1>
+        <p>测试基本的JavaScript功能是否正常工作。</p>
+
+        <button onclick="test1()">测试1: 变量和函数</button>
+        <button onclick="test2()">测试2: 条件判断</button>
+        <button onclick="test3()">测试3: 循环</button>
+        <button onclick="test4()">测试4: 对象</button>
+        <button onclick="test5()">测试5: 数组</button>
+        <button onclick="clearStatus()">清空</button>
+
+        <div id="status">等待测试...</div>
+    </div>
+
+    <div class="card">
+        <h2>测试页面导航</h2>
+        <ul>
+            <li><a href="step1-basic-html.html">步骤1：基础HTML</a></li>
+            <li><strong>步骤2：基本JavaScript（当前）</strong></li>
+            <li><a href="step3-dom.html">步骤3：DOM操作</a></li>
+            <li><a href="step4-events.html">步骤4：事件处理</a></li>
+            <li><a href="step5-fetch.html">步骤5：API请求</a></li>
+            <li><a href="step6-chart-lib.html">步骤6：图表库引用</a></li>
+            <li><a href="step7-chart-create.html">步骤7：图表创建</a></li>
+            <li><a href="step8-chart-full.html">步骤8：完整图表</a></li>
+        </ul>
+    </div>
+
+    <script>
+        let results = [];
+
+        function log(test, result, message) {
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const entry = { time, test, result, message };
+            results.unshift(entry);
+
+            const statusDiv = document.getElementById('status');
+            const color = result ? 'success' : 'error';
+            const text = result ? '✓' : '✗';
+
+            statusDiv.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                    <span class="${color}">${text}</span>
+                    <strong>${test}</strong>: ${message}
+                    <br><small style="color: #999;">[${time}]</small>
+                </div>
+            ` + statusDiv.innerHTML;
+
+            console.log(`${text} ${test}: ${message}`);
+        }
+
+        function test1() {
+            try {
+                let x = 10;
+                let y = 20;
+                let z = x + y;
+                log('测试1: 变量和函数', z === 30, `x=${x}, y=${y}, z=${z}`);
+            } catch (error) {
+                log('测试1: 变量和函数', false, error.message);
+            }
+        }
+
+        function test2() {
+            try {
+                let x = 10;
+                if (x > 5) {
+                    log('测试2: 条件判断', true, 'x > 5');
+                } else {
+                    log('测试2: 条件判断', false, 'x <= 5');
+                }
+            } catch (error) {
+                log('测试2: 条件判断', false, error.message);
+            }
+        }
+
+        function test3() {
+            try {
+                let sum = 0;
+                for (let i = 1; i <= 5; i++) {
+                    sum += i;
+                }
+                log('测试3: 循环', sum === 15, `1+2+3+4+5 = ${sum}`);
+            } catch (error) {
+                log('测试3: 循环', false, error.message);
+            }
+        }
+
+        function test4() {
+            try {
+                const obj = { name: '测试', value: 100 };
+                log('测试4: 对象', obj.name === '测试' && obj.value === 100, JSON.stringify(obj));
+            } catch (error) {
+                log('测试4: 对象', false, error.message);
+            }
+        }
+
+        function test5() {
+            try {
+                const arr = [1, 2, 3, 4, 5];
+                const sum = arr.reduce((a, b) => a + b, 0);
+                log('测试5: 数组', sum === 15, `[${arr.join(', ')}] = ${sum}`);
+            } catch (error) {
+                log('测试5: 数组', false, error.message);
+            }
+        }
+
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '等待测试...';
+            results = [];
+        }
+
+        // 页面加载时的初始化测试
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM加载完成');
+            log('系统启动', '步骤2页面加载完成');
+
+            setTimeout(() => {
+                test1();
+                test2();
+                test3();
+                test4();
+                test5();
+            }, 500);
+        });
+
+        // 错误捕获
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+            log('全局错误', false, event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise错误:', event.reason);
+            log('Promise错误', false, event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</body>
+</html>

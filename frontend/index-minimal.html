@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>威科夫股票分析系统 - 最小版</title>
+    <script src="./lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .form-input {
+            padding: 10px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #f9fafb;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary {
+            background: #374151;
+            color: #f9fafb;
+        }
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #logArea {
+            background: #0a0e27;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">威科夫股票分析系统 - 最小版</h2>
+        </div>
+
+        <!-- Tab导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+            <button class="tab-btn" id="tabWatchlist" onclick="showTab('watchlist')">我的关注</button>
+            <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
+            <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
+            <button class="tab-btn" id="tabStatus" onclick="showTab('status')">测试状态</button>
+        </div>
+
+        <!-- 分析Tab -->
+        <div id="tab-analyze" class="tab-content active">
+            <div class="form-group">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                <button class="btn" onclick="analyzeStock()">开始分析</button>
+            </div>
+            <div id="analyzeResult"></div>
+        </div>
+
+        <!-- 我的关注Tab -->
+        <div id="tab-watchlist" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">我的关注内容...</div>
+        </div>
+
+        <!-- 多周期Tab -->
+        <div id="tab-multi" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">多周期分析内容...</div>
+        </div>
+
+        <!-- 系统配置Tab -->
+        <div id="tab-config" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">系统配置内容...</div>
+        </div>
+
+        <!-- 测试状态Tab -->
+        <div id="tab-status" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">测试状态内容...</div>
+        </div>
+    </div>
+
+    <!-- 日志区域 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">操作日志</h2>
+        </div>
+        <div id="logArea">
+            <div style="color: #9ca3af;">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+        let operationLogs = [];
+
+        // ========== 日志系统 ==========
+        function addLog(action, detail) {
+            console.log('addLog:', action, detail);
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            const logEntry = { time: timeStr, action: action, detail: detail };
+            operationLogs.unshift(logEntry);
+
+            if (operationLogs.length > 100) {
+                operationLogs = operationLogs.slice(0, 100);
+            }
+
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logArea = document.getElementById('logArea');
+            if (!logArea) {
+                console.warn('logArea 元素不存在');
+                return;
+            }
+
+            if (operationLogs.length === 0) {
+                logArea.innerHTML = '<div style="color: #9ca3af;">等待操作...</div>';
+                return;
+            }
+
+            const logsHtml = operationLogs.map(log => {
+                return `<div style="padding: 4px 0; border-bottom: 1px solid #1f2937;">
+                    <span style="color: #6b7280; margin-right: 10px;">[${log.time}]</span>
+                    <span style="color: #10b981; font-weight: 600;">${log.action}</span>
+                    <span style="color: #d1d5db;">${log.detail}</span>
+                </div>`;
+            }).join('');
+
+            logArea.innerHTML = logsHtml;
+        }
+
+        // ========== Tab切换 ==========
+        function showTab(tab) {
+            console.log('切换到标签:', tab);
+            addLog('切换标签', `切换到: ${tab}`);
+
+            const tabs = ['analyze', 'watchlist', 'multi', 'config', 'status'];
+            tabs.forEach(t => {
+                const tabElement = document.getElementById(`tab-${t}`);
+                if (tabElement) {
+                    tabElement.classList.remove('active');
+                    tabElement.style.display = 'none';
+                }
+            });
+
+            const targetTab = document.getElementById(`tab-${tab}`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                targetTab.style.display = 'block';
+            } else {
+                console.warn('找不到标签:', tab);
+            }
+        }
+
+        // ========== 分析功能 ==========
+        async function analyzeStock() {
+            console.log('分析股票');
+            addLog('开始分析', '正在分析...');
+
+            const code = document.getElementById('stockCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                addLog('错误', '股票代码为空');
+                return;
+            }
+
+            const resultDiv = document.getElementById('analyzeResult');
+            resultDiv.innerHTML = '<div style="color: #3b82f6;">分析中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+
+                const summary = data.analysis_summary;
+                resultDiv.innerHTML = `
+                    <div style="padding: 16px; background: #1f2937; border-radius: 8px;">
+                        <p><strong>方向:</strong> ${summary.direction}</p>
+                        <p><strong>评分:</strong> ${summary.score}</p>
+                        <p><strong>置信度:</strong> ${((summary.confidence || 0) * 100).toFixed(0)}%</p>
+                    </div>
+                `;
+
+                addLog('分析完成', `方向: ${summary.direction}`);
+            } catch (error) {
+                console.error('分析失败:', error);
+                resultDiv.innerHTML = `<div style="color: #ef4444;">分析失败: ${error.message}</div>`;
+                addLog('分析失败', error.message);
+            }
+        }
+
+        // ========== 页面加载 ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('页面 DOM 加载完成');
+            addLog('系统启动', '页面加载完成');
+        });
+
+        window.addEventListener('load', () => {
+            console.log('页面完全加载');
+            addLog('页面加载', '页面完全加载完成');
+        });
+
+        // 错误处理
+        window.addEventListener('error', (event) => {
+            console.error('页面错误:', event.error);
+            addLog('页面错误', event.error ? event.error.message : '未知错误');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise 错误:', event.reason);
+            addLog('异步错误', event.reason ? event.reason.message : '未知错误');
+        });
+    </script>
+</body>
+</html>

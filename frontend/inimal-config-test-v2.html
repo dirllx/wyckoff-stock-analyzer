@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统配置 - 最小化测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0a0e27;
+            color: #f9fafb;
+        }
+        .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .title { font-size: 18px; margin-bottom: 16px; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover { background: #2563eb; }
+        .result {
+            padding: 12px;
+            margin-top: 16px;
+            background: #0a0e27;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #d1d5db;
+        }
+        .success { background: #064e3b; color: #10b981; }
+        .error { background: #7f1d1d; color: #ef4444; }
+        .warning { background: #78350f; color: #f59e0b; }
+        .info { background: #1e3a8a; color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">系统配置测试</h1>
+        <p style="color: #9ca3af; margin-bottom: 16px;">最小化测试版本，只包含系统配置功能</p>
+        
+        <div style="margin-bottom: 16px;">
+            <button onclick="test1()">测试1: 检查函数</button>
+            <button onclick="test2()">测试2: 调用函数</button>
+        </div>
+        <div id="result" class="result">点击按钮开始测试...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        // 测试1: 检查函数
+        function test1() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试...\n';
+
+            const functions = [
+                'loadPatternsConfig',
+                'loadTimeframesConfig',
+                'loadFeishuConfig',
+                'loadRiskConfig',
+                'getRealtimeQuote',
+                'recognizePatterns'
+            ];
+
+            resultDiv.innerHTML += '测试1: 检查函数是否定义\n\n';
+
+            let allDefined = true;
+
+            functions.forEach(funcName => {
+                const isDefined = typeof window[funcName] === 'function';
+                const status = isDefined ? '✓ 已定义' : '✗ 未定义';
+                resultDiv.innerHTML += `${status} ${funcName}\n`;
+                if (!isDefined) allDefined = false;
+            });
+
+            resultDiv.innerHTML += `\n${allDefined ? '✓ 所有函数已定义' : '✗ 有函数未定义'}`;
+        }
+
+        // 测试2: 调用函数
+        function test2() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试...\n';
+
+            resultDiv.innerHTML += '测试2: 调用 loadPatternsConfig 函数\n\n';
+
+            if (typeof loadPatternsConfig !== 'function') {
+                resultDiv.innerHTML += '✗ loadPatternsConfig 未定义\n';
+                resultDiv.innerHTML += '\n建议：请清除浏览器缓存，强制刷新页面（Ctrl + F5）';
+                return;
+            }
+
+            try {
+                loadPatternsConfig();
+                resultDiv.innerHTML += '✓ loadPatternsConfig 调用成功\n';
+                resultDiv.innerHTML += '\n请查看页面上的配置数据';
+            } catch (error) {
+                resultDiv.innerHTML += `✗ loadPatternsConfig 调用失败\n`;
+                resultDiv.innerHTML += `\n错误: ${error.message}`;
+            }
+        }
+
+        // ========== 配置管理 ==========
+        async function loadPatternsConfig() {
+            console.log('加载形态识别配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/patterns`);
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data.items || data.items.length === 0) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无形态识别配置</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = data.items.map(pattern => `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${pattern.pattern_type}</strong>
+                            <span style="color: ${pattern.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${pattern.enabled ? '已启用' : '已禁用'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">精度模式: ${pattern.accuracy_mode || '默认'}</div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">最小置信度: ${pattern.min_confidence || 0.5}</div>
+                    </div>
+                `).join('');
+
+                const headerDiv = document.createElement('div');
+                headerDiv.style.marginTop = '16px';
+                headerDiv.style.fontWeight = '600';
+                headerDiv.style.fontSize = '16px';
+                headerDiv.style.color = '#10b981';
+                headerDiv.innerText = `共 ${data.total} 种形态识别配置`;
+
+                document.getElementById('result').appendChild(headerDiv);
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `加载失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+
+        async function loadTimeframesConfig() {
+            console.log('加载时间周期配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/timeframes`);
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data.items || data.items.length === 0) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无时间周期配置</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = data.items.map(tf => `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${tf.timeframe}</strong>
+                            <span style="color: ${tf.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${tf.enabled ? '已启用' : '已禁用'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">优先级: ${tf.priority}</div>
+                    </div>
+                `).join('');
+
+                const headerDiv = document.createElement('div');
+                headerDiv.style.marginTop = '16px';
+                headerDiv.style.fontWeight = '600';
+                headerDiv.style.fontSize = '16px';
+                headerDiv.style.color = '#10b981';
+                headerDiv.innerText = `共 ${data.total} 个时间周期配置`;
+
+                document.getElementById('result').appendChild(headerDiv);
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `加载失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+
+        async function loadFeishuConfig() {
+            console.log('加载飞书通知配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu`);
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data || !data.webhook_url) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无飞书通知配置</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">Webhook URL:</span>
+                            <div style="color: #f9fafb; font-size: 13px; margin-top: 4px; word-break: break-all; background: #0a0e27; padding: 8px; border-radius: 4px;">${data.webhook_url}</div>
+                        </div>
+                        <div>
+                            <span style="color: #9ca3af; font-size: 12px;">启用通知:</span>
+                            <span style="color: ${data.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; margin-left: 8px;">${data.enabled ? '启用' : '禁用'}</span>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `加载失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+
+        async function loadRiskConfig() {
+            console.log('加载风险监控配置');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/risk`);
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data || !data.threshold) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无风险监控配置</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">风险阈值:</span>
+                            <div style="color: #f9fafb; font-size: 18px; font-weight: 600; margin-top: 4px;">${data.threshold}</div>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <span style="color: #9ca3af; font-size: 12px;">启用风险监控:</span>
+                            <span style="color: ${data.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; margin-left: 8px;">${data.enabled ? '启用' : '禁用'}</span>
+                        </div>
+                        <div>
+                            <span style="color: #9ca3af; font-size: 12px;">风险等级:</span>
+                            <span style="color: #f9fafb; font-size: 13px; margin-left: 8px;">${data.risk_level || '低'}</span>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `加载失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+
+        async function getRealtimeQuote() {
+            console.log('查询实时行情: 688234');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/realtime/quote/688234`);
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data || !data.price) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无实时行情数据</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = `
+                    <div style="padding: 16px; background: #1f2937; border-radius: 6px; margin-bottom: 12px;">
+                        <h3 style="margin-bottom: 12px; color: #10b981;">实时行情 (688234)</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">当前价</span>
+                                <div style="color: #f9fafb; font-size: 18px; font-weight: 600;">${data.price}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">涨跌额</span>
+                                <div style="color: ${data.change >= 0 ? '#10b981' : '#ef4444'}; font-size: 16px; font-weight: 600;">${data.change >= 0 ? '+' : ''}${data.change}</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">涨跌幅</span>
+                                <div style="color: ${data.change_percent >= 0 ? '#10b981' : '#ef4444'}; font-size: 16px; font-weight: 600;">${data.change_percent >= 0 ? '+' : ''}${data.change_percent}%</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">成交量</span>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${data.volume || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `查询失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+
+        async function recognizePatterns() {
+            console.log('识别形态: 688234 (日线)');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/688234/patterns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ timeframe: 'daily' })
+                });
+                const data = await response.json();
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.marginTop = '16px';
+
+                if (!data || !data.patterns || data.patterns.length === 0) {
+                    contentDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂未识别到任何形态</div>';
+                    document.getElementById('result').appendChild(contentDiv);
+                    return;
+                }
+
+                const html = data.patterns.map(pattern => `
+                    <div style="padding: 12px; background: #1f2937; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid ${pattern.type === 'bullish' ? '#10b981' : '#ef4444'};">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="color: #f9fafb; font-size: 14px;">${pattern.pattern}</strong>
+                            <span style="color: ${pattern.type === 'bullish' ? '#10b981' : '#ef4444'}; font-weight: 600; font-size: 12px;">${pattern.type === 'bullish' ? '看涨' : '看跌'}</span>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">${pattern.description || '无描述'}</div>
+                        <div style="color: #9ca3af; font-size: 12px;">置信度: ${pattern.confidence || 0}</div>
+                    </div>
+                `).join('');
+
+                const headerDiv = document.createElement('div');
+                headerDiv.style.marginTop = '16px';
+                headerDiv.style.fontWeight = '600';
+                headerDiv.style.fontSize = '16px';
+                headerDiv.style.color = '#10b981';
+                headerDiv.innerText = `识别到 ${data.patterns.length} 个形态`;
+
+                document.getElementById('result').appendChild(headerDiv);
+                document.getElementById('result').appendChild(contentDiv);
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.marginTop = '16px';
+                errorDiv.style.padding = '12px';
+                errorDiv.style.background = '#7f1d1d';
+                errorDiv.style.borderRadius = '6px';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = `识别失败: ${error.message}`;
+                document.getElementById('result').appendChild(errorDiv);
+            }
+        }
+    </script>
+</body>
+</html>
