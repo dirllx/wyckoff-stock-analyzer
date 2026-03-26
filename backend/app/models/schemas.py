@@ -35,7 +35,13 @@ class StockQuoteResponse(BaseModel):
     amount: Optional[float]
     ma5: Optional[float]
     ma10: Optional[float]
+    ma15: Optional[float]
     ma20: Optional[float]
+    ma30: Optional[float]
+    ma60: Optional[float]
+    ma90: Optional[float]
+    ma120: Optional[float]
+    ma250: Optional[float]
     volume_ma5: Optional[float]
     obv: Optional[float]
 

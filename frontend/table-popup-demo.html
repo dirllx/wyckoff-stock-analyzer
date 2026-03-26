@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格弹窗功能测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+        .kline-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .kline-table th,
+        .kline-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #374151;
+        }
+        .kline-table th {
+            background: #1f2937;
+            color: #f9fafb;
+            font-weight: 600;
+        }
+        .kline-table tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+            cursor: pointer;
+        }
+        .kline-red { color: #ef4444; }
+        .kline-green { color: #10b981; }
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #059669;
+        }
+        .info {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>表格弹窗功能测试</h1>
+
+        <div class="info">
+            <strong>说明：</strong>点击表格中的任意一行，会弹出该行的详细信息。
+        </div>
+
+        <button class="btn" onclick="loadSampleData()">加载示例数据</button>
+
+        <table class="kline-table" id="testTable">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>开盘</th>
+                    <th>最高</th>
+                    <th>最低</th>
+                    <th>收盘</th>
+                    <th>成交量</th>
+                    <th>MA5</th>
+                    <th>MA10</th>
+                    <th>MA20</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="9" style="color: #9ca3af;">点击"加载示例数据"按钮开始测试</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // 动态检测 API 地址
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        // 示例数据
+        const sampleData = [
+            { date: '2026-03-26', open: 10.91, high: 11.05, low: 10.90, close: 11.00, volume: 489999, amount: 538937750, ma5: 10.81, ma10: 10.88, ma20: 10.86, ma60: 11.08, ma120: 11.31, ma250: 11.55, volume_ma5: 1054240, obv: 4990555 },
+            { date: '2026-03-25', open: 10.94, high: 11.01, low: 10.88, close: 10.94, volume: 412000, amount: 450120000, ma5: 10.78, ma10: 10.87, ma20: 10.85, ma60: 11.09, ma120: 11.31, ma250: 11.56, volume_ma5: 1100000, obv: 4491555 },
+            { date: '2026-03-24', open: 10.88, high: 10.95, low: 10.86, close: 10.88, volume: 380000, amount: 415800000, ma5: 10.79, ma10: 10.87, ma20: 10.85, ma60: 11.10, ma120: 11.31, ma250: 11.56, volume_ma5: 1150000, obv: 3991555 },
+            { date: '2026-03-23', open: 10.45, high: 10.88, low: 10.44, close: 10.45, volume: 520000, amount: 566400000, ma5: 10.82, ma10: 10.86, ma20: 10.85, ma60: 11.11, ma120: 11.32, ma250: 11.56, volume_ma5: 1200000, obv: 3591555 },
+            { date: '2026-03-20', open: 10.77, high: 10.82, low: 10.75, close: 10.77, volume: 350000, amount: 377900000, ma5: 10.91, ma10: 10.89, ma20: 10.87, ma60: 11.13, ma120: 11.33, ma250: 11.57, volume_ma5: 1250000, obv: 3091555 }
+        ];
+
+        // 保存数据供点击事件使用
+        window.currentQuotes = sampleData;
+
+        function loadSampleData() {
+            const tbody = document.getElementById('tableBody');
+
+            tbody.innerHTML = sampleData.map((q, index) => {
+                const isRed = q.close < q.open;
+
+                return `<tr onclick="showQuoteDetail(${index})">
+                    <td>${q.date}</td>
+                    <td class="${isRed ? 'kline-red' : 'kline-green'}">${q.open.toFixed(2)}</td>
+                    <td>${q.high.toFixed(2)}</td>
+                    <td>${q.low.toFixed(2)}</td>
+                    <td class="${isRed ? 'kline-red' : 'kline-green'}">${q.close.toFixed(2)}</td>
+                    <td>${(q.volume / 10000).toFixed(0)}万</td>
+                    <td style="color:#3b82f6;">${q.ma5.toFixed(2)}</td>
+                    <td style="color:#8b5cf6;">${q.ma10.toFixed(2)}</td>
+                    <td style="color:#10b981;">${q.ma20.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            console.log('示例数据加载完成');
+        }
+
+        function showQuoteDetail(index) {
+            if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
+                alert('数据不存在');
+                return;
+            }
+
+            const q = window.currentQuotes[index];
+            const isRed = q.close < q.open;
+            const change = ((q.close - q.open) / q.open * 100).toFixed(2);
+            const changeSign = change >= 0 ? '+' : '';
+
+            // 创建弹窗
+            const modal = document.createElement('div');
+            modal.id = 'quoteModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: #1f2937;
+                    border-radius: 12px;
+                    max-width: 600px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    padding: 24px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                ">
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        border-bottom: 1px solid #374151;
+                        padding-bottom: 15px;
+                    ">
+                        <h2 style="
+                            font-size: 20px;
+                            font-weight: 600;
+                            color: #f9fafb;
+                            margin: 0;
+                        ">K线详细信息</h2>
+                        <button onclick="document.getElementById('quoteModal').remove()" style="
+                            background: none;
+                            border: none;
+                            color: #9ca3af;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 0;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">&times;</button>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 15px;
+                            margin-bottom: 15px;
+                        ">
+                            <div style="background: #111827; padding: 15px; border-radius: 8px;">
+                                <div style="color: #9ca3af; font-size: 14px; margin-bottom: 8px;">日期</div>
+                                <div style="font-size: 18px; font-weight: 600;">${q.date}</div>
+                            </div>
+                            <div style="background: #111827; padding: 15px; border-radius: 8px;">
+                                <div style="color: #9ca3af; font-size: 14px; margin-bottom: 8px;">涨跌幅</div>
+                                <div style="font-size: 18px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">
+                                    ${changeSign}${change}%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            gap: 10px;
+                            margin-bottom: 15px;
+                        ">
+                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">开盘</div>
+                                <div style="font-size: 16px; font-weight: 500;">${q.open.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">最高</div>
+                                <div style="font-size: 16px; font-weight: 500; color: #10b981;">${q.high.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">最低</div>
+                                <div style="font-size: 16px; font-weight: 500; color: #ef4444;">${q.low.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">收盘</div>
+                                <div style="font-size: 16px; font-weight: 500; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #111827; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="color: #9ca3af; font-size: 14px; margin-bottom: 10px;">成交量</div>
+                            <div style="font-size: 16px; font-weight: 500;">${q.volume.toLocaleString()}</div>
+                        </div>
+
+                        <div style="background: #111827; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="color: #9ca3af; font-size: 14px; margin-bottom: 10px;">移动平均线 (MA)</div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                <div><span style="color: #3b82f6;">MA5:</span> ${q.ma5.toFixed(2)}</div>
+                                <div><span style="color: #8b5cf6;">MA10:</span> ${q.ma10.toFixed(2)}</div>
+                                <div><span style="color: #10b981;">MA20:</span> ${q.ma20.toFixed(2)}</div>
+                                <div><span style="color: #ec4899;">MA60:</span> ${q.ma60.toFixed(2)}</div>
+                                <div><span style="color: #f97316;">MA120:</span> ${q.ma120.toFixed(2)}</div>
+                                <div><span style="color: #06b6d4;">MA250:</span> ${q.ma250.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #111827; padding: 15px; border-radius: 8px;">
+                            <div style="color: #9ca3af; font-size: 14px; margin-bottom: 10px;">能量潮 (OBV)</div>
+                            <div style="font-size: 16px; font-weight: 500;">${(q.obv / 1000000).toFixed(2)}M</div>
+                            <div style="font-size: 14px; color: #9ca3af; margin-top: 5px;">5日均量: ${(q.volume_ma5 / 10000).toFixed(0)}万</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button onclick="document.getElementById('quoteModal').remove()" style="
+                            background: #10b981;
+                            color: white;
+                            border: none;
+                            padding: 10px 30px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">关闭</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            console.log(`显示K线详情: ${q.date}`);
+        }
+    </script>
+</body>
+</html>

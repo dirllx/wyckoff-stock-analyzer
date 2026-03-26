@@ -133,7 +133,13 @@ class DataStorage:
             for i, q in enumerate(all_quotes):
                 q.ma5 = df.iloc[i]["ma5"]
                 q.ma10 = df.iloc[i]["ma10"]
+                q.ma15 = df.iloc[i]["ma15"]
                 q.ma20 = df.iloc[i]["ma20"]
+                q.ma30 = df.iloc[i]["ma30"]
+                q.ma60 = df.iloc[i]["ma60"]
+                q.ma90 = df.iloc[i]["ma90"]
+                q.ma120 = df.iloc[i]["ma120"]
+                q.ma250 = df.iloc[i]["ma250"]
                 q.volume_ma5 = df.iloc[i]["volume_ma5"]
                 q.obv = df.iloc[i]["obv"]
 
@@ -167,7 +173,13 @@ class DataStorage:
         # 计算移动平均线
         df["ma5"] = df["close"].rolling(window=5, min_periods=1).mean()
         df["ma10"] = df["close"].rolling(window=10, min_periods=1).mean()
+        df["ma15"] = df["close"].rolling(window=15, min_periods=1).mean()
         df["ma20"] = df["close"].rolling(window=20, min_periods=1).mean()
+        df["ma30"] = df["close"].rolling(window=30, min_periods=1).mean()
+        df["ma60"] = df["close"].rolling(window=60, min_periods=1).mean()
+        df["ma90"] = df["close"].rolling(window=90, min_periods=1).mean()
+        df["ma120"] = df["close"].rolling(window=120, min_periods=1).mean()
+        df["ma250"] = df["close"].rolling(window=250, min_periods=1).mean()
 
         # 计算成交量均线
         df["volume_ma5"] = df["volume"].rolling(window=5, min_periods=1).mean()
@@ -189,7 +201,7 @@ class DataStorage:
         self,
         code: str,
         timeframe: str = "daily",
-        limit: int = 300
+        limit: int = 500
     ) -> List[StockQuote]:
         """
         获取K线数据
@@ -218,7 +230,7 @@ class DataStorage:
         self,
         stock_id: int,
         timeframe: str = "daily",
-        limit: int = 300
+        limit: int = 500
     ) -> List[StockQuote]:
         """
         根据股票ID和周期获取K线数据
@@ -250,17 +262,31 @@ class DataStorage:
             是否成功
         """
         try:
-            # 获取最后一条数据日期
+            # 获取股票
             stock = self.get_or_create_stock(code)
-            last_quote = self.db.query(StockQuote).filter(
+
+            # 检查现有数据量
+            existing_count = self.db.query(StockQuote).filter(
                 StockQuote.stock_id == stock.id,
                 StockQuote.timeframe == timeframe
-            ).order_by(StockQuote.date.desc()).first()
+            ).count()
 
-            # 确定起始日期
-            start_date = None
-            if last_quote:
-                start_date = (last_quote.date + timedelta(days=1)).strftime("%Y%m%d")
+            # 如果现有数据少于500条，重新获取全部数据
+            if existing_count < 500:
+                logger.info(f"股票{code}现有数据{existing_count}条不足500条，重新获取全部数据")
+                # 获取至少3年的数据
+                start_date = None  # 使用默认的3年范围
+            else:
+                # 获取最后一条数据日期
+                last_quote = self.db.query(StockQuote).filter(
+                    StockQuote.stock_id == stock.id,
+                    StockQuote.timeframe == timeframe
+                ).order_by(StockQuote.date.desc()).first()
+
+                # 确定起始日期 - 只获取新数据
+                start_date = None
+                if last_quote:
+                    start_date = (last_quote.date + timedelta(days=1)).strftime("%Y%m%d")
 
             # 获取新数据
             quotes_df = self.fetcher.get_stock_quotes(

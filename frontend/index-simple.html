@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>威科夫股票分析系统 - 简化版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+        .card {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-bottom: 15px;
+            color: #60a5fa;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .status-item {
+            background: #111827;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .status-label {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .status-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .status-healthy { color: #10b981; }
+        .status-error { color: #ef4444; }
+        .status-warning { color: #f59e0b; }
+        input, select {
+            background: #111827;
+            border: 1px solid #374151;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #111827;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 200px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .info-item {
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .info-label {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        .log {
+            background: #111827;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .log-item {
+            padding: 3px 0;
+            border-bottom: 1px solid #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>威科夫股票分析系统 - 简化版</h1>
+
+        <!-- 系统状态 -->
+        <div class="card">
+            <h2>系统状态</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">系统状态</div>
+                    <div class="status-value" id="systemStatus">检查中...</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">数据库</div>
+                    <div class="status-value" id="dbStatus">检查中...</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">API地址</div>
+                    <div class="status-value" id="apiStatus" style="font-size: 14px;">检测中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 股票分析 -->
+        <div class="card">
+            <h2>股票分析</h2>
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="stockCode" placeholder="股票代码" value="600519" style="width: 150px;">
+                <select id="timeframe">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                    <option value="60">60分钟</option>
+                </select>
+                <button onclick="analyzeStock()" id="analyzeBtn">分析</button>
+            </div>
+            <div class="result" id="analyzeResult">
+                <div style="color: #6b7280;">输入股票代码并点击分析按钮</div>
+            </div>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="card">
+            <h2>操作日志</h2>
+            <div class="log" id="logArea">
+                <div class="log-item" style="color: #10b981;">[系统] 页面加载完成</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 动态检测 API 地址
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        // 显示 API 地址
+        document.getElementById('apiStatus').textContent = API_BASE;
+
+        // 日志函数
+        function addLog(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const colors = {
+                info: '#60a5fa',
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b'
+            };
+            const time = new Date().toLocaleTimeString();
+            logArea.innerHTML += `<div class="log-item" style="color: ${colors[type]};">[${time}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 健康检查
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                const data = await response.json();
+
+                const systemEl = document.getElementById('systemStatus');
+                const dbEl = document.getElementById('dbStatus');
+
+                if (data.status === 'healthy') {
+                    systemEl.textContent = '正常';
+                    systemEl.className = 'status-value status-healthy';
+                } else {
+                    systemEl.textContent = '降级';
+                    systemEl.className = 'status-value status-warning';
+                }
+
+                if (data.database === 'connected') {
+                    dbEl.textContent = '已连接';
+                    dbEl.className = 'status-value status-healthy';
+                } else {
+                    dbEl.textContent = '未连接';
+                    dbEl.className = 'status-value status-error';
+                }
+
+                addLog(`健康检查: 系统=${data.status}, 数据库=${data.database}`, 'success');
+            } catch (error) {
+                document.getElementById('systemStatus').textContent = '错误';
+                document.getElementById('systemStatus').className = 'status-value status-error';
+                addLog(`健康检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 股票分析
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            const timeframe = document.getElementById('timeframe').value;
+            const btn = document.getElementById('analyzeBtn');
+            const resultDiv = document.getElementById('analyzeResult');
+
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '分析中...';
+            resultDiv.innerHTML = '<div style="color: #6b7280;">正在分析...</div>';
+            addLog(`开始分析股票: ${code}, 周期: ${timeframe}`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, timeframes: [timeframe] })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const quote = data.current_quote;
+
+                resultDiv.innerHTML = `
+                    <div style="color: #10b981; margin-bottom: 15px; font-size: 18px;">
+                        ✓ ${data.stock.name} (${data.stock.code})
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">日期</div>
+                            <div class="info-value">${quote.date.split('T')[0]}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">收盘价</div>
+                            <div class="info-value">${quote.close}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">成交量</div>
+                            <div class="info-value">${quote.volume?.toLocaleString()}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA5</div>
+                            <div class="info-value">${quote.ma5?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA10</div>
+                            <div class="info-value">${quote.ma10?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA20</div>
+                            <div class="info-value">${quote.ma20?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA60</div>
+                            <div class="info-value">${quote.ma60?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA120</div>
+                            <div class="info-value">${quote.ma120?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">MA250</div>
+                            <div class="info-value">${quote.ma250?.toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">分析建议</div>
+                            <div class="info-value">${data.analysis_summary.suggestion}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #1f2937; border-radius: 4px;">
+                        <div style="color: #9ca3af; margin-bottom: 5px;">分析原因:</div>
+                        <div>${data.analysis_summary.reason}</div>
+                    </div>
+                `;
+
+                addLog(`分析完成: ${data.analysis_summary.suggestion}`, 'success');
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #ef4444;">✗ 分析失败: ${error.message}</div>`;
+                addLog(`分析失败: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '分析';
+            }
+        }
+
+        // 页面加载后自动检查健康状态
+        window.addEventListener('load', () => {
+            setTimeout(checkHealth, 500);
+            // 每30秒自动检查一次
+            setInterval(checkHealth, 30000);
+        });
+
+        // 回车键触发分析
+        document.getElementById('stockCode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                analyzeStock();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -65,9 +65,8 @@ async def health_check(db: Session = Depends(get_db)):
     # 获取详细服务状态
     services = get_service_status()
 
-    # 计算总体健康状态
-    all_connected = db_status == "connected" and redis_status == "connected"
-    overall_status = "healthy" if all_connected else "degraded"
+    # 计算总体健康状态（Redis是可选的，只要数据库连接就健康）
+    overall_status = "healthy" if db_status == "connected" else "unhealthy"
 
     return HealthResponse(
         status=overall_status,

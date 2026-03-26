@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>威科夫系统功能诊断</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+        .section {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-bottom: 15px;
+            color: #60a5fa;
+            font-size: 18px;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #374151;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #059669;
+            color: white;
+        }
+        .status.error {
+            background: #dc2626;
+            color: white;
+        }
+        .status.pending {
+            background: #6b7280;
+            color: white;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        .log {
+            background: #111827;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #1f2937;
+        }
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        .info-box {
+            background: #1e3a8a;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 威科夫系统功能诊断</h1>
+
+        <div class="info-box">
+            <strong>当前访问地址:</strong> <span id="currentUrl"></span><br>
+            <strong>检测到的主机名:</strong> <span id="hostname"></span><br>
+            <strong>自动配置的API地址:</strong> <span id="apiBase"></span>
+        </div>
+
+        <div class="section">
+            <h2>1. 基础信息</h2>
+            <div class="test-item">
+                <span>页面加载</span>
+                <span class="status success">✓ 正常</span>
+            </div>
+            <div class="test-item">
+                <span>JavaScript 运行</span>
+                <span class="status success">✓ 正常</span>
+            </div>
+            <div class="test-item">
+                <span>Fetch API 支持</span>
+                <span class="status success" id="fetchStatus">✓ 正常</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. API 连接测试</h2>
+            <div class="test-item">
+                <span>健康检查 API</span>
+                <span class="status pending" id="healthStatus">检测中...</span>
+            </div>
+            <div class="test-item">
+                <span>股票分析 API (000001)</span>
+                <span class="status pending" id="analyzeStatus">等待测试</span>
+            </div>
+            <div class="test-item">
+                <span>配置查询 API</span>
+                <span class="status pending" id="configStatus">等待测试</span>
+            </div>
+            <div style="margin-top: 15px;">
+                <button onclick="runAllTests()">🚀 运行所有测试</button>
+                <button onclick="testAnalyzeSpecific()">📊 测试股票分析</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. 测试股票分析</h2>
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="testCode" placeholder="输入股票代码 (如 600519)" value="600519"
+                       style="padding: 8px; border-radius: 4px; border: 1px solid #4b5563; background: #1f2937; color: white; width: 200px;">
+                <button onclick="testSpecificStock()">分析</button>
+            </div>
+            <div id="analyzeResult" style="min-height: 100px; background: #111827; padding: 15px; border-radius: 6px;">
+                <div style="color: #6b7280;">等待分析...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. 操作日志</h2>
+            <div class="log" id="logArea">
+                <div class="log-item" style="color: #10b981;">[系统] 诊断页面已加载</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 动态检测 API 地址
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        // 显示基础信息
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('hostname').textContent = currentHost;
+        document.getElementById('apiBase').textContent = API_BASE;
+
+        // 日志函数
+        function addLog(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const colors = {
+                info: '#60a5fa',
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b'
+            };
+            const time = new Date().toLocaleTimeString();
+            logArea.innerHTML += `<div class="log-item" style="color: ${colors[type]};">[${time}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 检查 Fetch API
+        if (typeof fetch === 'undefined') {
+            document.getElementById('fetchStatus').textContent = '✗ 不支持';
+            document.getElementById('fetchStatus').className = 'status error';
+            addLog('Fetch API 不支持', 'error');
+        } else {
+            addLog('Fetch API 支持正常', 'success');
+        }
+
+        // 测试健康检查
+        async function testHealth() {
+            addLog('开始测试健康检查 API...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('healthStatus').textContent = `✓ ${data.status}`;
+                document.getElementById('healthStatus').className = 'status success';
+
+                addLog(`健康检查成功: 系统=${data.status}, 数据库=${data.database}`, 'success');
+
+                // 显示详细信息
+                addLog(`  - 后端进程: ${data.services.backend.pid}`, 'info');
+                addLog(`  - 内存使用: ${data.services.backend.memory_mb} MB`, 'info');
+
+                return true;
+            } catch (error) {
+                document.getElementById('healthStatus').textContent = `✗ ${error.message}`;
+                document.getElementById('healthStatus').className = 'status error';
+                addLog(`健康检查失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // 测试股票分析
+        async function testAnalyze() {
+            addLog('开始测试股票分析 API (000001)...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: '000001', timeframes: ['day'] })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('analyzeStatus').textContent = '✓ 正常';
+                document.getElementById('analyzeStatus').className = 'status success';
+
+                addLog(`股票分析成功: ${data.stock.name}`, 'success');
+                addLog(`  - 收盘价: ${data.current_quote.close}`, 'info');
+                addLog(`  - MA5: ${data.current_quote.ma5}, MA250: ${data.current_quote.ma250}`, 'info');
+                addLog(`  - 分析建议: ${data.analysis_summary.suggestion}`, 'info');
+
+                return true;
+            } catch (error) {
+                document.getElementById('analyzeStatus').textContent = `✗ ${error.message}`;
+                document.getElementById('analyzeStatus').className = 'status error';
+                addLog(`股票分析失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // 测试配置查询
+        async function testConfig() {
+            addLog('开始测试配置查询 API...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('configStatus').textContent = '✓ 正常';
+                document.getElementById('configStatus').className = 'status success';
+
+                addLog('配置查询成功', 'success');
+                return true;
+            } catch (error) {
+                document.getElementById('configStatus').textContent = `✗ ${error.message}`;
+                document.getElementById('configStatus').className = 'status error';
+                addLog(`配置查询失败: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // 运行所有测试
+        async function runAllTests() {
+            addLog('========== 开始运行所有测试 ==========', 'info');
+
+            document.getElementById('healthStatus').textContent = '检测中...';
+            document.getElementById('healthStatus').className = 'status pending';
+            document.getElementById('analyzeStatus').textContent = '等待中...';
+            document.getElementById('analyzeStatus').className = 'status pending';
+            document.getElementById('configStatus').textContent = '等待中...';
+            document.getElementById('configStatus').className = 'status pending';
+
+            await testHealth();
+            await testAnalyze();
+            await testConfig();
+
+            addLog('========== 测试完成 ==========', 'info');
+        }
+
+        // 测试特定股票
+        async function testSpecificStock() {
+            const code = document.getElementById('testCode').value;
+            if (!code) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            const resultDiv = document.getElementById('analyzeResult');
+            resultDiv.innerHTML = '<div style="color: #6b7280;">分析中...</div>';
+
+            addLog(`开始分析股票: ${code}`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, timeframes: ['day'] })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+
+                const quote = data.current_quote;
+                resultDiv.innerHTML = `
+                    <div style="color: #10b981; margin-bottom: 10px;">✓ 分析成功</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>股票:</strong> ${data.stock.code} - ${data.stock.name}</div>
+                        <div><strong>日期:</strong> ${quote.date.split('T')[0]}</div>
+                        <div><strong>收盘:</strong> ${quote.close}</div>
+                        <div><strong>成交量:</strong> ${quote.volume?.toLocaleString()}</div>
+                        <div><strong>MA5:</strong> ${quote.ma5?.toFixed(2)}</div>
+                        <div><strong>MA20:</strong> ${quote.ma20?.toFixed(2)}</div>
+                        <div><strong>MA60:</strong> ${quote.ma60?.toFixed(2)}</div>
+                        <div><strong>MA250:</strong> ${quote.ma250?.toFixed(2)}</div>
+                        <div style="grid-column: 1 / -1;"><strong>分析建议:</strong> ${data.analysis_summary.suggestion}</div>
+                        <div style="grid-column: 1 / -1;"><strong>分析原因:</strong> ${data.analysis_summary.reason}</div>
+                    </div>
+                `;
+
+                addLog(`股票 ${code} 分析成功: ${data.analysis_summary.suggestion}`, 'success');
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #ef4444;">✗ 分析失败: ${error.message}</div>`;
+                addLog(`股票 ${code} 分析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载后自动运行测试
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addLog('页面加载完成，3秒后自动运行测试...', 'info');
+                setTimeout(runAllTests, 3000);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

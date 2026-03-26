@@ -41,7 +41,7 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
         update_success = storage.update_stock_quotes(request.code, request.timeframe)
 
         # 获取K线数据（更新后获取）
-        quotes = storage.get_quotes(request.code, request.timeframe, limit=300)
+        quotes = storage.get_quotes(request.code, request.timeframe, limit=500)
 
         if not quotes:
             raise HTTPException(
@@ -134,12 +134,17 @@ async def get_stock_signals(code: str, db: Session = Depends(get_db)):
 
 
 @router.post("/stocks/{code}/update")
-async def update_stock_data(code: str, db: Session = Depends(get_db)):
+async def update_stock_data(
+    code: str,
+    timeframe: str = "daily",
+    db: Session = Depends(get_db)
+):
     """
     手动更新股票数据
 
     Args:
         code: 股票代码
+        timeframe: 时间周期 (daily/weekly/monthly/30/60)
         db: 数据库会话
 
     Returns:
@@ -150,7 +155,7 @@ async def update_stock_data(code: str, db: Session = Depends(get_db)):
         # 先创建股票（如果不存在）
         storage.get_or_create_stock(code)
 
-        success = storage.update_stock_quotes(code)
+        success = storage.update_stock_quotes(code, timeframe=timeframe)
 
         if success:
             return MessageResponse(
@@ -171,7 +176,7 @@ async def update_stock_data(code: str, db: Session = Depends(get_db)):
 async def get_stock_quotes(
     code: str,
     timeframe: str = "daily",
-    limit: int = 300,
+    limit: int = 500,
     db: Session = Depends(get_db)
 ):
     """
@@ -192,37 +197,6 @@ async def get_stock_quotes(
 
         quotes = storage.get_quotes(code, timeframe, limit)
 
-        # 动态计算额外的均线（MA20/MA30/MA60/MA90/MA120/MA250）
-        # 注意：MA20直接使用数据库中的值，不重新计算
-        closes = [q.close for q in quotes]
-
-        def calculate_ma(data, window):
-            """计算移动平均线"""
-            if len(data) < window:
-                # 数据不足时，使用可用数据计算部分值
-                ma = []
-                for i in range(len(data)):
-                    if i < len(data):
-                        ma.append(sum(data[:i+1]) / (i+1))
-                    else:
-                        ma.append(sum(data[i-window+1:i+1]) / window)
-                return ma
-            ma = []
-            for i in range(len(data)):
-                if i < window - 1:
-                    ma.append(None)
-                else:
-                    ma.append(sum(data[i-window+1:i+1]) / window)
-            return ma
-
-        # MA20直接使用数据库中的值（不计算）
-        ma20 = [q.ma20 for q in quotes]
-        ma30 = calculate_ma(closes, 30)
-        ma60 = calculate_ma(closes, 60)
-        ma90 = calculate_ma(closes, 90)
-        ma120 = calculate_ma(closes, 120)
-        ma250 = calculate_ma(closes, 250)
-
         return {
             "code": code,
             "timeframe": timeframe,
@@ -237,13 +211,13 @@ async def get_stock_quotes(
                     "volume": q.volume,
                     "ma5": q.ma5,
                     "ma10": q.ma10,
-                    "ma15": calculate_ma(closes[:i+1], 15)[-1] if i >= 14 else None,
-                    "ma20": ma20[i],
-                    "ma30": ma30[i],
-                    "ma60": ma60[i],
-                    "ma90": ma90[i],
-                    "ma120": ma120[i],
-                    "ma250": ma250[i],
+                    "ma15": q.ma15,
+                    "ma20": q.ma20,
+                    "ma30": q.ma30,
+                    "ma60": q.ma60,
+                    "ma90": q.ma90,
+                    "ma120": q.ma120,
+                    "ma250": q.ma250,
                     "volume_ma5": q.volume_ma5,
                     "obv": q.obv
                 }

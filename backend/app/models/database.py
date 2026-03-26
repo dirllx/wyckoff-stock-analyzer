@@ -46,7 +46,13 @@ class StockQuote(Base):
     # 技术指标
     ma5 = Column(Float, comment="5日均线")
     ma10 = Column(Float, comment="10日均线")
+    ma15 = Column(Float, comment="15日均线")
     ma20 = Column(Float, comment="20日均线")
+    ma30 = Column(Float, comment="30日均线")
+    ma60 = Column(Float, comment="60日均线")
+    ma90 = Column(Float, comment="90日均线")
+    ma120 = Column(Float, comment="120日均线")
+    ma250 = Column(Float, comment="250日均线")
     volume_ma5 = Column(Float, comment="5日成交量均线")
     obv = Column(Float, comment="能量潮")
 

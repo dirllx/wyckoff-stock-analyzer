@@ -1,13 +1,13 @@
 #!/bin/bash
 # 启动脚本 - 威科夫股票分析系统
 
-cd /root/.openclaw/workspace/wyckoff-stock-analyzer
+cd "/Users/dirllx/Claude Code/wyckoff-stock-analyzer"
 
 # 激活虚拟环境
 source backend/venv/bin/activate
 
 # 设置Python路径
-export PYTHONPATH=/root/.openclaw/workspace/wyckoff-stock-analyzer/backend:$PYTHONPATH
+export PYTHONPATH="/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend:$PYTHONPATH"
 
 # 启动服务
 nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > /tmp/wyckoff-api.log 2>&1 &
