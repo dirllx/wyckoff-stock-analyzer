@@ -1,0 +1,47 @@
+# Environment variables
+.env
+.env.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Credentials
+gog-credentials/
+*.credentials
+credentials.json
+token.json
+
+# Temporary files
+*.tmp
+*.bak
+diagnostic.html
+
+# Node modules (if any)
+node_modules/

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>股票分析 - 简化版</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .section {
+            background: #16213e;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #1a1a2e;
+            color: #eee;
+            width: 150px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .result {
+            background: #0f0f1a;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .log {
+            background: #0f0f1a;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>股票分析 - 简化版</h1>
+
+    <div class="section">
+        <h2>分析股票</h2>
+        <input type="text" id="stockCode" value="688234" placeholder="股票代码">
+        <button onclick="analyzeStock()">开始分析</button>
+        <button onclick="clearResult()">清空</button>
+    </div>
+
+    <div class="section">
+        <h2>分析结果</h2>
+        <div id="result" class="result">等待分析...</div>
+    </div>
+
+    <div class="section">
+        <h2>操作日志</h2>
+        <div id="log" class="log">等待操作...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://45.153.246.2:8000';
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString('zh-CN');
+            const line = `<div>[${time}] ${message}</div>`;
+            logDiv.innerHTML = line + logDiv.innerHTML;
+            console.log(`[${time}] ${message}`);
+        }
+
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            log(`开始分析股票: ${code}`);
+            document.getElementById('result').innerHTML = '分析中...';
+
+            try {
+                // 获取 K 线数据
+                log('获取 K 线数据...');
+                const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=5`);
+                const quotesData = await quotesRes.json();
+
+                if (!quotesData.quotes || quotesData.quotes.length === 0) {
+                    throw new Error('未找到 K 线数据');
+                }
+
+                log(`获取到 ${quotesData.total} 条 K 线数据`);
+
+                // 分析股票
+                log('执行威科夫分析...');
+                const analysisRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, timeframe: 'daily' })
+                });
+                const analysisData = await analysisRes.json();
+
+                // 显示结果
+                const summary = analysisData.analysis_summary;
+                const latest = quotesData.quotes[quotesData.quotes.length - 1];
+
+                const result = `
+股票代码: ${code}
+股票名称: ${analysisData.stock.name || '-'}
+最新日期: ${latest.date}
+最新收盘价: ${latest.close}
+
+=== 分析结果 ===
+方向: ${summary.direction}
+评分: ${summary.score}/10
+置信度: ${(summary.confidence * 100).toFixed(0)}%
+建议: ${summary.suggestion}
+
+=== 技术指标 ===
+MA5: ${latest.ma5?.toFixed(2) || '-'}
+MA10: ${latest.ma10?.toFixed(2) || '-'}
+MA15: ${latest.ma15?.toFixed(2) || '-'}
+MA20: ${latest.ma20?.toFixed(2) || '-'}
+MA30: ${latest.ma30?.toFixed(2) || '-'}
+MA60: ${latest.ma60?.toFixed(2) || '-'}
+OBV: ${(latest.obv / 1000000).toFixed(2)}M
+                `;
+
+                document.getElementById('result').innerHTML = result;
+                log('分析完成！');
+
+            } catch (error) {
+                log(`错误: ${error.message}`);
+                console.error(error);
+                document.getElementById('result').innerHTML = `错误: ${error.message}`;
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '等待分析...';
+            log('结果已清空');
+        }
+
+        // 页面加载
+        window.onload = function() {
+            log('页面加载完成');
+            log(`API 地址: ${API_BASE}`);
+        };
+    </script>
+</body>
+</html>
