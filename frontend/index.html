@@ -8,7 +8,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>步骤8 - 完整图表</title>
+    <title>威科夫股票分析系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,13 +16,13 @@
             background: #0a0e27;
             color: #f9fafb;
             padding: 20px;
-            padding-top: 80px;
+            padding-top: 10px;
         }
         .card {
             background: #111827;
             border: 1px solid #374151;
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
             margin-bottom: 16px;
         }
         .card-header {
@@ -115,37 +115,37 @@
         /* 健康状态栏 */
         .health-status-bar {
             position: fixed;
-            top: 0;
+            top: -5px;
             right: 20px;
             background: #111827;
             border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 8px 16px;
+            border-radius: 6px;
+            padding: 4px 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             z-index: 1000;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .health-indicator {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .health-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
         }
 
-        .health-dot.healthy { background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .health-dot.error { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .health-dot.healthy { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .health-dot.error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
         .health-label { color: #9ca3af; }
         .health-value { color: #f9fafb; font-weight: 600; }
-        .health-divider { width: 1px; height: 16px; background: #374151; }
+        .health-divider { width: 1px; height: 12px; background: #374151; }
 
         /* Tab导航 */
         .tab-nav {
@@ -204,7 +204,7 @@
 .kline-table-container {
             background: #1f2937;
             border-radius: 10px;
-            padding: 12px;
+            padding: 0;
             margin-bottom: 16px;
             overflow-x: auto;
             overflow-y: auto;
@@ -215,7 +215,7 @@
         .kline-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 12px;
             table-layout: fixed;
             min-width: 1600px;
         }
@@ -223,7 +223,7 @@
         .kline-table td {
             padding: 12px 16px;
             text-align: center;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #d1d5db;
         }
         .kline-table th {
             position: sticky;
@@ -231,12 +231,12 @@
             background: #f3f4f6;
             color: #374151;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            z-index: 5;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 8px;
+            z-index: 10;
+            border-bottom: 2px solid #d1d5db;
+            padding: 12px 16px;
         }
         .kline-table td:first-child { text-align: left; }
         .kline-table tr:hover {
@@ -409,10 +409,6 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">步骤8 - 完整图表测试</h2>
-        </div>
-
         <!-- Tab导航 -->
         <div class="tab-nav">
             <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
@@ -426,7 +422,7 @@
         <!-- 分析Tab -->
         <div id="tab-analyze" class="tab-content active">
             <div class="form-group">
-                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 50%;">
                 <select class="form-input" id="timeframe" style="width: 100px;">
                     <option value="daily">日线</option>
                     <option value="weekly">周线</option>
@@ -738,6 +734,97 @@
             addLog('切换标签', `切换到: ${tab}`);
         }
 
+        // ========== 日期格式化函数 ==========
+        function formatDateString(dateStr, timeframe = 'daily') {
+            if (!dateStr) return '-';
+
+            // dateStr 格式可能是 "2026-03-27 14:30:00" 或 "2026-03-27"
+            const parts = dateStr.split(' ');
+            const datePart = parts[0]; // "2026-03-27"
+            const timePart = parts[1]; // "14:30:00" 如果有的话
+
+            if (!datePart) return '-';
+
+            // 分割日期部分
+            const dateComponents = datePart.split('-');
+            if (dateComponents.length >= 3) {
+                const year = dateComponents[0];
+                const month = dateComponents[1];
+                const day = dateComponents[2];
+
+                // 分钟线（30分钟、60分钟）显示日期和时间
+                if (timeframe === '30' || timeframe === '60') {
+                    if (timePart) {
+                        const timeComponents = timePart.split(':');
+                        if (timeComponents.length >= 2) {
+                            const hour = timeComponents[0];
+                            const minute = timeComponents[1];
+                            return `${month}-${day} ${hour}:${minute}`;
+                        }
+                    }
+                    return `${month}-${day}`;
+                }
+
+                // 日线、周线、月线只显示 MM-DD
+                return `${month}-${day}`;
+            }
+
+            return datePart;
+        }
+
+        // ========== 数据去重函数 ==========
+        /**
+         * 根据时间周期对K线数据进行去重
+         * @param {Array} quotes - 原始K线数据
+         * @param {string} timeframe - 时间周期 (daily, weekly, monthly, 30, 60)
+         * @returns {Array} - 去重后的K线数据
+         */
+        function deduplicateQuotes(quotes, timeframe) {
+            if (!quotes || quotes.length === 0) return quotes;
+
+            const dateMap = new Map();
+            let originalCount = quotes.length;
+
+            for (const q of quotes) {
+                if (!q || !q.date) continue;
+
+                // 根据时间周期选择去重键
+                let uniqueKey;
+                switch(timeframe) {
+                    case '30':
+                    case '60':
+                        // 分钟线：保留完整日期时间（不去重同一日期的不同时间）
+                        uniqueKey = q.date;
+                        break;
+                    case 'daily':
+                    case 'weekly':
+                    case 'monthly':
+                    default:
+                        // 日线/周线/月线：只按日期部分去重
+                        const dateParts = q.date.split(' ');
+                        uniqueKey = dateParts[0]; // YYYY-MM-DD
+                        break;
+                }
+
+                // 只保留第一次出现的记录
+                if (!dateMap.has(uniqueKey)) {
+                    dateMap.set(uniqueKey, q);
+                }
+            }
+
+            const result = Array.from(dateMap.values());
+
+            // 添加日志
+            console.log(`去重 [${timeframe}]: 从 ${originalCount} 条减少到 ${result.length} 条`);
+
+            // 检测并报告重复数据
+            if (originalCount > result.length) {
+                console.warn(`发现并移除了 ${originalCount - result.length} 条重复数据`);
+            }
+
+            return result;
+        }
+
         // ========== 威科夫阶段计算函数 ==========
         function calculateWyckoffPhase(quote) {
             const close = Number(quote.close);
@@ -798,18 +885,21 @@
             return ma;
         }
 
-        function renderKlineTable(quotes) {
+        function renderKlineTable(quotes, timeframe = 'daily') {
             const klineBody = document.getElementById('klineBody');
             const klineTableHead = document.getElementById('klineTableHead');
 
+            // 直接使用传入的数据（已在analyzeStock中过去重）
+            const uniqueQuotes = quotes;
+
             // 检查哪些列有数据
-            const hasMa15 = quotes.some(q => q.ma15 != null);
-            const hasMa30 = quotes.some(q => q.ma30 != null);
-            const hasMa60 = quotes.some(q => q.ma60 != null);
-            const hasMa90 = quotes.some(q => q.ma90 != null);
-            const hasMa120 = quotes.some(q => q.ma120 != null);
-            const hasMa250 = quotes.some(q => q.ma250 != null);
-            const hasObv = quotes.some(q => q.obv != null);
+            const hasMa15 = uniqueQuotes.some(q => q.ma15 != null);
+            const hasMa30 = uniqueQuotes.some(q => q.ma30 != null);
+            const hasMa60 = uniqueQuotes.some(q => q.ma60 != null);
+            const hasMa90 = uniqueQuotes.some(q => q.ma90 != null);
+            const hasMa120 = uniqueQuotes.some(q => q.ma120 != null);
+            const hasMa250 = uniqueQuotes.some(q => q.ma250 != null);
+            const hasObv = uniqueQuotes.some(q => q.obv != null);
 
             // 动态生成表头
             let headerHtml = '<tr>';
@@ -833,10 +923,15 @@
             headerHtml += '</tr>';
             klineTableHead.innerHTML = headerHtml;
 
-            // 保存 quotes 数据供点击事件使用
-            window.currentQuotes = quotes;
+            // 保存 quotes 数据供点击事件使用（保存去重后的数据和原始数据的映射）
+            window.currentQuotes = uniqueQuotes;
 
-            klineBody.innerHTML = quotes.slice().reverse().slice(0, 350).map((q, i) => {
+            klineBody.innerHTML = uniqueQuotes.slice().reverse().slice(0, 350).map((q, i) => {
+                // 数据验证，确保q对象存在且有效
+                if (!q || !q.date) {
+                    return '<tr><td colspan="15">数据异常</td></tr>';
+                }
+
                 const isRed = q.close < q.open;
                 const closeClass = isRed ? 'kline-red' : 'kline-green';
 
@@ -844,28 +939,29 @@
                 let phaseClass = 'phase-neutral';
                 let phaseTooltip = '市场横盘整理，等待方向选择';
 
-                if (q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                // 添加空值检查，避免比较时出现NaN
+                if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
                     phase = 'U'; phaseClass = 'phase-U';
                     phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
-                } else if (q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
                     phase = 'D'; phaseClass = 'phase-D';
                     phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
-                } else if (q.volume > q.volume_ma5 * 1.5) {
+                } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
                     phase = 'A'; phaseClass = 'phase-A';
                     phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
-                } else if (q.close < q.ma5 && q.close > q.ma20) {
+                } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
                     phase = 'DS'; phaseClass = 'phase-DS';
                     phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
                 }
 
                 // 动态生成表格行，只显示有值的列
-                let rowHtml = '<tr style="cursor: pointer;" onclick="showQuoteDetail(' + quotes.length - 1 - i + ')">';
-                rowHtml += `<td>${q.date.split(' ')[0]}</td>`;
-                rowHtml += `<td class="${closeClass}">${q.open.toFixed(2)}</td>`;
-                rowHtml += `<td>${q.high.toFixed(2)}</td>`;
-                rowHtml += `<td>${q.low.toFixed(2)}</td>`;
-                rowHtml += `<td class="${closeClass}">${q.close.toFixed(2)}</td>`;
-                rowHtml += `<td>${(q.volume / 10000).toFixed(0)}万</td>`;
+                let rowHtml = '<tr style="cursor: pointer;" onclick="showQuoteDetail(' + uniqueQuotes.length - 1 - i + ')">';
+                rowHtml += `<td>${formatDateString(q.date, timeframe)}</td>`;
+                rowHtml += `<td class="${closeClass}">${q.open != null ? q.open.toFixed(2) : '-'}</td>`;
+                rowHtml += `<td>${q.high != null ? q.high.toFixed(2) : '-'}</td>`;
+                rowHtml += `<td>${q.low != null ? q.low.toFixed(2) : '-'}</td>`;
+                rowHtml += `<td class="${closeClass}">${q.close != null ? q.close.toFixed(2) : '-'}</td>`;
+                rowHtml += `<td>${q.volume != null ? (q.volume / 10000).toFixed(0) + '万' : '-'}</td>`;
                 rowHtml += `<td style="color:#3b82f6;">${q.ma5 != null ? q.ma5.toFixed(2) : '-'}</td>`;
                 rowHtml += `<td style="color:#8b5cf6;">${q.ma10 != null ? q.ma10.toFixed(2) : '-'}</td>`;
                 if (hasMa15) rowHtml += `<td style="color:#f59e0b;">${q.ma15 != null ? q.ma15.toFixed(2) : '-'}</td>`;
@@ -924,18 +1020,20 @@
                     },
                 });
 
-                // 数据去重处理（同一日期只保留一条记录）
+                // currentQuotesData 已在 analyzeStock 中过去重，直接使用
                 const dateMap = new Map();
                 for (const q of currentQuotesData) {
-                    const date = q.date.split(' ')[0]; // 去除时间部分，只保留日期
+                    if (!q.date) continue;
+                    const dateParts = q.date.split(' ');
+                    const date = dateParts[0];
                     if (!dateMap.has(date)) {
                         dateMap.set(date, q);
                     }
                 }
 
-                // 添加K线数据（使用去重后的数据）
+                // 添加K线数据
                 const candlestickData = Array.from(dateMap.values()).map(q => ({
-                    time: q.date.split(' ')[0],
+                    time: q.date ? q.date.split(' ')[0] : '',
                     open: q.open,
                     high: q.high,
                     low: q.low,
@@ -956,17 +1054,17 @@
                 const uniqueDates = Array.from(dateMap.keys());
 
                 const ma5Data = uniqueDates.map(date => {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return { time: date, value: q?.ma5 };
                 }).filter(d => d.value);
 
                 const ma10Data = uniqueDates.map(date => {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return { time: date, value: q?.ma10 };
                 }).filter(d => d.value);
 
                 const ma20Data = uniqueDates.map(date => {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return { time: date, value: q?.ma20 };
                 }).filter(d => d.value);
 
@@ -979,7 +1077,7 @@
                 let lastPhase = null;
 
                 for (const date of uniqueDates) {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     if (q) {
                         const phase = calculateWyckoffPhase(q);
 
@@ -1020,7 +1118,7 @@
 
                 // 成交量数据（使用去重后的数据）
                 const volumeData = uniqueDates.map(date => {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return {
                         time: date,
                         value: q?.volume,
@@ -1040,7 +1138,7 @@
 
                 // 添加成交量MA5线
                 const volumeMA5Data = uniqueDates.map(date => {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return { time: date, value: q?.volume_ma5 };
                 }).filter(d => d.value);
 
@@ -1056,7 +1154,7 @@
                 // 标注异常放量（成交量 > volume_ma5 * 1.5）
                 const abnormalVolumeMarkers = [];
                 for (const date of uniqueDates) {
-                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    const q = dateMap.get(date); // 直接从去重后的Map中获取
                     if (q) {
                         const vol = Number(q.volume);
                         const ma5Vol = Number(q.volume_ma5);
@@ -1136,7 +1234,11 @@
                 const quotesData = await quotesRes.json();
                 const analysisData = await analysisRes.json();
 
-                currentQuotesData = quotesData.quotes;
+                // 根据时间周期去重数据
+                const rawQuotes = quotesData.quotes;
+                const uniqueQuotes = deduplicateQuotes(rawQuotes, timeframe);
+
+                currentQuotesData = uniqueQuotes;
                 const summary = analysisData.analysis_summary;
 
                 // 分析结果 HTML
@@ -1200,14 +1302,14 @@
                 `;
 
                 resultDiv.innerHTML = tableHtml + analysisHtml;
-                addLog('分析成功', `K线: ${quotesData.total}条, 方向: ${summary.direction}`);
+                addLog('分析成功', `K线: ${uniqueQuotes.length}条, 方向: ${summary.direction}`);
                 updateTestStatus('分析完成', true, '分析成功完成');
 
                 // 渲染 K 线表格
                 if (useTableMode) {
-                    renderKlineTable(quotesData.quotes);
+                    renderKlineTable(uniqueQuotes, timeframe);
                 }
-                addLog('分析成功', `K线: ${quotesData.total}条, 方向: ${summary.direction}`);
+                addLog('分析成功', `K线: ${uniqueQuotes.length}条, 方向: ${summary.direction}`);
                 updateTestStatus('分析完成', true, '分析成功完成');
 
                 // 渲染图表
@@ -1236,7 +1338,9 @@
                 chartMode.style.display = 'none';
                 useTableMode = true;
                 if (currentQuotesData) {
-                    renderKlineTable(currentQuotesData);
+                    // 获取当前时间周期
+                    const currentTimeframe = document.getElementById('timeframe')?.value || 'daily';
+                    renderKlineTable(currentQuotesData, currentTimeframe);
                 }
             } else {
                 btnChart.classList.add('active');
@@ -1772,6 +1876,9 @@
             const change = ((q.close - q.open) / q.open * 100).toFixed(2);
             const changeSign = change >= 0 ? '+' : '';
 
+            // 获取当前时间周期
+            const currentTimeframe = document.getElementById('timeframe')?.value || 'daily';
+
             // 创建弹窗
             const modal = document.createElement('div');
             modal.id = 'quoteModal';
@@ -1836,7 +1943,7 @@
                         ">
                             <div style="background: #111827; padding: 15px; border-radius: 8px;">
                                 <div style="color: #9ca3af; font-size: 14px; margin-bottom: 8px;">日期</div>
-                                <div style="font-size: 18px; font-weight: 600;">${q.date.split(' ')[0]}</div>
+                                <div style="font-size: 18px; font-weight: 600;">${formatDateString(q.date, currentTimeframe)}</div>
                             </div>
                             <div style="background: #111827; padding: 15px; border-radius: 8px;">
                                 <div style="color: #9ca3af; font-size: 14px; margin-bottom: 8px;">涨跌幅</div>
@@ -1931,7 +2038,7 @@
                 }
             });
 
-            console.log(`显示K线详情: ${q.date.split(' ')[0]}`);
+            console.log(`显示K线详情: ${formatDateString(q.date, currentTimeframe)}`);
         }
     </script>
 
