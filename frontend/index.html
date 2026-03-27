@@ -16,6 +16,12 @@
             background: #0a0e27;
             color: #f9fafb;
             padding: 12px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
         }
         .card {
             background: #111827;
@@ -444,7 +450,7 @@
         <!-- 分析Tab -->
         <div id="tab-analyze" class="tab-content active">
             <div class="form-group">
-                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 50%;">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 15%;">
                 <select class="form-input" id="timeframe" style="width: 100px;">
                     <option value="daily">日线</option>
                     <option value="weekly">周线</option>
@@ -1907,11 +1913,36 @@
             if (q.ma5 && q.ma10 && q.ma20) {
                 // 多头排列：ma5 > ma10 > ma20
                 if (q.ma5 > q.ma10 && q.ma10 > q.ma20) {
-                    maTrend.push({ type: '多头排列', color: '#10b981' });
+                    const ma5_10_gap = ((q.ma5 - q.ma10) / q.ma10 * 100).toFixed(2);
+                    const ma10_20_gap = ((q.ma10 - q.ma20) / q.ma20 * 100).toFixed(2);
+                    maTrend.push({ type: `多头排列 开口${ma5_10_gap}%`, color: '#10b981' });
                 }
                 // 空头排列：ma5 < ma10 < ma20
                 if (q.ma5 < q.ma10 && q.ma10 < q.ma20) {
-                    maTrend.push({ type: '空头排列', color: '#ef4444' });
+                    const ma5_10_gap = ((q.ma10 - q.ma5) / q.ma10 * 100).toFixed(2);
+                    const ma10_20_gap = ((q.ma20 - q.ma10) / q.ma20 * 100).toFixed(2);
+                    maTrend.push({ type: `空头排列 开口${ma5_10_gap}%`, color: '#ef4444' });
+                }
+
+                // MA5/MA10开口判断
+                const ma5_10_diff = Math.abs(q.ma5 - q.ma10);
+                const ma5_10_diff_pct = (ma5_10_diff / q.close * 100).toFixed(2);
+                if (ma5_10_diff_pct > 3) {
+                    const trendType = q.ma5 > q.ma10 ? 'MA5/MA10大幅发散' : 'MA5/MA10大幅发散';
+                    maTrend.push({ type: `${trendType} (${ma5_10_diff_pct}%)`, color: q.ma5 > q.ma10 ? '#10b981' : '#ef4444' });
+                } else if (ma5_10_diff_pct < 0.5) {
+                    maTrend.push({ type: `MA5/MA10粘合 (${ma5_10_diff_pct}%)`, color: '#f59e0b' });
+                }
+
+                // 均线收敛判断（与前一天对比）
+                if (prevQ && prevQ.ma5 && prevQ.ma10) {
+                    const prev_gap = Math.abs(prevQ.ma5 - prevQ.ma10);
+                    const curr_gap = Math.abs(q.ma5 - q.ma10);
+                    if (curr_gap < prev_gap * 0.7) {
+                        maTrend.push({ type: '均线收敛', color: '#f59e0b' });
+                    } else if (curr_gap > prev_gap * 1.3) {
+                        maTrend.push({ type: '均线发散', color: '#9ca3af' });
+                    }
                 }
             }
 
@@ -1919,11 +1950,21 @@
             if (prevQ && prevQ.ma5 && prevQ.ma10 && q.ma5 && q.ma10) {
                 // 金叉：ma5从下方穿过ma10
                 if (prevQ.ma5 <= prevQ.ma10 && q.ma5 > q.ma10) {
-                    maTrend.push({ type: 'MA5金叉', color: '#10b981' });
+                    maTrend.push({ type: '🔥 MA5金叉', color: '#10b981' });
                 }
                 // 死叉：ma5从上方穿过ma10
                 if (prevQ.ma5 >= prevQ.ma10 && q.ma5 < q.ma10) {
-                    maTrend.push({ type: 'MA5死叉', color: '#ef4444' });
+                    maTrend.push({ type: '💀 MA5死叉', color: '#ef4444' });
+                }
+            }
+
+            // MA20金叉死叉
+            if (prevQ && prevQ.ma10 && prevQ.ma20 && q.ma10 && q.ma20) {
+                if (prevQ.ma10 <= prevQ.ma20 && q.ma10 > q.ma20) {
+                    maTrend.push({ type: '🔥 MA10金叉MA20', color: '#10b981' });
+                }
+                if (prevQ.ma10 >= prevQ.ma20 && q.ma10 < q.ma20) {
+                    maTrend.push({ type: '💀 MA10死叉MA20', color: '#ef4444' });
                 }
             }
 
@@ -2097,18 +2138,53 @@
                         </div>
 
                         <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <div style="color: #9ca3af; font-size: 12px;">威科夫阶段</div>
-                                <div style="padding: 3px 10px; border-radius: 4px; font-weight: 600; font-size: 12px; background: ${phaseColor}20; color: ${phaseColor}; border: 1px solid ${phaseColor};">
-                                    ${currentPhase}阶段
+                                <div style="padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; background: ${phaseColor}20; color: ${phaseColor}; border: 1px solid ${phaseColor};">
+                                    ${currentPhase === 'U' ? '📈 上升' : currentPhase === 'D' ? '📉 下降' : currentPhase === 'A' ? '🔄 吸筹' : currentPhase === 'DS' ? '📥 下跌吸筹' : '⚡ 震荡'}
                                 </div>
                             </div>
-                            <div style="font-size: 10px; color: #9ca3af; line-height: 1.5;">
-                                <div style="margin-bottom: 4px;"><span style="color: #10b981; font-weight: 600;">U阶段</span>（上升）：close > ma20 && ma5 > ma10 > ma20</div>
-                                <div style="margin-bottom: 4px;"><span style="color: #ef4444; font-weight: 600;">D阶段</span>（下降）：close < ma20 && ma5 < ma10 < ma20</div>
-                                <div style="margin-bottom: 4px;"><span style="color: #f59e0b; font-weight: 600;">A阶段</span>（吸筹）：volume > volume_ma5 × 1.5</div>
-                                <div style="margin-bottom: 4px;"><span style="color: #8b5cf6; font-weight: 600;">DS阶段</span>（下跌吸筹）：close < ma5 && close > ma20</div>
-                                <div><span style="color: #9ca3af; font-weight: 600;">震荡</span>（默认）：以上条件都不满足</div>
+
+                            <!-- 当前阶段说明 -->
+                            <div style="background: ${phaseColor}10; padding: 10px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid ${phaseColor};">
+                                <div style="font-size: 12px; font-weight: 600; color: ${phaseColor}; margin-bottom: 4px;">
+                                    ${currentPhase === 'U' ? '📈 上升趋势 - 强势做多' :
+                                      currentPhase === 'D' ? '📉 下降趋势 - 观望做空' :
+                                      currentPhase === 'A' ? '🔄 吸筹阶段 - 关注主力' :
+                                      currentPhase === 'DS' ? '📥 下跌吸筹 - 机会来临' :
+                                      '⚡ 震荡整理 - 耐心等待'}
+                                </div>
+                                <div style="font-size: 11px; color: #d1d5db; line-height: 1.6;">
+                                    ${currentPhase === 'U' ? '均线多头排列向上发散，价格强势上涨，适合持仓或逢低买入。' :
+                                      currentPhase === 'D' ? '均线空头排列向下发散，价格弱势下跌，建议观望或轻仓试探。' :
+                                      currentPhase === 'A' ? '成交量异常放大，主力资金可能在吸筹，关注后续走势，等待方向选择。' :
+                                      currentPhase === 'DS' ? '价格回落但在MA20上方，可能是主力洗盘，上涨概率较大，值得关注。' :
+                                      '多空力量均衡，等待方向突破，可关注放量突破信号。'}
+                                </div>
+                            </div>
+
+                            <!-- 操作建议 -->
+                            <div style="font-size: 10px; color: #9ca3af; line-height: 1.6;">
+                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'U' ? 'background: rgba(16, 185, 129, 0.1);' : ''}">
+                                    <span style="color: #10b981; font-weight: 600;">📈 U阶段</span> 上升：close > ma20 且 ma5 > ma10 > ma20
+                                    ${currentPhase === 'U' ? ' <span style="color: #10b981;">✅ 适合买入/持有</span>' : ''}
+                                </div>
+                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'D' ? 'background: rgba(239, 68, 68, 0.1);' : ''}">
+                                    <span style="color: #ef4444; font-weight: 600;">📉 D阶段</span> 下降：close < ma20 且 ma5 < ma10 < ma20
+                                    ${currentPhase === 'D' ? ' <span style="color: #ef4444;">⚠️ 建议观望/减仓</span>' : ''}
+                                </div>
+                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'A' ? 'background: rgba(251, 191, 36, 0.1);' : ''}">
+                                    <span style="color: #f59e0b; font-weight: 600;">🔄 A阶段</span> 吸筹：volume > volume_ma5 × 1.5
+                                    ${currentPhase === 'A' ? ' <span style="color: #f59e0b;">👀 关注主力动作</span>' : ''}
+                                </div>
+                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'DS' ? 'background: rgba(139, 92, 246, 0.1);' : ''}">
+                                    <span style="color: #8b5cf6; font-weight: 600;">📥 DS阶段</span> 下跌吸筹：close < ma5 且 close > ma20
+                                    ${currentPhase === 'DS' ? ' <span style="color: #8b5cf6;">💎 关注买入机会</span>' : ''}
+                                </div>
+                                <div style="padding: 4px; border-radius: 4px; ${currentPhase === '震荡' ? 'background: rgba(156, 163, 175, 0.1);' : ''}">
+                                    <span style="color: #9ca3af; font-weight: 600;">⚡ 震荡</span> 默认：以上条件都不满足
+                                    ${currentPhase === '震荡' ? ' <span style="color: #9ca3af;">⏸️ 耐心等待</span>' : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
