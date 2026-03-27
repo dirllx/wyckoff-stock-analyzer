@@ -444,7 +444,7 @@
         <!-- 分析Tab -->
         <div id="tab-analyze" class="tab-content active">
             <div class="form-group">
-                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 50%;">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 25%;">
                 <select class="form-input" id="timeframe" style="width: 100px;">
                     <option value="daily">日线</option>
                     <option value="weekly">周线</option>
@@ -1899,6 +1899,34 @@
 
             const q = window.currentQuotes[index];
 
+            // 获取前一天数据用于对比
+            const prevQ = index > 0 ? window.currentQuotes[index - 1] : null;
+
+            // 计算均线开口情况
+            const maTrend = [];
+            if (q.ma5 && q.ma10 && q.ma20) {
+                // 多头排列：ma5 > ma10 > ma20
+                if (q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                    maTrend.push({ type: '多头排列', color: '#10b981' });
+                }
+                // 空头排列：ma5 < ma10 < ma20
+                if (q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                    maTrend.push({ type: '空头排列', color: '#ef4444' });
+                }
+            }
+
+            // 金叉死叉判断（与前一天对比）
+            if (prevQ && prevQ.ma5 && prevQ.ma10 && q.ma5 && q.ma10) {
+                // 金叉：ma5从下方穿过ma10
+                if (prevQ.ma5 <= prevQ.ma10 && q.ma5 > q.ma10) {
+                    maTrend.push({ type: 'MA5金叉', color: '#10b981' });
+                }
+                // 死叉：ma5从上方穿过ma10
+                if (prevQ.ma5 >= prevQ.ma10 && q.ma5 < q.ma10) {
+                    maTrend.push({ type: 'MA5死叉', color: '#ef4444' });
+                }
+            }
+
             // 数据验证
             if (!q || q.open == null || q.close == null) {
                 alert('数据不完整');
@@ -2033,14 +2061,39 @@
 
                         <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
                             <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">移动平均线 (MA)</div>
-                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
-                                <div style="font-size: 12px;"><span style="color: #3b82f6;">MA5:</span> ${q.ma5?.toFixed(2) || '-'}</div>
-                                <div style="font-size: 12px;"><span style="color: #8b5cf6;">MA10:</span> ${q.ma10?.toFixed(2) || '-'}</div>
-                                <div style="font-size: 12px;"><span style="color: #10b981;">MA20:</span> ${q.ma20?.toFixed(2) || '-'}</div>
-                                <div style="font-size: 12px;"><span style="color: #ec4899;">MA60:</span> ${q.ma60?.toFixed(2) || '-'}</div>
-                                <div style="font-size: 12px;"><span style="color: #f97316;">MA120:</span> ${q.ma120?.toFixed(2) || '-'}</div>
-                                <div style="font-size: 12px;"><span style="color: #06b6d4;">MA250:</span> ${q.ma250?.toFixed(2) || '-'}</div>
+                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 8px;">
+                                <div style="font-size: 12px;">
+                                    <span style="color: #3b82f6;">MA5:</span> ${q.ma5?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma5 ? `<span style="font-size: 10px; color: ${q.ma5 > prevQ.ma5 ? '#10b981' : '#ef4444'};">(${q.ma5 > prevQ.ma5 ? '+' : ''}${(q.ma5 - prevQ.ma5).toFixed(2)})</span>` : ''}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    <span style="color: #8b5cf6;">MA10:</span> ${q.ma10?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma10 ? `<span style="font-size: 10px; color: ${q.ma10 > prevQ.ma10 ? '#10b981' : '#ef4444'};">(${q.ma10 > prevQ.ma10 ? '+' : ''}${(q.ma10 - prevQ.ma10).toFixed(2)})</span>` : ''}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    <span style="color: #10b981;">MA20:</span> ${q.ma20?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma20 ? `<span style="font-size: 10px; color: ${q.ma20 > prevQ.ma20 ? '#10b981' : '#ef4444'};">(${q.ma20 > prevQ.ma20 ? '+' : ''}${(q.ma20 - prevQ.ma20).toFixed(2)})</span>` : ''}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    <span style="color: #ec4899;">MA60:</span> ${q.ma60?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma60 ? `<span style="font-size: 10px; color: ${q.ma60 > prevQ.ma60 ? '#10b981' : '#ef4444'};">(${q.ma60 > prevQ.ma60 ? '+' : ''}${(q.ma60 - prevQ.ma60).toFixed(2)})</span>` : ''}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    <span style="color: #f97316;">MA120:</span> ${q.ma120?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma120 ? `<span style="font-size: 10px; color: ${q.ma120 > prevQ.ma120 ? '#10b981' : '#ef4444'};">(${q.ma120 > prevQ.ma120 ? '+' : ''}${(q.ma120 - prevQ.ma120).toFixed(2)})</span>` : ''}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    <span style="color: #06b6d4;">MA250:</span> ${q.ma250?.toFixed(2) || '-'}
+                                    ${prevQ && prevQ.ma250 ? `<span style="font-size: 10px; color: ${q.ma250 > prevQ.ma250 ? '#10b981' : '#ef4444'};">(${q.ma250 > prevQ.ma250 ? '+' : ''}${(q.ma250 - prevQ.ma250).toFixed(2)})</span>` : ''}
+                                </div>
                             </div>
+                            ${maTrend.length > 0 ? `
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid #374151;">
+                                ${maTrend.map(trend => `
+                                    <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
+                                `).join('')}
+                            </div>
+                            ` : ''}
                         </div>
 
                         <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
