@@ -1998,6 +1998,102 @@
                 phaseColor = '#8b5cf6';
             }
 
+            // 计算昨天的威科夫阶段
+            let prevPhase = '震荡';
+            if (prevQ) {
+                if (prevQ.ma20 && prevQ.ma5 && prevQ.ma10 && prevQ.close > prevQ.ma20 && prevQ.ma5 > prevQ.ma10 && prevQ.ma10 > prevQ.ma20) {
+                    prevPhase = 'U';
+                } else if (prevQ.ma20 && prevQ.ma5 && prevQ.ma10 && prevQ.close < prevQ.ma20 && prevQ.ma5 < prevQ.ma10 && prevQ.ma10 < prevQ.ma20) {
+                    prevPhase = 'D';
+                } else if (prevQ.volume_ma5 && prevQ.volume > prevQ.volume_ma5 * 1.5) {
+                    prevPhase = 'A';
+                } else if (prevQ.ma5 && prevQ.ma20 && prevQ.close < prevQ.ma5 && prevQ.close > prevQ.ma20) {
+                    prevPhase = 'DS';
+                }
+            }
+
+            // 计算阶段转变分析
+            let phaseChange = '';
+            let phaseChangeStrength = '';
+            let phaseChangeColor = '';
+            let operationAdvice = '';
+            let operationColor = '';
+
+            const phaseStrength = { 'U': 5, 'D': -5, 'A': 3, 'DS': 2, '震荡': 0 };
+            const currentStrength = phaseStrength[currentPhase] || 0;
+            const prevStrength = phaseStrength[prevPhase] || 0;
+            const strengthDiff = currentStrength - prevStrength;
+
+            if (currentPhase === prevPhase) {
+                // 阶段未变化
+                if (currentPhase === 'U') {
+                    phaseChange = '持续强势上涨';
+                    phaseChangeStrength = '📈 多头趋势延续';
+                    phaseChangeColor = '#10b981';
+                    operationAdvice = '✅ 持仓/逢低买入';
+                    operationColor = '#10b981';
+                } else if (currentPhase === 'D') {
+                    phaseChange = '持续弱势下跌';
+                    phaseChangeStrength = '📉 空头趋势延续';
+                    phaseChangeColor = '#ef4444';
+                    operationAdvice = '⚠️ 观望/轻仓试探';
+                    operationColor = '#ef4444';
+                } else if (currentPhase === 'A') {
+                    phaseChange = '持续吸筹';
+                    phaseChangeStrength = '🔄 主力继续吸筹';
+                    phaseChangeColor = '#f59e0b';
+                    operationAdvice = '👀 密切关注';
+                    operationColor = '#f59e0b';
+                } else if (currentPhase === 'DS') {
+                    phaseChange = '持续下跌吸筹';
+                    phaseChangeStrength = '📥 洗盘吸筹延续';
+                    phaseChangeColor = '#8b5cf6';
+                    operationAdvice = '💎 关注低吸机会';
+                    operationColor = '#8b5cf6';
+                } else {
+                    phaseChange = '持续震荡';
+                    phaseChangeStrength = '⚡ 震荡延续';
+                    phaseChangeColor = '#9ca3af';
+                    operationAdvice = '⏸️ 继续等待';
+                    operationColor = '#9ca3af';
+                }
+            } else {
+                // 阶段发生变化
+                const transitions = {
+                    '震荡->U': { change: '转强向上', emoji: '🚀', color: '#10b981', advice: '🔥 积极买入', strength: '强势转强' },
+                    '震荡->D': { change: '转弱向下', emoji: '🔻', color: '#ef4444', advice: '⚠️ 及时止盈', strength: '强势转弱' },
+                    '震荡->A': { change: '进入吸筹', emoji: '🎯', color: '#f59e0b', advice: '👀 跟踪观察', strength: '开始活跃' },
+                    '震荡->DS': { change: '进入洗盘', emoji: '📥', color: '#8b5cf6', advice: '💎 准备低吸', strength: '开始调整' },
+                    'D->震荡': { change: '止跌企稳', emoji: '🛡️', color: '#9ca3af', advice: '⏸️ 观望为主', strength: '下跌趋缓' },
+                    'D->DS': { change: '下跌吸筹', emoji: '📥', color: '#8b5cf6', advice: '💎 分批低吸', strength: '止跌信号' },
+                    'D->A': { change: '反弹吸筹', emoji: '🔄', color: '#f59e0b', advice: '👀 谨慎参与', strength: '短线反弹' },
+                    'U->震荡': { change: '上涨乏力', emoji: '😰', color: '#f59e0b', advice: '⚠️ 获利了结', strength: '上涨趋缓' },
+                    'U->DS': { change: '回调洗盘', emoji: '📥', color: '#8b5cf6', advice: '💎 逢低介入', strength: '正常回调' },
+                    'U->A': { change: '高位吸筹', emoji: '⚠️', color: '#f59e0b', advice: '🚨 谨慎观望', strength: '派发风险' },
+                    'U->D': { change: '趋势反转', emoji: '💀', color: '#ef4444', advice: '🚨 果断离场', strength: '重大转弱' },
+                    'DS->U': { change: '重拾升势', emoji: '🚀', color: '#10b981', advice: '🔥 积极跟进', strength: '强势反转' },
+                    'DS->D': { change: '破位下行', emoji: '📉', color: '#ef4444', advice: '⚠️ 止损观望', strength: '继续下跌' },
+                    'A->U': { change: '吸筹完成', emoji: '🚀', color: '#10b981', advice: '🔥 积极买入', strength: '启动拉升' },
+                    'A->D': { change: '吸筹失败', emoji: '💔', color: '#ef4444', advice: '⚠️ 继续观望', strength: '转弱下跌' },
+                };
+
+                const transitionKey = `${prevPhase}->${currentPhase}`;
+                if (transitions[transitionKey]) {
+                    const t = transitions[transitionKey];
+                    phaseChange = t.change;
+                    phaseChangeStrength = `${t.emoji} ${t.strength}`;
+                    phaseChangeColor = t.color;
+                    operationAdvice = t.advice;
+                    operationColor = t.color;
+                } else {
+                    phaseChange = `${prevPhase}转${currentPhase}`;
+                    phaseChangeStrength = strengthDiff > 0 ? '📈 趋势转强' : '📉 趋势转弱';
+                    phaseChangeColor = strengthDiff > 0 ? '#10b981' : '#ef4444';
+                    operationAdvice = strengthDiff > 0 ? '👀 积极关注' : '⚠️ 谨慎观望';
+                    operationColor = strengthDiff > 0 ? '#10b981' : '#ef4444';
+                }
+            }
+
             // 创建弹窗
             const modal = document.createElement('div');
             modal.id = 'quoteModal';
@@ -2144,6 +2240,40 @@
                                     ${currentPhase === 'U' ? '📈 上升' : currentPhase === 'D' ? '📉 下降' : currentPhase === 'A' ? '🔄 吸筹' : currentPhase === 'DS' ? '📥 下跌吸筹' : '⚡ 震荡'}
                                 </div>
                             </div>
+
+                            <!-- 与昨天对比分析 -->
+                            ${prevQ ? `
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                <div style="font-size: 11px; font-weight: 600; color: #8b5cf6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    📊 趋势对比分析
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px;">
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">昨天</div>
+                                        <div style="font-size: 12px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'}20; color: ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'}; border: 1px solid ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'};">
+                                            ${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">变化</div>
+                                        <div style="font-size: 16px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">今天</div>
+                                        <div style="font-size: 12px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: ${phaseColor}20; color: ${phaseColor}; border: 1px solid ${phaseColor};">
+                                            ${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: ${operationColor}15; border-radius: 6px; border-left: 3px solid ${operationColor};">
+                                    <div style="font-size: 20px;">💡</div>
+                                    <div>
+                                        <div style="font-size: 10px; color: #9ca3af; margin-bottom: 2px;">今日操作建议</div>
+                                        <div style="font-size: 14px; font-weight: 600; color: ${operationColor};">${operationAdvice}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
 
                             <!-- 当前阶段说明 -->
                             <div style="background: ${phaseColor}10; padding: 10px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid ${phaseColor};">
