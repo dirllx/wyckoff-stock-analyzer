@@ -1183,19 +1183,40 @@
                 let phaseClass = 'phase-neutral';
                 let phaseTooltip = '市场横盘整理，等待方向选择';
 
-                // 添加空值检查，避免比较时出现NaN
-                if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
-                    phase = 'U'; phaseClass = 'phase-U';
-                    phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
-                } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
-                    phase = 'D'; phaseClass = 'phase-D';
-                    phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
-                } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
-                    phase = 'A'; phaseClass = 'phase-A';
-                    phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
-                } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
-                    phase = 'DS'; phaseClass = 'phase-DS';
-                    phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
+                // 检查是否是最新一天（第一行），如果是，使用后端分析的威科夫阶段
+                const isLatest = i === 0;
+                if (isLatest && window.backendWyckoffPhase) {
+                    // 使用后端返回的威科夫阶段
+                    const backendPhase = window.backendWyckoffPhase;
+                    if (backendPhase.includes('U') || backendPhase.includes('上升')) {
+                        phase = 'U'; phaseClass = 'phase-U';
+                        phaseTooltip = `后端综合分析：${backendPhase}`;
+                    } else if (backendPhase.includes('D') || backendPhase.includes('下降')) {
+                        phase = 'D'; phaseClass = 'phase-D';
+                        phaseTooltip = `后端综合分析：${backendPhase}`;
+                    } else if (backendPhase.includes('A') || backendPhase.includes('吸筹')) {
+                        phase = 'A'; phaseClass = 'phase-A';
+                        phaseTooltip = `后端综合分析：${backendPhase}`;
+                    } else if (backendPhase.includes('DS') || backendPhase.includes('下跌吸筹')) {
+                        phase = 'DS'; phaseClass = 'phase-DS';
+                        phaseTooltip = `后端综合分析：${backendPhase}`;
+                    }
+                } else {
+                    // 其他行使用前端计算的威科夫阶段
+                    // 添加空值检查，避免比较时出现NaN
+                    if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                        phase = 'U'; phaseClass = 'phase-U';
+                        phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
+                    } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                        phase = 'D'; phaseClass = 'phase-D';
+                        phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
+                    } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
+                        phase = 'A'; phaseClass = 'phase-A';
+                        phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
+                    } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
+                        phase = 'DS'; phaseClass = 'phase-DS';
+                        phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
+                    }
                 }
 
                 // 计算原始索引（倒序数组索引转换回正序数组索引）
@@ -1219,7 +1240,7 @@
                 if (hasMa120) rowHtml += `<td style="color:#f97316;">${q.ma120 != null ? q.ma120.toFixed(2) : '-'}</td>`;
                 if (hasMa250) rowHtml += `<td style="color:#06b6d4;">${q.ma250 != null ? q.ma250.toFixed(2) : '-'}</td>`;
                 if (hasObv) rowHtml += `<td style="color:#f97316;">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>`;
-                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase}阶段</span></td>`;
+                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase}阶段${isLatest ? ' ⭐' : ''}</span></td>`;
                 rowHtml += '</tr>';
 
                 return rowHtml;
@@ -1597,13 +1618,20 @@
                 currentQuotesData = uniqueQuotes;
                 const summary = analysisData.analysis_summary;
 
+                // 保存后端分析的威科夫阶段，用于在表格中标注最新一天
+                window.backendWyckoffPhase = summary.wyckoff_phase;
+
                 // 分析结果 HTML
                 const analysisHtml = `
                     <div class="card" style="margin-top: 16px;">
                         <div class="card-header">
-                            <h3 class="card-title">分析结果</h3>
+                            <h3 class="card-title">⭐ 后端综合分析结果（最新）</h3>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 16px; background: #1f2937; border-radius: 8px;">
+                            <div>
+                                <span style="color: #9ca3af; font-size: 12px;">威科夫阶段</span>
+                                <div style="color: #fbbf24; font-size: 16px; font-weight: 600;">${summary.wyckoff_phase || '-'}</div>
+                            </div>
                             <div>
                                 <span style="color: #9ca3af; font-size: 12px;">方向</span>
                                 <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${summary.direction}</div>
@@ -1616,7 +1644,7 @@
                                 <span style="color: #9ca3af; font-size: 12px;">置信度</span>
                                 <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${((summary.confidence || 0) * 100).toFixed(0)}%</div>
                             </div>
-                            <div>
+                            <div style="grid-column: span 2;">
                                 <span style="color: #9ca3af; font-size: 12px;">建议</span>
                                 <div style="color: #f9fafb; font-size: 14px;">${summary.suggestion || '无'}</div>
                             </div>
