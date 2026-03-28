@@ -2067,14 +2067,30 @@
                 </div>
             `;
 
+            // 1.5 数据说明
+            html += `
+                <div style="background: #1e3a8a20; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid #3b82f640;">
+                    <div style="color: #60a5fa; font-size: 12px; font-weight: 600; margin-bottom: 4px;">💡 数据说明</div>
+                    <div style="color: #d1d5db; font-size: 11px; line-height: 1.5;">
+                        多周期分析显示的是后端综合算法得出的<b style="color: #f9fafb;">整体威科夫阶段</b>，考虑了趋势、量能、动量等多个维度。
+                        表格分析显示的是<b style="color: #f9fafb;">某一天</b>的实时计算结果。两者算法不同，结论可能不一致。
+                        建议以多周期综合分析为准，表格数据用于查看具体某日的详细指标。
+                    </div>
+                </div>
+            `;
+
             // 2. 关键指标对比表格
             html += `
                 <div style="background: #1f2937; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #374151;">
-                    <div style="color: #f9fafb; font-size: 14px; font-weight: 600; margin-bottom: 10px;">📊 各周期关键指标对比</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="color: #f9fafb; font-size: 14px; font-weight: 600;">📊 各周期关键指标对比</div>
+                        <div style="color: #9ca3af; font-size: 11px;">* 显示后端综合分析的最新数据</div>
+                    </div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr style="border-bottom: 2px solid #374151;">
                                 <th style="text-align: left; padding: 8px; color: #9ca3af; font-weight: 500;">周期</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">日期</th>
                                 <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">价格</th>
                                 <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">评分</th>
                                 <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">方向</th>
@@ -2093,6 +2109,7 @@
                 const score = summary.score || 0;
                 const wyckoffPhase = summary.wyckoff_phase || '-';
                 const suggestion = summary.suggestion || '-';
+                const quoteDate = quote?.date ? quote.date.split('T')[0] : '-';
 
                 let directionColor = '#9ca3af';
                 let directionText = '中性';
@@ -2112,18 +2129,19 @@
                 // 威科夫阶段颜色
                 let phaseColor = '#9ca3af';
                 let phaseIcon = '';
-                if (wyckoffPhase === 'U') { phaseColor = '#10b981'; phaseIcon = '📈'; }
-                else if (wyckoffPhase === 'D') { phaseColor = '#ef4444'; phaseIcon = '📉'; }
-                else if (wyckoffPhase === 'A') { phaseColor = '#f59e0b'; phaseIcon = '🔄'; }
-                else if (wyckoffPhase === 'DS') { phaseColor = '#8b5cf6'; phaseIcon = '📥'; }
+                if (wyckoffPhase.includes('U') || wyckoffPhase.includes('上升')) { phaseColor = '#10b981'; phaseIcon = '📈'; }
+                else if (wyckoffPhase.includes('D') || wyckoffPhase.includes('下降')) { phaseColor = '#ef4444'; phaseIcon = '📉'; }
+                else if (wyckoffPhase.includes('A') || wyckoffPhase.includes('吸筹')) { phaseColor = '#f59e0b'; phaseIcon = '🔄'; }
+                else if (wyckoffPhase.includes('DS') || wyckoffPhase.includes('下跌吸筹')) { phaseColor = '#8b5cf6'; phaseIcon = '📥'; }
 
                 html += `
                     <tr style="border-bottom: 1px solid #374151;">
                         <td style="padding: 10px 8px; color: #f9fafb; font-weight: 600;">${tfName}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: #9ca3af; font-size: 11px;">${quoteDate}</td>
                         <td style="text-align: center; padding: 10px 8px; color: #f9fafb;">${quote?.close ? quote.close.toFixed(2) : '-'}</td>
                         <td style="text-align: center; padding: 10px 8px; color: ${scoreColor}; font-weight: 700;">${score > 0 ? '+' : ''}${score}</td>
                         <td style="text-align: center; padding: 10px 8px; color: ${directionColor}; font-weight: 600;">${directionText}</td>
-                        <td style="text-align: center; padding: 10px 8px; color: ${phaseColor}; font-weight: 600;">${phaseIcon} ${wyckoffPhase}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: ${phaseColor}; font-weight: 600;" title="${wyckoffPhase}">${phaseIcon} ${wyckoffPhase}</td>
                         <td style="text-align: left; padding: 10px 8px; color: #d1d5db; font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${suggestion}">${suggestion}</td>
                     </tr>
                 `;
