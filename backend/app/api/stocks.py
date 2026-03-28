@@ -181,6 +181,7 @@ async def get_stock_quotes(
 ):
     """
     获取股票K线数据（用于图表展示）
+    只查询数据，不更新数据（由analyze接口负责更新）
 
     Args:
         code: 股票代码
@@ -192,10 +193,27 @@ async def get_stock_quotes(
     """
     try:
         storage = DataStorage(db)
+
         # 先创建股票（如果不存在）
         stock = storage.get_or_create_stock(code)
 
+        # 只查询数据，不更新
+        logger.info(f"查询股票{code} {timeframe}数据...")
         quotes = storage.get_quotes(code, timeframe, limit)
+
+        if not quotes:
+            # 尝试获取数据，看看是否能成功
+            update_success = storage.update_stock_quotes(code, timeframe)
+            quotes = storage.get_quotes(code, timeframe, limit)
+
+            if not quotes:
+                # 如果还是没有数据，可能是股票代码不存在
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"股票{code}暂无{timeframe}数据。可能原因：1) 股票代码不存在或已退市 2) 数据源暂无该股票数据 3) 请检查股票代码是否正确"
+                )
+
+        logger.info(f"返回股票{code} {timeframe}数据，共{len(quotes)}条")
 
         return {
             "code": code,
@@ -224,6 +242,8 @@ async def get_stock_quotes(
                 for i, q in enumerate(quotes)
             ]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取K线数据失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取失败: {str(e)}")

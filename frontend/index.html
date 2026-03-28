@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20240225-0150">
+    <meta name="version" content="20260328-1300">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -412,7 +412,43 @@
             font-size: 14px;
         }
 
+        /* 威科夫阶段 Tooltip 样式 */
+        .wyckoff-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .wyckoff-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #d1d5db;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid #374151;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            margin-bottom: 6px;
+        }
+
+        .wyckoff-tooltip:hover::after {
+            opacity: 1;
+        }
+
     </style>
+    <!-- 禁止缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 <body>
     <!-- 健康状态栏 -->
@@ -440,7 +476,7 @@
         <!-- Tab导航 -->
         <div class="tab-nav">
             <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
-                <button class="tab-btn" id="tab-watchlist" onclick="showTab('watchlist')">我的关注</button>
+                <button class="tab-btn" id="btnWatchlist" onclick="showTab('watchlist')">我的关注</button>
             <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
             <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
 
@@ -450,7 +486,10 @@
         <!-- 分析Tab -->
         <div id="tab-analyze" class="tab-content active">
             <div class="form-group">
-                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" style="width: 15%;">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001" list="stockHistory" style="width: 15%;" onchange="onStockCodeChange()">
+                <datalist id="stockHistory">
+                    <!-- 历史记录将通过JS动态填充 -->
+                </datalist>
                 <select class="form-input" id="timeframe" style="width: 100px;">
                     <option value="daily">日线</option>
                     <option value="weekly">周线</option>
@@ -467,16 +506,54 @@
         <!-- 我的关注Tab -->
         <div id="tab-watchlist" class="tab-content">
             <div class="card-header">
-                <h2 class="card-title">我的关注</h2>
+                <h2 class="card-title">⭐ 我的关注</h2>
                 <div class="form-group" style="margin-bottom: 0;">
-                    <select class="form-input" id="watchlistSelect" style="width: 120px; margin-right: 10px;" onchange="analyzeFromWatchlist()">
-                        <option value="">选择股票</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="addToWatchlist()">添加</button>
+                    <button class="btn btn-secondary" onclick="toggleBatchImport()">📥 批量导入</button>
                     <button class="btn btn-secondary" onclick="refreshWatchlist()">刷新</button>
                 </div>
             </div>
-            <div id="watchlistContent"></div>
+
+            <!-- 批量导入区域（可折叠） -->
+            <div id="batchImportArea" style="display: none; padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-size: 14px; font-weight: 600; color: #f9fafb;">📥 批量导入股票</div>
+                    <button onclick="toggleBatchImport()" style="background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer;">&times;</button>
+                </div>
+
+                <!-- 文本输入区 -->
+                <textarea
+                    id="batchImportText"
+                    placeholder="粘贴文本，自动识别股票代码&#10;&#10;支持格式：&#10;• 603520&#10;• SH603520、sz300001&#10;• 股票代码:603520&#10;• 或任何包含6位数字的文本"
+                    style="width: 100%; min-height: 120px; padding: 12px; background: #111827; border: 1px solid #374151; border-radius: 6px; color: #f9fafb; font-size: 13px; resize: vertical; margin-bottom: 12px;"
+                ></textarea>
+
+                <!-- 操作按钮 -->
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary" onclick="previewBatchImport()">🔍 识别预览</button>
+                    <button class="btn btn-secondary" onclick="clearBatchImport()">清空</button>
+                </div>
+
+                <!-- 预览结果 -->
+                <div id="batchPreview" style="margin-top: 12px; display: none;">
+                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">识别到以下股票代码：</div>
+                    <div id="batchPreviewList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+                    <button class="btn btn-primary" onclick="confirmBatchImport()" style="width: 100%;">✅ 确认导入</button>
+                </div>
+            </div>
+
+            <!-- 手动添加区域 -->
+            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" class="form-input" id="watchlistCode" placeholder="输入股票代码（如：603520）" style="flex: 1;">
+                    <button class="btn btn-primary" onclick="addToWatchlist()">➕ 添加</button>
+                </div>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">
+                    💡 提示：分析股票后会自动添加到关注列表 | 支持批量导入文本中的股票代码
+                </div>
+            </div>
+
+            <!-- 关注列表 -->
+            <div id="watchlistContent" style="padding: 0 16px 16px 16px;"></div>
         </div>
 
         <!-- 多周期Tab -->
@@ -754,12 +831,25 @@
         function showTab(tab) {
             const tabs = ['analyze', 'watchlist', 'multi', 'config', 'status'];
             tabs.forEach(t => {
-                document.getElementById(`tab-${t}`).classList.remove('active');
-                document.getElementById(`tab-${t}`).style.display = 'none';
+                const el = document.getElementById(`tab-${t}`);
+                if (el) {
+                    el.classList.remove('active');
+                    el.style.display = 'none';
+                }
             });
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            document.getElementById(`tab-${tab}`).style.display = 'block';
+
+            const targetEl = document.getElementById(`tab-${tab}`);
+            if (targetEl) {
+                targetEl.classList.add('active');
+                targetEl.style.display = 'block';
+            }
+
             addLog('切换标签', `切换到: ${tab}`);
+
+            // 如果切换到关注列表，自动刷新
+            if (tab === 'watchlist') {
+                refreshWatchlist();
+            }
         }
 
         // ========== 日期格式化函数 ==========
@@ -1223,6 +1313,54 @@
             }
         }
 
+        // ========== 股票历史记录管理 ==========
+        const STOCK_HISTORY_KEY = 'wyckoff_stock_history';
+        const MAX_HISTORY_COUNT = 5;
+
+        // 加载历史记录
+        function loadStockHistory() {
+            const history = JSON.parse(localStorage.getItem(STOCK_HISTORY_KEY) || '[]');
+            const datalist = document.getElementById('stockHistory');
+            if (datalist) {
+                datalist.innerHTML = history.map(item => {
+                    const displayText = item.name ? `${item.code} - ${item.name}` : item.code;
+                    return `<option value="${item.code}">${displayText}</option>`;
+                }).join('');
+            }
+            return history;
+        }
+
+        // 保存历史记录
+        function saveStockHistory(code, name = '') {
+            let history = JSON.parse(localStorage.getItem(STOCK_HISTORY_KEY) || '[]');
+
+            // 移除已存在的相同代码
+            history = history.filter(item => item.code !== code);
+
+            // 添加到开头
+            history.unshift({ code, name });
+
+            // 只保留最近5条
+            history = history.slice(0, MAX_HISTORY_COUNT);
+
+            // 保存到 localStorage
+            localStorage.setItem(STOCK_HISTORY_KEY, JSON.stringify(history));
+
+            // 更新 datalist
+            loadStockHistory();
+        }
+
+        // 当用户从下拉列表选择股票时触发
+        function onStockCodeChange() {
+            const input = document.getElementById('stockCode');
+            const history = loadStockHistory();
+            const selected = history.find(item => item.code === input.value);
+            if (selected && selected.name) {
+                // 可以在这里添加额外的处理，比如显示股票名称
+                console.log(`选择股票: ${selected.code} - ${selected.name}`);
+            }
+        }
+
         // ========== 分析功能 ==========
         async function analyzeStock() {
             try {
@@ -1250,21 +1388,37 @@
                     volumeChart = null;
                 }
 
-                const [quotesRes, analysisRes] = await Promise.all([
-                    fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=500`),
-                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code })
-                    })
-                ]);
+                // 串行调用：先analyze（会更新数据），再quotes（获取数据）
+                // 修复：避免并行调用导致的数据竞态问题
+                addLog('数据更新', '正在更新股票数据...');
 
-                if (!quotesRes.ok || !analysisRes.ok) {
-                    throw new Error('API请求失败');
+                const analysisRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, timeframe })
+                });
+
+                if (!analysisRes.ok) {
+                    throw new Error('API请求失败: ' + await analysisRes.text());
+                }
+
+                const analysisData = await analysisRes.json();
+
+                // 保存到历史记录（包含股票名字）
+                if (analysisData.stock && analysisData.stock.name) {
+                    saveStockHistory(code, analysisData.stock.name);
+                }
+
+                addLog('数据更新', '数据更新完成，正在获取K线数据...');
+
+                // 分析完成后，获取K线数据
+                const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=500`);
+
+                if (!quotesRes.ok) {
+                    throw new Error('API请求失败: ' + await quotesRes.text());
                 }
 
                 const quotesData = await quotesRes.json();
-                const analysisData = await analysisRes.json();
 
                 // 根据时间周期去重数据
                 const rawQuotes = quotesData.quotes;
@@ -1344,6 +1498,9 @@
                 addLog('分析成功', `K线: ${uniqueQuotes.length}条, 方向: ${summary.direction}`);
                 updateTestStatus('分析完成', true, '分析成功完成');
 
+                // 自动添加到关注列表（静默）
+                addToWatchlist(true);
+
                 // 渲染图表
                 if (!useTableMode) {
                     renderCharts();
@@ -1351,9 +1508,22 @@
 
             } catch (error) {
                 console.error('分析失败:', error);
-                document.getElementById('analyzeResult').innerHTML = `<p class="red">分析失败: ${error.message}</p>`;
-                addLog('分析失败', error.message);
-                updateTestStatus('分析失败', false, error.message);
+                const errorMsg = error.message || '未知错误';
+                document.getElementById('analyzeResult').innerHTML = `
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header" style="background: #7f1d1d;">
+                            <h3 class="card-title" style="color: #fca5a5;">❌ 分析失败</h3>
+                        </div>
+                        <div style="padding: 16px;">
+                            <p style="color: #fca5a5;">${errorMsg}</p>
+                            <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
+                                提示：如果是首次查询分钟线数据，可能需要较长时间，请耐心等待。
+                            </p>
+                        </div>
+                    </div>
+                `;
+                addLog('分析失败', errorMsg);
+                updateTestStatus('分析失败', false, errorMsg);
             }
         }
 
@@ -1468,41 +1638,92 @@
 
         // ========== 关注列表 ==========
         async function refreshWatchlist() {
-            console.log('刷新关注列表');
-            addLog('操作', '刷新关注列表');
+            const content = document.getElementById('watchlistContent');
+
+            if (!content) {
+                addLog('错误', '找不到关注列表容器');
+                return;
+            }
+
+            // 显示加载中
+            content.innerHTML = '<div style="text-align:center; padding:40px; color:#10b981;">🔄 正在加载...</div>';
 
             try {
                 const response = await fetch(`${API_BASE}/api/v1/watchlist`);
                 const data = await response.json();
 
-                const content = document.getElementById('watchlistContent');
-                if (data.items.length === 0) {
-                    content.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">暂无关注股票</div>';
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding: 60px; background: #1f2937; border-radius: 12px; border: 2px dashed #374151;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                            <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">暂无关注股票</div>
+                            <div style="color: #6b7280; font-size: 13px;">分析股票后会自动添加到关注列表</div>
+                        </div>
+                    `;
                     addLog('刷新完成', '关注列表为空');
                     return;
                 }
 
-                const select = document.getElementById('watchlistSelect');
-                select.innerHTML = '<option value="">选择股票</option>';
-                data.items.forEach(item => {
-                    select.innerHTML += `<option value="${item.stock_code}">${item.stock_code}</option>`;
+                // 渲染股票列表
+                let html = `
+                    <div style="background: #1f2937; border-radius: 12px; padding: 16px; margin-top: 12px;">
+                        <div style="color: #10b981; font-weight: 600; margin-bottom: 16px; padding: 12px; background: #111827; border-radius: 8px;">
+                            ✅ 共 ${data.total} 只股票
+                        </div>
+                `;
+
+                data.items.forEach((item, index) => {
+                    html += `
+                        <div style="background: #374151; padding: 16px; margin: 12px 0; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div>
+                                    <strong style="font-size: 16px; color: #f9fafb;">${item.stock_code}</strong>
+                                    ${item.stock_name ? `<span style="color: #10b981; margin-left: 10px;">${item.stock_name}</span>` : ''}
+                                </div>
+                                <small style="color: #9ca3af;">${new Date(item.created_at).toLocaleDateString('zh-CN')}</small>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="analyzeFromWatchlist('${item.stock_code}')" style="background: #3b82f6; padding: 8px 16px; border: none; color: white; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                                    📊 分析
+                                </button>
+                                <button onclick="deleteFromWatchlist('${item.stock_code}')" style="background: #dc2626; padding: 8px 16px; border: none; color: white; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                                    🗑️ 删除
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 });
 
-                content.innerHTML = data.items.map(item => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #1f2937; border-radius: 8px; margin-bottom: 8px; border: 1px solid #374151;">
-                        <div style="font-weight: 600;">${item.stock_code}</div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-primary" onclick="analyzeFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">分析</button>
-                            <button class="btn btn-secondary" onclick="deleteFromWatchlist('${item.stock_code}')" style="padding:6px 12px; font-size:12px;">删除</button>
-                        </div>
-                    </div>
-                `).join('');
-
-                console.log(`关注列表刷新完成，共${data.total}只股票`);
+                html += '</div>';
+                content.innerHTML = html;
                 addLog('刷新完成', `共 ${data.total} 只股票`);
             } catch (error) {
-                console.error('刷新关注列表失败:', error);
+                console.error('❌ 刷新关注列表失败:', error);
+                content.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:20px; font-weight:600;">❌ 加载失败: ${error.message}</div>`;
                 addLog('刷新失败', `错误: ${error.message}`);
+            }
+        }
+
+        // 调整关注列表顺序
+        async function moveWatchlistItem(code, direction) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist/move?direction=${direction}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addLog('顺序调整', data.message);
+                    refreshWatchlist();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || '调整失败');
+                }
+            } catch (error) {
+                console.error('调整顺序失败:', error);
+                alert(`⚠️ ${error.message}\n\n提示：您也可以通过删除后重新添加来调整顺序`);
             }
         }
 
@@ -1513,47 +1734,186 @@
             analyzeStock();
         }
 
-        async function addToWatchlist() {
-            const code = document.getElementById('stockCode').value;
-            if (!code) {
-                alert('请输入股票代码');
+        async function addToWatchlist(silent = false, code = null) {
+            // 如果没有指定code，从输入框获取
+            const stockCode = code || document.getElementById('watchlistCode').value;
+
+            if (!stockCode) {
                 addLog('错误', '股票代码为空');
                 return;
             }
 
-            console.log(`添加到关注列表: ${code}`);
-            addLog('添加关注', `股票代码: ${code}`);
+            if (!silent) addLog('添加关注', `股票代码: ${stockCode}`);
 
             try {
                 const response = await fetch(`${API_BASE}/api/v1/watchlist`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
+                    body: JSON.stringify({ code: stockCode })
                 });
                 const data = await response.json();
-                alert(`添加成功: ${data.message}`);
-                addLog('添加成功', data.message);
+
+                if (!silent) {
+                    // 清空输入框
+                    document.getElementById('watchlistCode').value = '';
+                    addLog('添加成功', data.message);
+                }
+
                 refreshWatchlist();
             } catch (error) {
                 console.error('添加失败:', error);
-                alert(`添加失败: ${error.message}`);
-                addLog('添加失败', `错误: ${error.message}`);
+                if (!silent) {
+                    addLog('添加失败', `错误: ${error.message}`);
+                }
             }
         }
 
         async function deleteFromWatchlist(code) {
             if (!confirm('确定删除 ' + code + '?')) return;
-            console.log(`删除: ${code}`);
             addLog('删除关注', `股票代码: ${code}`);
 
             try {
                 const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, { method: 'DELETE' });
-                alert('删除成功');
                 addLog('删除成功', `已删除 ${code}`);
+                refreshWatchlist();
             } catch (error) {
                 console.error('删除失败:', error);
                 addLog('删除失败', `错误: ${error.message}`);
             }
+        }
+
+        // ========== 批量导入功能 ==========
+        let batchStocks = [];  // 存储识别到的股票代码
+
+
+        // 切换批量导入区域显示/隐藏
+        function toggleBatchImport() {
+            const area = document.getElementById('batchImportArea');
+            area.style.display = area.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 清空批量导入区域
+        function clearBatchImport() {
+            document.getElementById('batchImportText').value = '';
+            document.getElementById('batchPreview').style.display = 'none';
+            batchStocks = [];
+        }
+
+        // 使用正则表达式识别股票代码
+        function extractStockCodes(text) {
+            // A股股票代码正则表达式
+            // 匹配规则：
+            // 1. 6位数字
+            // 2. 可选的前缀：SH、SZ、sh、sz
+            // 3. 可能的A股前缀：600, 601, 603, 605（沪市主板）
+            //              000, 001, 002（深市主板/中小板）
+            //              300（创业板）
+            //              688（科创板）
+            const patterns = [
+                /(?:[Ss][Zz]|[Ss][Hh])?(600|601|603|605|000|001|002|300|688)\d{3}\b/g,
+                /(?:[Ss][Zz]|[Ss][Hh])?\b\d{6}\b/g  // 兜底：任何6位数字
+            ];
+
+            let allCodes = [];
+            let uniqueCodes = new Set();
+
+            // 使用第一个模式（严格匹配）
+            const matches = text.match(patterns[0]);
+            if (matches) {
+                matches.forEach(code => {
+                    // 移除前缀
+                    let cleanCode = code.replace(/^([Ss][Zz]|[Ss][Hh])/, '');
+
+                    // 验证是否为有效的A股代码
+                    if (isValidStockCode(cleanCode) && !uniqueCodes.has(cleanCode)) {
+                        uniqueCodes.add(cleanCode);
+                        allCodes.push(cleanCode);
+                    }
+                });
+            }
+
+            return allCodes;
+        }
+
+        // 验证是否为有效的A股代码
+        function isValidStockCode(code) {
+            if (!/^\d{6}$/.test(code)) return false;
+
+            const prefix = code.substring(0, 3);
+            const validPrefixes = ['600', '601', '603', '605', '000', '001', '002', '300', '688'];
+
+            return validPrefixes.includes(prefix);
+        }
+
+        // 预览批量导入
+        function previewBatchImport() {
+            const text = document.getElementById('batchImportText').value;
+
+            if (!text.trim()) {
+                addLog('提示', '请输入或粘贴文本');
+                return;
+            }
+
+            // 识别股票代码
+            batchStocks = extractStockCodes(text);
+
+            if (batchStocks.length === 0) {
+                addLog('识别失败', '未识别到股票代码，请确保文本中包含6位数字的A股代码（如：603520、300001、000001等）');
+                document.getElementById('batchPreview').style.display = 'none';
+                return;
+            }
+
+            // 显示预览
+            const previewArea = document.getElementById('batchPreview');
+            const previewList = document.getElementById('batchPreviewList');
+
+            previewList.innerHTML = batchStocks.map(code => `
+                <div style="background: #374151; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #f9fafb; border: 1px solid #4b5563;">
+                    ${code}
+                </div>
+            `).join('');
+
+            previewArea.style.display = 'block';
+            addLog('识别股票', `找到 ${batchStocks.length} 个股票代码`);
+        }
+
+        // 确认批量导入
+        async function confirmBatchImport() {
+            if (batchStocks.length === 0) {
+                addLog('提示', '没有可导入的股票代码');
+                return;
+            }
+
+            if (!confirm(`确认导入 ${batchStocks.length} 只股票？`)) {
+                return;
+            }
+
+            addLog('批量导入', `开始导入 ${batchStocks.length} 只股票...`);
+
+            let successCount = 0;
+            let failCount = 0;
+
+            // 逐个添加
+            for (const code of batchStocks) {
+                try {
+                    await addToWatchlist(true, code);
+                    successCount++;
+                } catch (error) {
+                    console.error(`导入${code}失败:`, error);
+                    failCount++;
+                }
+            }
+
+            // 显示结果
+            const message = `导入完成！成功: ${successCount} 只，失败: ${failCount} 只`;
+            addLog('导入完成', message);
+
+            // 清空并关闭
+            clearBatchImport();
+            toggleBatchImport();
+
+            // 刷新列表
+            refreshWatchlist();
         }
 
         // ========== 配置管理 ==========
@@ -1865,6 +2225,9 @@
             console.log('DOM加载完成');
             addLog('系统启动', '步骤8页面加载完成');
 
+            // 加载股票历史记录
+            loadStockHistory();
+
             setTimeout(() => {
                 startHealthCheck();
                 updateTestStatus('系统启动', true, '页面加载完成，健康检查已启动');
@@ -1965,6 +2328,42 @@
                 }
                 if (prevQ.ma10 >= prevQ.ma20 && q.ma10 < q.ma20) {
                     maTrend.push({ type: '💀 MA10死叉MA20', color: '#ef4444' });
+                }
+            }
+
+            // ========== 量能分析 ==========
+            const volumeTrend = [];
+            if (q.volume && q.volume_ma5) {
+                // 当天成交量与均量比较
+                const volRatio = (q.volume / q.volume_ma5).toFixed(2);
+                if (q.volume > q.volume_ma5 * 2) {
+                    volumeTrend.push({ type: `🔥 放量${volRatio}倍`, color: '#10b981' });
+                } else if (q.volume > q.volume_ma5 * 1.5) {
+                    volumeTrend.push({ type: `📈 温和放量${volRatio}倍`, color: '#10b981' });
+                } else if (q.volume < q.volume_ma5 * 0.5) {
+                    volumeTrend.push({ type: `📉 缩量${volRatio}倍`, color: '#ef4444' });
+                } else if (q.volume < q.volume_ma5 * 0.8) {
+                    volumeTrend.push({ type: `⚠️ 地量`, color: '#f59e0b' });
+                }
+
+                // 与昨天成交量对比
+                if (prevQ && prevQ.volume) {
+                    const volChange = ((q.volume - prevQ.volume) / prevQ.volume * 100).toFixed(0);
+                    if (q.volume > prevQ.volume * 1.5) {
+                        volumeTrend.push({ type: `↗ 激增${volChange}%`, color: '#10b981' });
+                    } else if (q.volume < prevQ.volume * 0.7) {
+                        volumeTrend.push({ type: `↘ 暴减${volChange}%`, color: '#ef4444' });
+                    }
+                }
+            }
+
+            // OBV趋势分析
+            if (q.obv && prevQ && prevQ.obv) {
+                const obvChange = ((q.obv - prevQ.obv) / Math.abs(prevQ.obv) * 100).toFixed(1);
+                if (q.obv > prevQ.obv) {
+                    volumeTrend.push({ type: `💰 OBV+${obvChange}%`, color: '#10b981' });
+                } else if (q.obv < prevQ.obv) {
+                    volumeTrend.push({ type: `💸 OBV${obvChange}%`, color: '#ef4444' });
                 }
             }
 
@@ -2114,221 +2513,457 @@
                 <div style="
                     background: #1f2937;
                     border-radius: 12px;
-                    max-width: 900px;
-                    width: 90%;
-                    max-height: 65vh;
-                    overflow-y: auto;
-                    padding: 20px;
+                    max-width: 800px;
+                    width: 95%;
+                    max-height: 72.6vh;
+                    padding: 16px;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                    overflow-y: hidden;
                 ">
                     <div style="
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 20px;
+                        margin-bottom: 12px;
                         border-bottom: 1px solid #374151;
-                        padding-bottom: 15px;
+                        padding-bottom: 10px;
                     ">
                         <h2 style="
-                            font-size: 20px;
+                            font-size: 16px;
                             font-weight: 600;
                             color: #f9fafb;
                             margin: 0;
-                        ">K线详细信息</h2>
+                        ">K线详情</h2>
                         <button onclick="document.getElementById('quoteModal').remove()" style="
                             background: none;
                             border: none;
                             color: #9ca3af;
-                            font-size: 24px;
+                            font-size: 20px;
                             cursor: pointer;
                             padding: 0;
-                            width: 32px;
-                            height: 32px;
+                            width: 28px;
+                            height: 28px;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                         ">&times;</button>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">日期</div>
-                                <div style="font-size: 16px; font-weight: 600;">${formatDateString(q.date, currentTimeframe)}</div>
+                    <div style="margin-bottom: 10px;">
+                        <!-- 第1行：左右结构 - 日期/涨跌幅 + OHLC + 成交量/OBV -->
+                        <div style="display: grid; grid-template-columns: 150px 1fr 140px; gap: 8px; margin-bottom: 8px;">
+                            <!-- 左侧：日期/涨跌幅 -->
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 2px;">日期</div>
+                                    <div style="font-size: 14px; font-weight: 600;">${formatDateString(q.date, currentTimeframe)}</div>
+                                </div>
+                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 2px;">涨跌幅</div>
+                                    <div style="font-size: 14px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">
+                                        ${changeSign}${change}%
+                                    </div>
+                                </div>
                             </div>
-                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">涨跌幅</div>
-                                <div style="font-size: 16px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">
-                                    ${changeSign}${change}%
+
+                            <!-- 中间：OHLC -->
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">开</div>
+                                    <div style="font-size: 24px; font-weight: 600;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
+                                </div>
+                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">高</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
+                                </div>
+                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">低</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
+                                </div>
+                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">收</div>
+                                    <div style="font-size: 24px; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                                </div>
+                            </div>
+
+                            <!-- 右侧：成交量/OBV -->
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 4px;">成交量</div>
+                                    <div style="font-size: 13px; font-weight: 500;">${q.volume ? (q.volume / 10000).toFixed(0) + '万' : 'N/A'}</div>
+                                    ${q.volume_ma5 ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">均量${(q.volume_ma5 / 10000).toFixed(0)}万</div>` : ''}
+                                </div>
+                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 4px;">成交额</div>
+                                    <div style="font-size: 13px; font-weight: 500;">${q.amount ? (q.amount / 100000000).toFixed(2) + '亿' : 'N/A'}</div>
+                                    ${q.obv ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">OBV${(q.obv / 1000000).toFixed(1)}M</div>` : ''}
                                 </div>
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
-                            <div style="background: #111827; padding: 10px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">开盘</div>
-                                <div style="font-size: 14px; font-weight: 500;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
+                        <!-- 综合操作建议 -->
+                        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                            <div style="font-size: 11px; font-weight: 600; color: #8b5cf6; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">💡 今日综合操作建议</div>
+                            <div style="font-size: 13px; font-weight: 600; color: #f9fafb; margin-bottom: 6px;">
+                                ${(() => {
+                                    // ========== 优化的综合评分系统 ==========
+                                    let maScore = 0;
+                                    let phaseScore = 0;
+                                    let volScore = 0;
+                                    let trendBonus = 0;  // 趋势变化加分
+                                    let warnings = [];  // 风险提示
+                                    let positives = [];  // 积极因素
+
+                                    // 1. 均线评分（结合排列 + 收敛性）
+                                    const isBullishAlign = q.ma5 > q.ma10 && q.ma10 > q.ma20;
+                                    const isBearishAlign = q.ma5 < q.ma10 && q.ma10 < q.ma20;
+
+                                    if (isBullishAlign) {
+                                        positives.push('均线多头排列');
+                                        const maSpread = ((q.ma5 - q.ma20) / q.ma20 * 100);
+                                        if (prevQ && prevQ.ma5 && prevQ.ma20) {
+                                            const prevSpread = ((prevQ.ma5 - prevQ.ma20) / prevQ.ma20 * 100);
+                                            if (maSpread > prevSpread * 1.1) {
+                                                maScore = 2;  // 多头发散，强势
+                                                positives.push('多头发散');
+                                            } else {
+                                                maScore = 1;  // 多头收敛，上涨减弱
+                                                warnings.push('多头收敛，上涨减弱');
+                                            }
+                                        } else {
+                                            maScore = 2;
+                                        }
+                                    } else if (isBearishAlign) {
+                                        const maSpread = ((q.ma20 - q.ma5) / q.ma20 * 100);
+                                        if (prevQ && prevQ.ma5 && prevQ.ma20) {
+                                            const prevSpread = ((prevQ.ma20 - prevQ.ma5) / prevQ.ma20 * 100);
+                                            if (maSpread < prevSpread * 0.9) {
+                                                maScore = -1;  // 空头收敛，下跌减弱（可能转势）⭐
+                                                positives.push('空头收敛，下跌减弱');
+                                            } else {
+                                                maScore = -2;  // 空头发散，强势下跌
+                                                warnings.push('空头发散，下跌趋势强');
+                                            }
+                                        } else {
+                                            maScore = -2;
+                                        }
+                                    } else {
+                                        maScore = 0;  // 中性
+                                    }
+
+                                    // 2. 威科夫评分（提高吸筹阶段权重）
+                                    const phaseScores = { 'U': 2, 'A': 2, 'DS': 1, '震荡': 0, 'D': -2 };
+                                    phaseScore = phaseScores[currentPhase] || 0;
+
+                                    if (currentPhase === 'U') positives.push('威科夫上升阶段');
+                                    else if (currentPhase === 'A') positives.push('威科夫吸筹阶段');
+                                    else if (currentPhase === 'DS') positives.push('威科夫下跌吸筹');
+                                    else if (currentPhase === 'D') warnings.push('威科夫下降阶段');
+
+                                    // 3. 量能评分（结合阶段区分温和放量）
+                                    if (q.volume && q.volume_ma5) {
+                                        const volRatio = q.volume / q.volume_ma5;
+                                        if (currentPhase === 'U') {
+                                            // 上升阶段：缩量要降分
+                                            if (volRatio < 0.5) {
+                                                volScore = -2;  // 严重缩量，大幅降分 ⭐
+                                                warnings.push(`严重缩量(${volRatio.toFixed(2)}倍)，上涨乏力`);
+                                            } else if (volRatio < 0.8) {
+                                                volScore = -1;  // 缩量
+                                                warnings.push(`缩量(${volRatio.toFixed(2)}倍)，量能不足`);
+                                            } else if (volRatio > 1.5) {
+                                                volScore = 1;  // 放量
+                                                positives.push(`量能放大(${volRatio.toFixed(2)}倍)`);
+                                            } else {
+                                                volScore = 0;  // 平稳
+                                            }
+                                        } else if (currentPhase === 'A') {
+                                            // 吸筹阶段：温和放量(1.5-2倍) = 好，大量(>2倍) = 警惕
+                                            if (volRatio >= 1.5 && volRatio <= 2.0) {
+                                                volScore = 1;  // ⭐温和建仓
+                                                positives.push(`温和放量建仓(${volRatio.toFixed(2)}倍)`);
+                                            } else if (volRatio > 2.0) {
+                                                volScore = 0;  // 大量警惕诱多
+                                                warnings.push(`大量放量(${volRatio.toFixed(2)}倍)，警惕诱多`);
+                                            } else if (volRatio < 0.7) {
+                                                volScore = -1;
+                                                warnings.push(`缩量(${volRatio.toFixed(2)}倍)`);
+                                            } else {
+                                                volScore = 0;
+                                            }
+                                        } else if (currentPhase === 'D') {
+                                            // 下跌阶段放量 = 恐慌，不好
+                                            if (volRatio > 1.5) {
+                                                volScore = -1;
+                                                warnings.push(`放量恐慌(${volRatio.toFixed(2)}倍)`);
+                                            } else if (volRatio < 0.7) {
+                                                volScore = 0;
+                                            } else {
+                                                volScore = 0;
+                                            }
+                                        } else {
+                                            // 其他阶段
+                                            if (volRatio > 1.5) {
+                                                volScore = 0;
+                                            } else if (volRatio < 0.7) {
+                                                volScore = -1;
+                                            } else {
+                                                volScore = 0;
+                                            }
+                                        }
+                                    }
+
+                                    // 4. 趋势变化加分（与前一天对比）
+                                    if (prevQ && prevQ.ma5 && prevQ.ma10 && prevQ.ma20) {
+                                        // 威科夫阶段改善
+                                        const phaseRank = { 'D': -2, '震荡': -1, 'DS': 0, 'A': 1, 'U': 2 };
+                                        const currentPhaseRank = phaseRank[currentPhase] || 0;
+                                        const prevPhase = getWyckoffPhase(prevQ);
+                                        const prevPhaseRank = phaseRank[prevPhase] || 0;
+
+                                        if (currentPhaseRank > prevPhaseRank) {
+                                            trendBonus += 1;  // 阶段改善
+                                            positives.push('阶段改善');
+                                        }
+
+                                        // MA收敛改善（空头收敛）
+                                        if (isBearishAlign && q.ma5 && prevQ.ma5) {
+                                            const currentBearSpread = q.ma20 - q.ma5;
+                                            const prevBearSpread = prevQ.ma20 - prevQ.ma5;
+                                            if (currentBearSpread < prevBearSpread * 0.95) {
+                                                trendBonus += 1;  // 空头收敛加速 ⭐
+                                                positives.push('空头收敛加速');
+                                            }
+                                        }
+                                    }
+
+                                    // 辅助函数：获取威科夫阶段
+                                    function getWyckoffPhase(quote) {
+                                        if (quote.ma20 && quote.ma5 && quote.ma10 && quote.close > quote.ma20 && quote.ma5 > quote.ma10 && quote.ma10 > quote.ma20) return 'U';
+                                        if (quote.ma20 && quote.ma5 && quote.ma10 && quote.close < quote.ma20 && quote.ma5 < quote.ma10 && quote.ma10 < quote.ma20) return 'D';
+                                        if (quote.volume_ma5 && quote.volume > quote.volume_ma5 * 1.5) return 'A';
+                                        if (quote.ma5 && quote.ma20 && quote.close < quote.ma5 && quote.close > quote.ma20) return 'DS';
+                                        return '震荡';
+                                    }
+
+                                    const totalScore = maScore + phaseScore + volScore + trendBonus;
+
+                                    // 调整建议阈值
+                                    const adviceColor = totalScore >= 4 ? '#10b981' : totalScore >= 2 ? '#10b981' : totalScore >= 0 ? '#f59e0b' : totalScore >= -2 ? '#9ca3af' : '#ef4444';
+                                    const adviceEmoji = totalScore >= 4 ? '🚀' : totalScore >= 2 ? '📈' : totalScore >= 0 ? '⚖️' : totalScore >= -2 ? '👁️' : '⚠️';
+
+                                    let advice = '';
+                                    if (totalScore >= 4) {
+                                        advice = '三指标共振向上，适合积极买入或持有';
+                                    } else if (totalScore >= 2) {
+                                        advice = '指标偏多，可适量参与，注意风险控制';
+                                    } else if (totalScore >= 0) {
+                                        advice = '多空平衡，可观察等待，关注趋势变化';
+                                    } else if (totalScore >= -2) {
+                                        advice = '指标偏弱但有改善迹象，建议观望等待';
+                                    } else {
+                                        advice = '三指标偏弱，建议减仓或空仓等待';
+                                    }
+
+                                    // 构建详细说明
+                                    let detailHtml = '';
+                                    if (warnings.length > 0 || positives.length > 0) {
+                                        detailHtml = '<div style="font-size: 11px; margin-top: 6px; line-height: 1.5;">';
+
+                                        if (warnings.length > 0) {
+                                            detailHtml += `<div style="color: #f87171;">⚠️ ${warnings.join('，')}</div>`;
+                                        }
+                                        if (positives.length > 0) {
+                                            detailHtml += `<div style="color: #34d399;">✅ ${positives.join('，')}</div>`;
+                                        }
+
+                                        detailHtml += '</div>';
+                                    }
+
+                                    return `<span style="color: ${adviceColor};">${adviceEmoji} ${advice}</span>${detailHtml}`;
+                                })()}
                             </div>
-                            <div style="background: #111827; padding: 10px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">最高</div>
-                                <div style="font-size: 14px; font-weight: 500; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
-                            </div>
-                            <div style="background: #111827; padding: 10px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">最低</div>
-                                <div style="font-size: 14px; font-weight: 500; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
-                            </div>
-                            <div style="background: #111827; padding: 10px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">收盘</div>
-                                <div style="font-size: 14px; font-weight: 500; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #d1d5db;">
+                                <span>均线:${(() => {
+                                    const score = (q.ma5 > q.ma10 ? 1 : -1) + (q.ma10 > q.ma20 ? 1 : -1) + (q.close > q.ma20 ? 1 : -1);
+                                    if (score >= 2) return '↗多头';
+                                    if (score <= -2) return '↘空头';
+                                    return '→中性';
+                                })()}</span>
+                                <span>量能:${q.volume_ma5 && q.volume > q.volume_ma5 * 1.2 ? '↗放量' : q.volume_ma5 && q.volume < q.volume_ma5 * 0.8 ? '↘缩量' : '→平稳'}</span>
+                                <span>威科夫:${currentPhase === 'U' ? '📈上升' : currentPhase === 'D' ? '📉下降' : currentPhase === 'A' ? '🔄吸筹' : currentPhase === 'DS' ? '📥下跌吸筹' : '⚡震荡'}</span>
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">成交量</div>
-                                <div style="font-size: 14px; font-weight: 500;">${q.volume?.toLocaleString()}</div>
-                                <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">成交额: ${q.amount ? (q.amount / 100000000).toFixed(2) + '亿' : 'N/A'}</div>
-                            </div>
-                            <div style="background: #111827; padding: 12px; border-radius: 6px;">
-                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">能量潮 (OBV)</div>
-                                <div style="font-size: 14px; font-weight: 500;">${q.obv ? (q.obv / 1000000).toFixed(2) + 'M' : 'N/A'}</div>
-                                ${q.volume_ma5 ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">5日均量: ${(q.volume_ma5 / 10000).toFixed(0)}万</div>` : ''}
-                            </div>
-                        </div>
+                        <!-- 三列布局：均线(左)、量能(中)、威科夫(右) -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px;">
+                            <!-- 1. 均线分析（左） -->
+                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 6px;">均线分析</div>
+                                <!-- 上：当天情况 - 3行结构 -->
+                                <div style="margin-bottom: 8px;">
+                                    ${maTrend.length > 0 ? `
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;">
+                                        ${maTrend.slice(0, 2).map(trend => `
+                                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
+                                        `).join('')}
+                                    </div>
+                                    ` : ''}
 
-                        <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                            <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">移动平均线 (MA)</div>
-                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 8px;">
-                                <div style="font-size: 12px;">
-                                    <span style="color: #3b82f6;">MA5:</span> ${q.ma5?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma5 ? `<span style="font-size: 10px; color: ${q.ma5 > prevQ.ma5 ? '#10b981' : '#ef4444'};">(${q.ma5 > prevQ.ma5 ? '+' : ''}${(q.ma5 - prevQ.ma5).toFixed(2)})</span>` : ''}
-                                </div>
-                                <div style="font-size: 12px;">
-                                    <span style="color: #8b5cf6;">MA10:</span> ${q.ma10?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma10 ? `<span style="font-size: 10px; color: ${q.ma10 > prevQ.ma10 ? '#10b981' : '#ef4444'};">(${q.ma10 > prevQ.ma10 ? '+' : ''}${(q.ma10 - prevQ.ma10).toFixed(2)})</span>` : ''}
-                                </div>
-                                <div style="font-size: 12px;">
-                                    <span style="color: #10b981;">MA20:</span> ${q.ma20?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma20 ? `<span style="font-size: 10px; color: ${q.ma20 > prevQ.ma20 ? '#10b981' : '#ef4444'};">(${q.ma20 > prevQ.ma20 ? '+' : ''}${(q.ma20 - prevQ.ma20).toFixed(2)})</span>` : ''}
-                                </div>
-                                <div style="font-size: 12px;">
-                                    <span style="color: #ec4899;">MA60:</span> ${q.ma60?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma60 ? `<span style="font-size: 10px; color: ${q.ma60 > prevQ.ma60 ? '#10b981' : '#ef4444'};">(${q.ma60 > prevQ.ma60 ? '+' : ''}${(q.ma60 - prevQ.ma60).toFixed(2)})</span>` : ''}
-                                </div>
-                                <div style="font-size: 12px;">
-                                    <span style="color: #f97316;">MA120:</span> ${q.ma120?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma120 ? `<span style="font-size: 10px; color: ${q.ma120 > prevQ.ma120 ? '#10b981' : '#ef4444'};">(${q.ma120 > prevQ.ma120 ? '+' : ''}${(q.ma120 - prevQ.ma120).toFixed(2)})</span>` : ''}
-                                </div>
-                                <div style="font-size: 12px;">
-                                    <span style="color: #06b6d4;">MA250:</span> ${q.ma250?.toFixed(2) || '-'}
-                                    ${prevQ && prevQ.ma250 ? `<span style="font-size: 10px; color: ${q.ma250 > prevQ.ma250 ? '#10b981' : '#ef4444'};">(${q.ma250 > prevQ.ma250 ? '+' : ''}${(q.ma250 - prevQ.ma250).toFixed(2)})</span>` : ''}
-                                </div>
-                            </div>
-                            ${maTrend.length > 0 ? `
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid #374151;">
-                                ${maTrend.map(trend => `
-                                    <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
-                                `).join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <div style="color: #9ca3af; font-size: 12px;">威科夫阶段</div>
-                                <div style="padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; background: ${phaseColor}20; color: ${phaseColor}; border: 1px solid ${phaseColor};">
-                                    ${currentPhase === 'U' ? '📈 上升' : currentPhase === 'D' ? '📉 下降' : currentPhase === 'A' ? '🔄 吸筹' : currentPhase === 'DS' ? '📥 下跌吸筹' : '⚡ 震荡'}
-                                </div>
-                            </div>
-
-                            <!-- 与昨天对比分析 -->
-                            ${prevQ ? `
-                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(139, 92, 246, 0.3);">
-                                <div style="font-size: 11px; font-weight: 600; color: #8b5cf6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    📊 趋势对比分析
-                                </div>
-                                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px;">
-                                    <div style="text-align: center;">
-                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">昨天</div>
-                                        <div style="font-size: 12px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'}20; color: ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'}; border: 1px solid ${prevPhase === 'U' ? '#10b981' : prevPhase === 'D' ? '#ef4444' : prevPhase === 'A' ? '#f59e0b' : prevPhase === 'DS' ? '#8b5cf6' : '#9ca3af'};">
-                                            ${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}
+                                    <!-- 短线指标（MA5-10） -->
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 4px;">
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #3b82f6;">MA5:</span>${q.ma5?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma5 ? `<span style="font-size: 8px; color: ${q.ma5 > prevQ.ma5 ? '#10b981' : '#ef4444'};">(${q.ma5 > prevQ.ma5 ? '+' : ''}${(q.ma5 - prevQ.ma5).toFixed(2)})</span>` : ''}
+                                        </div>
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #8b5cf6;">MA10:</span>${q.ma10?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma10 ? `<span style="font-size: 8px; color: ${q.ma10 > prevQ.ma10 ? '#10b981' : '#ef4444'};">(${q.ma10 > prevQ.ma10 ? '+' : ''}${(q.ma10 - prevQ.ma10).toFixed(2)})</span>` : ''}
                                         </div>
                                     </div>
-                                    <div style="text-align: center;">
-                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">变化</div>
-                                        <div style="font-size: 16px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
+
+                                    <!-- 中线指标（MA20-60） -->
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 4px;">
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #10b981;">MA20:</span>${q.ma20?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma20 ? `<span style="font-size: 8px; color: ${q.ma20 > prevQ.ma20 ? '#10b981' : '#ef4444'};">(${q.ma20 > prevQ.ma20 ? '+' : ''}${(q.ma20 - prevQ.ma20).toFixed(2)})</span>` : ''}
+                                        </div>
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #ec4899;">MA60:</span>${q.ma60?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma60 ? `<span style="font-size: 8px; color: ${q.ma60 > prevQ.ma60 ? '#10b981' : '#ef4444'};">(${q.ma60 > prevQ.ma60 ? '+' : ''}${(q.ma60 - prevQ.ma60).toFixed(2)})</span>` : ''}
+                                        </div>
                                     </div>
-                                    <div style="text-align: center;">
-                                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 3px;">今天</div>
-                                        <div style="font-size: 12px; font-weight: 600; padding: 3px 6px; border-radius: 4px; background: ${phaseColor}20; color: ${phaseColor}; border: 1px solid ${phaseColor};">
-                                            ${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}
+
+                                    <!-- 长线指标（MA120-250） -->
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #f97316;">MA120:</span>${q.ma120?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma120 ? `<span style="font-size: 8px; color: ${q.ma120 > prevQ.ma120 ? '#10b981' : '#ef4444'};">(${q.ma120 > prevQ.ma120 ? '+' : ''}${(q.ma120 - prevQ.ma120).toFixed(2)})</span>` : ''}
+                                        </div>
+                                        <div style="font-size: 9px; background: #1f2937; padding: 3px 4px; border-radius: 3px;">
+                                            <span style="color: #06b6d4;">MA250:</span>${q.ma250?.toFixed(2) || '-'}
+                                            ${prevQ && prevQ.ma250 ? `<span style="font-size: 8px; color: ${q.ma250 > prevQ.ma250 ? '#10b981' : '#ef4444'};">(${q.ma250 > prevQ.ma250 ? '+' : ''}${(q.ma250 - prevQ.ma250).toFixed(2)})</span>` : ''}
                                         </div>
                                     </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: ${operationColor}15; border-radius: 6px; border-left: 3px solid ${operationColor};">
-                                    <div style="font-size: 20px;">💡</div>
-                                    <div>
-                                        <div style="font-size: 10px; color: #9ca3af; margin-bottom: 2px;">今日操作建议</div>
-                                        <div style="font-size: 14px; font-weight: 600; color: ${operationColor};">${operationAdvice}</div>
+                                <!-- 下：历史对比 -->
+                                ${prevQ && prevQ.ma5 && prevQ.ma10 && prevQ.ma20 ? `
+                                <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 6px; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">昨天</div>
+                                            <div style="font-size: 12px; font-weight: 600; color: #d1d5db;">
+                                                ${(() => {
+                                                    const score = (prevQ.ma5 > prevQ.ma10 ? 1 : -1) + (prevQ.ma10 > prevQ.ma20 ? 1 : -1) + (prevQ.close > prevQ.ma20 ? 1 : -1);
+                                                    if (score >= 2) return '↗';
+                                                    if (score <= -2) return '↘';
+                                                    return '→';
+                                                })()}
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 14px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">今天</div>
+                                            <div style="font-size: 12px; font-weight: 600; color: #d1d5db;">
+                                                ${(() => {
+                                                    const score = (q.ma5 > q.ma10 ? 1 : -1) + (q.ma10 > q.ma20 ? 1 : -1) + (q.close > q.ma20 ? 1 : -1);
+                                                    if (score >= 2) return '↗';
+                                                    if (score <= -2) return '↘';
+                                                    return '→';
+                                                })()}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            ` : ''}
-
-                            <!-- 当前阶段说明 -->
-                            <div style="background: ${phaseColor}10; padding: 10px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid ${phaseColor};">
-                                <div style="font-size: 12px; font-weight: 600; color: ${phaseColor}; margin-bottom: 4px;">
-                                    ${currentPhase === 'U' ? '📈 上升趋势 - 强势做多' :
-                                      currentPhase === 'D' ? '📉 下降趋势 - 观望做空' :
-                                      currentPhase === 'A' ? '🔄 吸筹阶段 - 关注主力' :
-                                      currentPhase === 'DS' ? '📥 下跌吸筹 - 机会来临' :
-                                      '⚡ 震荡整理 - 耐心等待'}
-                                </div>
-                                <div style="font-size: 11px; color: #d1d5db; line-height: 1.6;">
-                                    ${currentPhase === 'U' ? '均线多头排列向上发散，价格强势上涨，适合持仓或逢低买入。' :
-                                      currentPhase === 'D' ? '均线空头排列向下发散，价格弱势下跌，建议观望或轻仓试探。' :
-                                      currentPhase === 'A' ? '成交量异常放大，主力资金可能在吸筹，关注后续走势，等待方向选择。' :
-                                      currentPhase === 'DS' ? '价格回落但在MA20上方，可能是主力洗盘，上涨概率较大，值得关注。' :
-                                      '多空力量均衡，等待方向突破，可关注放量突破信号。'}
-                                </div>
+                                ` : '<div style="text-align: center; color: #9ca3af; font-size: 9px; padding: 10px 0;">无历史数据</div>'}
                             </div>
 
-                            <!-- 操作建议 -->
-                            <div style="font-size: 10px; color: #9ca3af; line-height: 1.6;">
-                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'U' ? 'background: rgba(16, 185, 129, 0.1);' : ''}">
-                                    <span style="color: #10b981; font-weight: 600;">📈 U阶段</span> 上升：close > ma20 且 ma5 > ma10 > ma20
-                                    ${currentPhase === 'U' ? ' <span style="color: #10b981;">✅ 适合买入/持有</span>' : ''}
+                            <!-- 2. 量能指标（中） -->
+                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 6px;">量能指标</div>
+                                <!-- 上：当天情况 -->
+                                <div style="margin-bottom: 8px;">
+                                    ${volumeTrend.length > 0 ? `
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;">
+                                        ${volumeTrend.slice(0, 2).map(trend => `
+                                            <span style="padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
+                                        `).join('')}
+                                    </div>
+                                    ` : '<div style="margin-bottom: 6px; font-size: 9px; color: #9ca3af;">无量能信号</div>'}
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;">
+                                        <div style="font-size: 10px; background: #1f2937; padding: 4px; border-radius: 3px;">
+                                            <span style="color: #f59e0b;">量:</span>${q.volume ? (q.volume / 10000).toFixed(0) + '万' : '-'}
+                                        </div>
+                                        <div style="font-size: 10px; background: #1f2937; padding: 4px; border-radius: 3px;">
+                                            <span style="color: #06b6d4;">均量:</span>${q.volume_ma5 ? (q.volume_ma5 / 10000).toFixed(0) + '万' : '-'}
+                                        </div>
+                                        <div style="font-size: 10px; background: #1f2937; padding: 4px; border-radius: 3px; grid-column: span 2;">
+                                            <span style="color: #8b5cf6;">OBV:</span>${q.obv ? (q.obv / 1000000).toFixed(2) + 'M' : '-'}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'D' ? 'background: rgba(239, 68, 68, 0.1);' : ''}">
-                                    <span style="color: #ef4444; font-weight: 600;">📉 D阶段</span> 下降：close < ma20 且 ma5 < ma10 < ma20
-                                    ${currentPhase === 'D' ? ' <span style="color: #ef4444;">⚠️ 建议观望/减仓</span>' : ''}
+                                <!-- 下：历史对比 -->
+                                ${prevQ && prevQ.volume ? `
+                                <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1)); padding: 6px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">昨天</div>
+                                            <div style="font-size: 12px; font-weight: 600; color: ${prevQ.volume_ma5 && prevQ.volume > prevQ.volume_ma5 ? '#10b981' : '#ef4444'};">${prevQ.volume_ma5 && prevQ.volume > prevQ.volume_ma5 ? '🔥' : '📉'}</div>
+                                        </div>
+                                        <div style="font-size: 14px; color: ${(() => {
+                                            const volChange = ((q.volume - prevQ.volume) / prevQ.volume * 100);
+                                            if (volChange > 30) return '#10b981';
+                                            if (volChange < -30) return '#ef4444';
+                                            return '#9ca3af';
+                                        })()};">${(() => {
+                                            const volChange = ((q.volume - prevQ.volume) / prevQ.volume * 100);
+                                            if (volChange > 30) return '↗';
+                                            if (volChange < -30) return '↘';
+                                            return '→';
+                                        })()}</div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">今天</div>
+                                            <div style="font-size: 12px; font-weight: 600; color: ${q.volume_ma5 && q.volume > q.volume_ma5 ? '#10b981' : '#ef4444'};">${q.volume_ma5 && q.volume > q.volume_ma5 ? '🔥' : '📉'}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'A' ? 'background: rgba(251, 191, 36, 0.1);' : ''}">
-                                    <span style="color: #f59e0b; font-weight: 600;">🔄 A阶段</span> 吸筹：volume > volume_ma5 × 1.5
-                                    ${currentPhase === 'A' ? ' <span style="color: #f59e0b;">👀 关注主力动作</span>' : ''}
+                                ` : '<div style="text-align: center; color: #9ca3af; font-size: 9px; padding: 10px 0;">无历史数据</div>'}
+                            </div>
+
+                            <!-- 3. 威科夫阶段（右） -->
+                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 6px;">威科夫阶段</div>
+                                <!-- 上：当天情况 -->
+                                <div style="margin-bottom: 8px;">
+                                    <div class="wyckoff-tooltip" style="text-align: center; cursor: help;" data-tooltip="${currentPhase === 'U' ? 'close > ma20 && ma5 > ma10 > ma20' : currentPhase === 'D' ? 'close < ma20 && ma5 < ma10 < ma20' : currentPhase === 'A' ? 'volume > volume_ma5 × 1.5' : currentPhase === 'DS' ? 'close < ma5 && close > ma20' : '默认阶段'}">
+                                        <div style="font-size: 28px; line-height: 1;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
+                                        <div style="font-size: 11px; font-weight: 600; color: ${phaseColor};">
+                                            ${currentPhase === 'U' ? '上升' : currentPhase === 'D' ? '下降' : currentPhase === 'A' ? '吸筹' : currentPhase === 'DS' ? '下跌吸筹' : '震荡'}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="margin-bottom: 6px; padding: 4px; border-radius: 4px; ${currentPhase === 'DS' ? 'background: rgba(139, 92, 246, 0.1);' : ''}">
-                                    <span style="color: #8b5cf6; font-weight: 600;">📥 DS阶段</span> 下跌吸筹：close < ma5 且 close > ma20
-                                    ${currentPhase === 'DS' ? ' <span style="color: #8b5cf6;">💎 关注买入机会</span>' : ''}
+                                <!-- 下：历史对比 + 操作建议 -->
+                                ${prevQ ? `
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">昨天</div>
+                                            <div style="font-size: 14px;">${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}</div>
+                                        </div>
+                                        <div style="font-size: 14px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">今天</div>
+                                            <div style="font-size: 14px;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px; padding: 6px; background: ${operationColor}15; border-radius: 4px; border-left: 2px solid ${operationColor};">
+                                        <span style="font-size: 14px;">💡</span>
+                                        <span style="font-size: 11px; font-weight: 600; color: ${operationColor};">${operationAdvice}</span>
+                                    </div>
                                 </div>
-                                <div style="padding: 4px; border-radius: 4px; ${currentPhase === '震荡' ? 'background: rgba(156, 163, 175, 0.1);' : ''}">
-                                    <span style="color: #9ca3af; font-weight: 600;">⚡ 震荡</span> 默认：以上条件都不满足
-                                    ${currentPhase === '震荡' ? ' <span style="color: #9ca3af;">⏸️ 耐心等待</span>' : ''}
-                                </div>
+                                ` : '<div style="text-align: center; color: #9ca3af; font-size: 9px; padding: 25px 0;">无历史数据</div>'}
                             </div>
                         </div>
-                    </div>
-
-                    <div style="text-align: center;">
-                        <button onclick="document.getElementById('quoteModal').remove()" style="
-                            background: #10b981;
-                            color: white;
-                            border: none;
-                            padding: 10px 30px;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 16px;
-                        ">关闭</button>
                     </div>
                 </div>
             `;

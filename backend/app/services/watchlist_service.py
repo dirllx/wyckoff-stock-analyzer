@@ -180,3 +180,64 @@ class WatchlistService:
             logger.error(f"批量更新股票信息失败: {e}")
             self.db.rollback()
             return 0
+
+    def move_item(self, code: str, direction: int) -> bool:
+        """
+        调整关注列表中股票的顺序
+
+        Args:
+            code: 股票代码
+            direction: 移动方向 (-1上移, 1下移)
+
+        Returns:
+            是否移动成功
+        """
+        try:
+            # 获取当前关注列表
+            watchlist = self.get_watchlist()
+            if not watchlist:
+                return False
+
+            # 找到要移动的项
+            current_index = -1
+            for i, item in enumerate(watchlist):
+                if item.stock_code == code:
+                    current_index = i
+                    break
+
+            if current_index == -1:
+                logger.warning(f"股票{code}不在关注列表中")
+                return False
+
+            # 计算新位置
+            new_index = current_index + direction
+
+            # 检查边界
+            if new_index < 0 or new_index >= len(watchlist):
+                return False
+
+            # 通过调整priority来实现排序
+            current_item = watchlist[current_index]
+            target_item = watchlist[new_index]
+
+            # 交换priority值
+            current_priority = current_item.priority
+            target_priority = target_item.priority
+
+            current_item.priority = target_priority
+            target_item.priority = current_priority
+
+            # 添加一点偏移量确保排序正确
+            if direction == -1:  # 上移
+                current_item.priority = target_priority + 1
+            else:  # 下移
+                current_item.priority = target_priority - 1
+
+            self.db.commit()
+            logger.info(f"股票{code}已{'上移' if direction == -1 else '下移'}")
+            return True
+
+        except Exception as e:
+            logger.error(f"调整顺序失败: {e}")
+            self.db.rollback()
+            return False

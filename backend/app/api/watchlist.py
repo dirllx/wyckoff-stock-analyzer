@@ -159,3 +159,39 @@ def check_in_watchlist(code: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"检查关注列表失败: {e}")
         raise HTTPException(status_code=500, detail=f"检查失败: {str(e)}")
+
+
+@router.post("/move")
+def move_watchlist_item(
+    request: WatchlistAddRequest,
+    direction: int = -1,
+    db: Session = Depends(get_db)
+):
+    """
+    调整关注列表中股票的顺序
+
+    Args:
+        request: 包含股票代码的请求
+        direction: 移动方向 (-1上移, 1下移)
+        db: 数据库会话
+
+    Returns:
+        消息响应
+    """
+    try:
+        service = WatchlistService(db)
+        success = service.move_item(request.code, direction)
+
+        if success:
+            action = "上移" if direction == -1 else "下移"
+            return MessageResponse(
+                message=f"股票{request.code}已{action}"
+            )
+        else:
+            raise HTTPException(status_code=400, detail="无法调整顺序")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"调整顺序失败: {e}")
+        raise HTTPException(status_code=500, detail=f"调整失败: {str(e)}")

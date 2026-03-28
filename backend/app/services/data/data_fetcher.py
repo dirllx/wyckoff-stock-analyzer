@@ -201,7 +201,10 @@ class DataFetcher:
             df = ak.stock_zh_a_minute(symbol=symbol, period=period, adjust="")
 
             if df.empty:
-                logger.warning(f"获取股票{code} {period}分钟线数据为空")
+                logger.warning(f"获取股票{code} {period}分钟线数据为空，可能原因：")
+                logger.warning(f"  1. 股票代码不存在或已退市")
+                logger.warning(f"  2. akshare接口不支持该股票的分钟线数据")
+                logger.warning(f"  3. 该股票可能停牌")
                 return pd.DataFrame()
 
             # 重命名列（分钟线数据的列名与日线不同）
@@ -225,7 +228,11 @@ class DataFetcher:
             return df
 
         except Exception as e:
-            logger.error(f"获取股票{code} {period}分钟线数据失败: {e}")
+            error_msg = str(e)
+            if "不存在" in error_msg or "退市" in error_msg:
+                logger.error(f"股票{code}不存在或已退市，无法获取{period}分钟线数据")
+            else:
+                logger.error(f"获取股票{code} {period}分钟线数据失败: {e}")
             return pd.DataFrame()
 
     def get_realtime_quote(self, code: str) -> dict:
