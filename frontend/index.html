@@ -1183,44 +1183,22 @@
                 let phaseClass = 'phase-neutral';
                 let phaseTooltip = '市场横盘整理，等待方向选择';
 
-                // 检查是否是最新一天（第一行），如果是，使用后端分析的威科夫阶段
-                const isLatest = i === 0;
-                if (isLatest && window.backendWyckoffPhase) {
-                    // 使用后端返回的威科夫阶段
-                    const backendPhase = window.backendWyckoffPhase;
-                    const backendReason = window.backendAnalysisReason || '';
-
-                    if (backendPhase.includes('U') || backendPhase.includes('上升')) {
-                        phase = 'U'; phaseClass = 'phase-U';
-                        phaseTooltip = `⭐ 后端综合分析（最新）\n阶段：${backendPhase}\n判断依据：${backendReason}\n\n后端算法综合考虑：趋势、量能、动量、威科夫形态等多维度因素，比前端简单规则更准确。`;
-                    } else if (backendPhase.includes('D') || backendPhase.includes('下降')) {
-                        phase = 'D'; phaseClass = 'phase-D';
-                        phaseTooltip = `⭐ 后端综合分析（最新）\n阶段：${backendPhase}\n判断依据：${backendReason}\n\n后端算法综合考虑：趋势、量能、动量、威科夫形态等多维度因素，比前端简单规则更准确。`;
-                    } else if (backendPhase.includes('A') || backendPhase.includes('吸筹')) {
-                        phase = 'A'; phaseClass = 'phase-A';
-                        phaseTooltip = `⭐ 后端综合分析（最新）\n阶段：${backendPhase}\n判断依据：${backendReason}\n\n后端算法综合考虑：趋势、量能、动量、威科夫形态等多维度因素，比前端简单规则更准确。`;
-                    } else if (backendPhase.includes('DS') || backendPhase.includes('下跌吸筹')) {
-                        phase = 'DS'; phaseClass = 'phase-DS';
-                        phaseTooltip = `⭐ 后端综合分析（最新）\n阶段：${backendPhase}\n判断依据：${backendReason}\n\n后端算法综合考虑：趋势、量能、动量、威科夫形态等多维度因素，比前端简单规则更准确。`;
-                    } else {
-                        phaseTooltip = `⭐ 后端综合分析（最新）\n阶段：${backendPhase}\n判断依据：${backendReason}\n\n后端算法综合考虑：趋势、量能、动量、威科夫形态等多维度因素，比前端简单规则更准确。`;
-                    }
+                // 所有行都使用前端计算的威科夫阶段（保持数据一致性）
+                // 避免因时间推移导致结果变化的问题
+                if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                    phase = 'U'; phaseClass = 'phase-U';
+                    phaseTooltip = '前端规则：均线多头排列\n条件：close > ma20 且 ma5 > ma10 > ma20\n\n说明：所有历史数据使用统一规则，确保结果不随时间变化。';
+                } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                    phase = 'D'; phaseClass = 'phase-D';
+                    phaseTooltip = '前端规则：均线空头排列\n条件：close < ma20 且 ma5 < ma10 < ma20\n\n说明：所有历史数据使用统一规则，确保结果不随时间变化。';
+                } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
+                    phase = 'A'; phaseClass = 'phase-A';
+                    phaseTooltip = '前端规则：成交量异常放大\n条件：volume > volume_ma5 × 1.5\n\n说明：所有历史数据使用统一规则，确保结果不随时间变化。';
+                } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
+                    phase = 'DS'; phaseClass = 'phase-DS';
+                    phaseTooltip = '前端规则：价格回调\n条件：close < ma5 且 close > ma20\n\n说明：所有历史数据使用统一规则，确保结果不随时间变化。';
                 } else {
-                    // 其他行使用前端计算的威科夫阶段
-                    // 添加空值检查，避免比较时出现NaN
-                    if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
-                        phase = 'U'; phaseClass = 'phase-U';
-                        phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
-                    } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
-                        phase = 'D'; phaseClass = 'phase-D';
-                        phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
-                    } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
-                        phase = 'A'; phaseClass = 'phase-A';
-                        phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
-                    } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
-                        phase = 'DS'; phaseClass = 'phase-DS';
-                        phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
-                    }
+                    phaseTooltip = '前端规则：无明显特征，市场横盘整理\n\n说明：所有历史数据使用统一规则，确保结果不随时间变化。';
                 }
 
                 // 计算原始索引（倒序数组索引转换回正序数组索引）
@@ -1244,7 +1222,7 @@
                 if (hasMa120) rowHtml += `<td style="color:#f97316;">${q.ma120 != null ? q.ma120.toFixed(2) : '-'}</td>`;
                 if (hasMa250) rowHtml += `<td style="color:#06b6d4;">${q.ma250 != null ? q.ma250.toFixed(2) : '-'}</td>`;
                 if (hasObv) rowHtml += `<td style="color:#f97316;">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>`;
-                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase}阶段${isLatest ? ' ⭐' : ''}</span></td>`;
+                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase}阶段</span></td>`;
                 rowHtml += '</tr>';
 
                 return rowHtml;
@@ -1630,16 +1608,12 @@
                 const analysisHtml = `
                     <div class="card" style="margin-top: 16px;">
                         <div class="card-header">
-                            <h3 class="card-title">⭐ 后端综合分析结果（最新）</h3>
+                            <h3 class="card-title">📊 分析结果</h3>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 16px; background: #1f2937; border-radius: 8px;">
                             <div>
-                                <span style="color: #9ca3af; font-size: 12px;">威科夫阶段</span>
-                                <div style="color: #fbbf24; font-size: 16px; font-weight: 600;">${summary.wyckoff_phase || '-'}</div>
-                            </div>
-                            <div>
                                 <span style="color: #9ca3af; font-size: 12px;">方向</span>
-                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${summary.direction}</div>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 600;">${summary.direction === 'LONG' ? '看涨' : summary.direction === 'SHORT' ? '看跌' : '中性'}</div>
                             </div>
                             <div>
                                 <span style="color: #9ca3af; font-size: 12px;">评分</span>
@@ -1652,6 +1626,16 @@
                             <div style="grid-column: span 2;">
                                 <span style="color: #9ca3af; font-size: 12px;">建议</span>
                                 <div style="color: #f9fafb; font-size: 14px;">${summary.suggestion || '无'}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px; padding: 12px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                            <div style="color: #fbbf24; font-size: 12px; font-weight: 600; margin-bottom: 6px;">⭐ 后端综合分析（仅供参考）</div>
+                            <div style="color: #d1d5db; font-size: 11px; line-height: 1.5;">
+                                威科夫阶段：<strong style="color: #fbbf24;">${summary.wyckoff_phase || '-'}</strong><br>
+                                判断依据：${summary.reason || '-'}
+                            </div>
+                            <div style="color: #9ca3af; font-size: 10px; margin-top: 6px; font-style: italic;">
+                                注：后端使用复杂算法综合分析，但表格和弹窗中的威科夫阶段使用统一前端规则，确保数据一致性。
                             </div>
                         </div>
                     </div>
@@ -2105,9 +2089,7 @@
                 <div style="background: #1e3a8a20; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid #3b82f640;">
                     <div style="color: #60a5fa; font-size: 12px; font-weight: 600; margin-bottom: 4px;">💡 数据说明</div>
                     <div style="color: #d1d5db; font-size: 11px; line-height: 1.5;">
-                        多周期分析显示的是后端综合算法得出的<b style="color: #f9fafb;">整体威科夫阶段</b>，考虑了趋势、量能、动量等多个维度。
-                        表格分析显示的是<b style="color: #f9fafb;">某一天</b>的实时计算结果。两者算法不同，结论可能不一致。
-                        建议以多周期综合分析为准，表格数据用于查看具体某日的详细指标。
+                        <b style="color: #f9fafb;">数据一致性原则：</b>表格和弹窗中的威科夫阶段全部使用<b style="color: #10b981;">统一前端规则</b>计算（基于MA和成交量），确保历史数据的结果不随时间变化。后端综合分析作为参考显示在上方"分析结果"卡片中。
                     </div>
                 </div>
             `;
@@ -3994,59 +3976,29 @@
             // 获取当前时间周期
             const currentTimeframe = document.getElementById('timeframe')?.value || 'daily';
 
-            // 判断是否是最新一天（在当前timeframe的数据中）
-            const isLatestData = (index === uniqueQuotes.length - 1);
-
-            // 计算威科夫阶段
+            // 计算威科夫阶段 - 全部使用前端规则（保持一致性）
             let currentPhase = '震荡';
             let phaseColor = '#9ca3af';
             let phaseTooltip = '';
 
-            // 如果是最新一天且有后端分析结果，使用后端分析
-            if (isLatestData && window.backendWyckoffPhase) {
-                const backendPhase = window.backendWyckoffPhase;
-                const backendReason = window.backendAnalysisReason || '';
-
-                if (backendPhase.includes('U') || backendPhase.includes('上升')) {
-                    currentPhase = 'U';
-                    phaseColor = '#10b981';
-                    phaseTooltip = `⭐ 后端综合分析（最新）：${backendPhase}\n判断依据：${backendReason}`;
-                } else if (backendPhase.includes('D') || backendPhase.includes('下降')) {
-                    currentPhase = 'D';
-                    phaseColor = '#ef4444';
-                    phaseTooltip = `⭐ 后端综合分析（最新）：${backendPhase}\n判断依据：${backendReason}`;
-                } else if (backendPhase.includes('A') || backendPhase.includes('吸筹')) {
-                    currentPhase = 'A';
-                    phaseColor = '#f59e0b';
-                    phaseTooltip = `⭐ 后端综合分析（最新）：${backendPhase}\n判断依据：${backendReason}`;
-                } else if (backendPhase.includes('DS') || backendPhase.includes('下跌吸筹')) {
-                    currentPhase = 'DS';
-                    phaseColor = '#8b5cf6';
-                    phaseTooltip = `⭐ 后端综合分析（最新）：${backendPhase}\n判断依据：${backendReason}`;
-                } else {
-                    phaseTooltip = `⭐ 后端综合分析（最新）：${backendPhase}\n判断依据：${backendReason}`;
-                }
+            if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                currentPhase = 'U';
+                phaseColor = '#10b981';
+                phaseTooltip = '前端规则：均线多头排列\n条件：close > ma20 且 ma5 > ma10 > ma20';
+            } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                currentPhase = 'D';
+                phaseColor = '#ef4444';
+                phaseTooltip = '前端规则：均线空头排列\n条件：close < ma20 且 ma5 < ma10 < ma20';
+            } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
+                currentPhase = 'A';
+                phaseColor = '#f59e0b';
+                phaseTooltip = '前端规则：成交量异常放大\n条件：volume > volume_ma5 × 1.5';
+            } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
+                currentPhase = 'DS';
+                phaseColor = '#8b5cf6';
+                phaseTooltip = '前端规则：价格回调\n条件：close < ma5 且 close > ma20';
             } else {
-                // 使用前端规则计算（历史数据）
-                if (q.ma20 && q.ma5 && q.ma10 && q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
-                    currentPhase = 'U';
-                    phaseColor = '#10b981';
-                    phaseTooltip = '前端规则：均线多头排列\n条件：close > ma20 && ma5 > ma10 > ma20';
-                } else if (q.ma20 && q.ma5 && q.ma10 && q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
-                    currentPhase = 'D';
-                    phaseColor = '#ef4444';
-                    phaseTooltip = '前端规则：均线空头排列\n条件：close < ma20 && ma5 < ma10 < ma20';
-                } else if (q.volume_ma5 && q.volume > q.volume_ma5 * 1.5) {
-                    currentPhase = 'A';
-                    phaseColor = '#f59e0b';
-                    phaseTooltip = '前端规则：成交量异常放大\n条件：volume > volume_ma5 * 1.5';
-                } else if (q.ma5 && q.ma20 && q.close < q.ma5 && q.close > q.ma20) {
-                    currentPhase = 'DS';
-                    phaseColor = '#8b5cf6';
-                    phaseTooltip = '前端规则：价格回调\n条件：close < ma5 && close > ma20';
-                } else {
-                    phaseTooltip = '前端规则：无明显特征，市场横盘整理';
-                }
+                phaseTooltip = '前端规则：无明显特征，市场横盘整理';
             }
 
             // 计算昨天的威科夫阶段
@@ -4443,7 +4395,7 @@
                                     return '→中性';
                                 })()}</span>
                                 <span>量能:${q.volume_ma5 && q.volume > q.volume_ma5 * 1.2 ? '↗放量' : q.volume_ma5 && q.volume < q.volume_ma5 * 0.8 ? '↘缩量' : '→平稳'}</span>
-                                <span class="wyckoff-tooltip" style="cursor: help;" data-tooltip="${phaseTooltip}">威科夫:${currentPhase === 'U' ? '📈上升' : currentPhase === 'D' ? '📉下降' : currentPhase === 'A' ? '🔄吸筹' : currentPhase === 'DS' ? '📥下跌吸筹' : '⚡震荡'}${isLatestData ? ' ⭐' : ''}</span>
+                                <span class="wyckoff-tooltip" style="cursor: help;" data-tooltip="${phaseTooltip}">威科夫:${currentPhase === 'U' ? '📈上升' : currentPhase === 'D' ? '📉下降' : currentPhase === 'A' ? '🔄吸筹' : currentPhase === 'DS' ? '📥下跌吸筹' : '⚡震荡'}</span>
                             </div>
                         </div>
 
@@ -4540,7 +4492,7 @@
 
                             <!-- 2. 威科夫阶段（右） -->
                             <div style="background: #111827; padding: 8px; border-radius: 4px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 6px; font-weight: 600;">威科夫阶段${isLatestData ? ' ⭐' : ''}</div>
+                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 6px; font-weight: 600;">威科夫阶段</div>
                                 <!-- 上：当天情况 -->
                                 <div style="margin-bottom: 8px;">
                                     <div class="wyckoff-tooltip" style="text-align: center; cursor: help;" data-tooltip="${phaseTooltip || (currentPhase === 'U' ? 'close > ma20 && ma5 > ma10 > ma20' : currentPhase === 'D' ? 'close < ma20 && ma5 < ma10 < ma20' : currentPhase === 'A' ? 'volume > volume_ma5 × 1.5' : currentPhase === 'DS' ? 'close < ma5 && close > ma20' : '默认阶段')}">
@@ -4554,8 +4506,8 @@
                                 ${prevQ ? `
                                 <div style="display: flex; flex-direction: column; gap: 6px;">
                                     <!-- 数据来源说明 -->
-                                    <div style="background: ${isLatestData ? 'rgba(251, 191, 36, 0.1)' : 'rgba(107, 114, 128, 0.1)'}; padding: 6px; border-radius: 4px; border: 1px solid ${isLatestData ? 'rgba(251, 191, 36, 0.3)' : 'rgba(107, 114, 128, 0.3)'}; font-size: 10px; color: ${isLatestData ? '#fbbf24' : '#9ca3af'}; line-height: 1.4;">
-                                        ${isLatestData ? '⭐ 后端综合分析（最新）：考虑趋势、量能、动量、威科夫形态等多维度' : '前端规则计算（历史）：基于MA和成交量的简单判断'}
+                                    <div style="background: rgba(107, 114, 128, 0.1); padding: 6px; border-radius: 4px; border: 1px solid rgba(107, 114, 128, 0.3); font-size: 10px; color: #9ca3af; line-height: 1.4;">
+                                        💡 前端规则计算：基于MA和成交量的简单判断，确保所有历史数据使用统一规则，结果不随时间变化
                                     </div>
                                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
                                         <div style="text-align: center;">
