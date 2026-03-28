@@ -20,20 +20,25 @@ router = APIRouter(prefix="/api/v1/watchlist", tags=["关注列表"])
 
 
 @router.get("", response_model=WatchlistResponse)
-def get_watchlist(db: Session = Depends(get_db), limit: int = 100):
+def get_watchlist(
+    db: Session = Depends(get_db),
+    limit: int = 100,
+    watch_type: str = None
+):
     """
     获取关注列表
 
     Args:
         db: 数据库会话
         limit: 返回数量限制（默认100）
+        watch_type: 关注类型 (favorite=自选股, browse=浏览股, None=全部)
 
     Returns:
         关注列表
     """
     try:
         service = WatchlistService(db)
-        watchlist = service.get_watchlist(limit)
+        watchlist = service.get_watchlist(limit, watch_type)
 
         return WatchlistResponse(
             total=len(watchlist),
@@ -43,6 +48,7 @@ def get_watchlist(db: Session = Depends(get_db), limit: int = 100):
                     stock_code=item.stock_code,
                     stock_name=item.stock_name,
                     priority=item.priority,
+                    watch_type=item.watch_type,
                     created_at=item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     updated_at=item.updated_at.strftime("%Y-%m-%d %H:%M:%S")
                 )
@@ -70,10 +76,11 @@ def add_to_watchlist(
     """
     try:
         service = WatchlistService(db)
-        service.add_to_watchlist(request.code)
+        watch_type = request.watch_type or "browse"
+        service.add_to_watchlist(request.code, watch_type=watch_type)
 
         return MessageResponse(
-            message=f"股票{request.code}已添加到关注列表",
+            message=f"股票{request.code}已添加到{'自选股' if watch_type == 'favorite' else '浏览股'}",
             data={"code": request.code}
         )
     except HTTPException:
@@ -195,3 +202,64 @@ def move_watchlist_item(
     except Exception as e:
         logger.error(f"调整顺序失败: {e}")
         raise HTTPException(status_code=500, detail=f"调整失败: {str(e)}")
+
+
+@router.post("/favorite/{code}")
+def favorite_stock(code: str, db: Session = Depends(get_db)):
+    """
+    将浏览股收藏为自选股
+
+    Args:
+        code: 股票代码
+        db: 数据库会话
+
+    Returns:
+        消息响应
+    """
+    try:
+        service = WatchlistService(db)
+        success = service.favorite_stock(code)
+
+        if success:
+            return MessageResponse(
+                message=f"股票{code}已收藏到自选股"
+            )
+        else:
+            raise HTTPException(status_code=400, detail="收藏失败，股票可能不在浏览股中")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"收藏股票失败: {e}")
+        raise HTTPException(status_code=500, detail=f"收藏失败: {str(e)}")
+
+
+@router.delete("/favorite/{code}")
+def unfavorite_stock(code: str, db: Session = Depends(get_db)):
+    """
+    取消收藏自选股
+
+    Args:
+        code: 股票代码
+        db: 数据库会话
+
+    Returns:
+        消息响应
+    """
+    try:
+        service = WatchlistService(db)
+        success = service.unfavorite_stock(code)
+
+        if success:
+            return MessageResponse(
+                message=f"股票{code}已从自选股移除"
+            )
+        else:
+            raise HTTPException(status_code=404, detail=f"股票{code}未找到")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"取消收藏失败: {e}")
+        raise HTTPException(status_code=500, detail=f"取消失败: {str(e)}")
+

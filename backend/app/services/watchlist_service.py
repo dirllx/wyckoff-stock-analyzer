@@ -19,13 +19,14 @@ class WatchlistService:
         self.db = db
         self.storage = DataStorage(db)
 
-    def add_to_watchlist(self, code: str, priority: int = 0) -> UserStockWatch:
+    def add_to_watchlist(self, code: str, priority: int = 0, watch_type: str = "browse") -> UserStockWatch:
         """
         添加股票到关注列表
 
         Args:
             code: 股票代码
             priority: 优先级（用于排序）
+            watch_type: 关注类型 (favorite=自选股, browse=浏览股)
 
         Returns:
             UserStockWatch对象
@@ -34,13 +35,14 @@ class WatchlistService:
             # 获取或创建股票
             stock = self.storage.get_or_create_stock(code)
 
-            # 检查是否已在关注列表
+            # 检查是否已在关注列表（同一类型）
             existing = self.db.query(UserStockWatch).filter(
-                UserStockWatch.stock_id == stock.id
+                UserStockWatch.stock_id == stock.id,
+                UserStockWatch.watch_type == watch_type
             ).first()
 
             if existing:
-                logger.info(f"股票{code}已在关注列表中")
+                logger.info(f"股票{code}已在{watch_type}列表中")
                 existing.updated_at = datetime.now()
                 self.db.commit()
                 self.db.refresh(existing)
@@ -51,6 +53,7 @@ class WatchlistService:
                 stock_id=stock.id,
                 stock_code=stock.code,
                 stock_name=stock.name,
+                watch_type=watch_type,
                 priority=priority
             )
             self.db.add(watchlist_item)
@@ -95,18 +98,25 @@ class WatchlistService:
             self.db.rollback()
             return False
 
-    def get_watchlist(self, limit: int = 100) -> List[UserStockWatch]:
+    def get_watchlist(self, limit: int = 100, watch_type: Optional[str] = None) -> List[UserStockWatch]:
         """
         获取关注列表
 
         Args:
             limit: 返回数量限制
+            watch_type: 关注类型过滤 (favorite=自选股, browse=浏览股, None=全部)
 
         Returns:
             关注列表
         """
         try:
-            watchlist = self.db.query(UserStockWatch).order_by(
+            query = self.db.query(UserStockWatch)
+
+            # 按类型过滤
+            if watch_type:
+                query = query.filter(UserStockWatch.watch_type == watch_type)
+
+            watchlist = query.order_by(
                 desc(UserStockWatch.priority),
                 desc(UserStockWatch.created_at)
             ).limit(limit).all()
@@ -241,3 +251,65 @@ class WatchlistService:
             logger.error(f"调整顺序失败: {e}")
             self.db.rollback()
             return False
+
+    def favorite_stock(self, code: str) -> bool:
+        """
+        将浏览股收藏为自选股
+
+        Args:
+            code: 股票代码
+
+        Returns:
+            是否收藏成功
+        """
+        try:
+            # 查找浏览股记录
+            browse_item = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_code == code,
+                UserStockWatch.watch_type == "browse"
+            ).first()
+
+            if not browse_item:
+                logger.warning(f"股票{code}不在浏览股列表中")
+                return False
+
+            # 检查是否已在自选股中
+            existing_favorite = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_code == code,
+                UserStockWatch.watch_type == "favorite"
+            ).first()
+
+            if existing_favorite:
+                logger.info(f"股票{code}已在自选股列表中")
+                # 删除浏览股记录
+                self.db.delete(browse_item)
+                self.db.commit()
+                return True
+
+            # 转换为自选股
+            browse_item.watch_type = "favorite"
+            browse_item.priority = 0  # 自选股默认优先级
+            browse_item.updated_at = datetime.now()
+
+            self.db.commit()
+            logger.info(f"股票{code}已收藏到自选股")
+            return True
+
+        except Exception as e:
+            logger.error(f"收藏股票失败: {e}")
+            self.db.rollback()
+            return False
+
+    def unfavorite_stock(self, code: str) -> bool:
+        """
+        将自选股取消收藏（删除）
+
+        Args:
+            code: 股票代码
+
+        Returns:
+            是否取消成功
+        """
+        # 取消收藏就是删除自选股记录
+        return self.remove_from_watchlist(code)
+

@@ -8,6 +8,7 @@ import numpy as np
 from loguru import logger
 
 from app.models.database import StockQuote, Stock
+from app.services.analysis.enhanced_scorer import EnhancedScorer
 
 
 class WyckoffAnalyzer:
@@ -44,15 +45,57 @@ class WyckoffAnalyzer:
         sps_analysis = self._analyze_sps(df)
         trend_analysis = self._analyze_trend(df)
 
-        # 综合评分
-        result = self._combine_signals(
-            volume_analysis,
-            effort_result_analysis,
-            sps_analysis,
-            trend_analysis
-        )
+        # 生成均线信号
+        ma_signals = self._generate_ma_signals(df)
 
-        logger.info(f"股票{stock.code}威科夫分析完成: {result}")
+        # 推断威科夫阶段
+        wyckoff_phase = self._infer_wyckoff_phase(df, trend_analysis, volume_analysis)
+
+        # 使用增强型评分器计算评分
+        try:
+            enhanced_scorer = EnhancedScorer()
+            enhanced_result = enhanced_scorer.calculate_enhanced_score(
+                df=df,
+                ma_signals=ma_signals,
+                wyckoff_phase=wyckoff_phase,
+                volume_analysis=volume_analysis,
+                trend_analysis=trend_analysis
+            )
+
+            # 合并结果
+            result = {
+                "signal_type": "WYCKOFF",
+                "direction": enhanced_result["direction"],
+                "score": enhanced_result["score"],
+                "confidence": min(0.9, abs(enhanced_result["score"]) / 5),
+                "strength": "STRONG" if abs(enhanced_result["score"]) >= 4 else "MODERATE" if abs(enhanced_result["score"]) >= 2 else "WEAK",
+                "suggestion": enhanced_result["suggestion"],
+                "reason": enhanced_result["reason"],
+                "wyckoff_phase": wyckoff_phase,
+                "detailed_scores": enhanced_result["detailed_scores"],
+                "details": {
+                    "volume": volume_analysis,
+                    "effort_result": effort_result_analysis,
+                    "sps": sps_analysis,
+                    "trend": trend_analysis,
+                    "ma_signals": ma_signals
+                }
+            }
+
+            logger.info(f"股票{stock.code}威科夫分析完成(增强评分): {result}")
+
+        except Exception as e:
+            logger.error(f"增强评分失败，使用原始评分: {e}")
+            # 降级到原始评分方法
+            result = self._combine_signals(
+                volume_analysis,
+                effort_result_analysis,
+                sps_analysis,
+                trend_analysis
+            )
+            result["wyckoff_phase"] = wyckoff_phase
+            result["ma_signals"] = ma_signals
+
         return result
 
     def _quotes_to_dataframe(self, quotes: List[StockQuote]) -> pd.DataFrame:
@@ -328,6 +371,101 @@ class WyckoffAnalyzer:
             trend_signal["reason"] = "均线纠结，震荡走势"
 
         return trend_signal
+
+    def _generate_ma_signals(self, df: pd.DataFrame) -> List[Dict]:
+        """
+        生成均线信号
+
+        检测均线金叉和死叉
+        """
+        signals = []
+
+        if len(df) < 2:
+            return signals
+
+        latest = df.iloc[-1]
+        prev = df.iloc[-2]
+
+        # MA5/MA10 金叉死叉
+        if prev['ma5'] <= prev['ma10'] and latest['ma5'] > latest['ma10']:
+            signals.append({'type': 'MA5/MA10金叉', 'color': '#10b981'})
+        elif prev['ma5'] >= prev['ma10'] and latest['ma5'] < latest['ma10']:
+            signals.append({'type': 'MA5/MA10死叉', 'color': '#ef4444'})
+
+        # MA10/MA20 金叉死叉
+        if prev['ma10'] <= prev['ma20'] and latest['ma10'] > latest['ma20']:
+            signals.append({'type': 'MA10/MA20金叉', 'color': '#10b981'})
+        elif prev['ma10'] >= prev['ma20'] and latest['ma10'] < latest['ma20']:
+            signals.append({'type': 'MA10/MA20死叉', 'color': '#ef4444'})
+
+        # 检查均线排列
+        if latest['close'] > latest['ma5'] > latest['ma10'] > latest['ma20']:
+            signals.append({'type': '多头排列', 'color': '#10b981'})
+        elif latest['close'] < latest['ma5'] < latest['ma10'] < latest['ma20']:
+            signals.append({'type': '空头排列', 'color': '#ef4444'})
+
+        return signals
+
+    def _infer_wyckoff_phase(
+        self,
+        df: pd.DataFrame,
+        trend_analysis: Dict,
+        volume_analysis: Dict
+    ) -> str:
+        """
+        推断威科夫阶段
+
+        根据趋势、成交量、价格形态推断当前所处的威科夫阶段
+        """
+        latest = df.iloc[-1]
+
+        # 上涨趋势 (U)
+        if trend_analysis.get('direction') == 'LONG' and trend_analysis.get('strength') == 'STRONG':
+            if volume_analysis.get('direction') == 'LONG':
+                return 'U(放量上涨)'
+            else:
+                return 'U(缩量上涨)'
+
+        # 下跌趋势 (D)
+        if trend_analysis.get('direction') == 'SHORT' and trend_analysis.get('strength') == 'STRONG':
+            if volume_analysis.get('direction') == 'SHORT':
+                return 'D(放量下跌)'
+            else:
+                return 'D(缩量下跌)'
+
+        # Accumulation (吸筹) - 低位横盘，成交量温和
+        if trend_analysis.get('strength') in ['WEAK', 'MODERATE']:
+            # 检查是否在低位
+            if len(df) >= 20:
+                recent_high = df.tail(20)['high'].max()
+                recent_low = df.tail(20)['low'].min()
+                current_price = latest['close']
+
+                # 价格在下半区
+                if current_price < (recent_high + recent_low) / 2:
+                    # 检查成交量
+                    if volume_analysis.get('anomaly') and volume_analysis.get('direction') == 'LONG':
+                        return 'A(吸筹放量)'
+                    else:
+                        return 'A(吸筹)'
+
+        # Distribution (派发) - 高位横盘，成交量放大
+        if trend_analysis.get('strength') in ['WEAK', 'MODERATE']:
+            if len(df) >= 20:
+                recent_high = df.tail(20)['high'].max()
+                recent_low = df.tail(20)['low'].min()
+                current_price = latest['close']
+
+                # 价格在上半区
+                if current_price > (recent_high + recent_low) / 2:
+                    # 检查成交量
+                    if volume_analysis.get('anomaly') and volume_analysis.get('direction') == 'SHORT':
+                        return 'DS(派发放量)'
+                    else:
+                        return 'DS(派发)'
+
+        # 默认震荡
+        return '震荡'
 
     def _combine_signals(
         self,

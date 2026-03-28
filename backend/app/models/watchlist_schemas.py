@@ -8,6 +8,7 @@ from typing import Optional
 class WatchlistAddRequest(BaseModel):
     """添加股票到关注列表"""
     code: str = Field(..., description="股票代码", example="000001")
+    watch_type: Optional[str] = Field("browse", description="关注类型: favorite=自选股, browse=浏览股")
 
 
 class WatchlistItemResponse(BaseModel):
@@ -16,6 +17,7 @@ class WatchlistItemResponse(BaseModel):
     stock_code: str
     stock_name: Optional[str]
     priority: int
+    watch_type: Optional[str] = "browse"
     created_at: str
     updated_at: str
 
