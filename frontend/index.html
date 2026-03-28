@@ -1821,8 +1821,8 @@
                     };
                 });
 
-                // 渲染结果
-                renderMultiTimeframeAnalysis(code, analysisData);
+                // 渲染结果 - 使用新的表格展示方式
+                renderMultiTimeframeTable(code, analysisData);
                 addLog('分析完成', `多周期分析完成，共${timeframes.length}个周期`);
 
             } catch (error) {
@@ -1991,6 +1991,7 @@
 
         // 渲染多周期分析结果（按短中长期分组）
         function renderMultiTimeframeAnalysis(code, analysisData) {
+            // 保留旧函数以兼容弹窗中的调用
             const contentEl = document.getElementById('multiContent');
 
             // 周期名称映射
@@ -2033,6 +2034,219 @@
             html += renderPhaseDetailCards('🎯 长线分析', longTerm, timeframeNames);
 
             contentEl.innerHTML = html;
+        }
+
+        // ========== 新的表格展示方式 ==========
+        function renderMultiTimeframeTable(code, analysisData) {
+            const contentEl = document.getElementById('multiContent');
+
+            // 周期名称映射
+            const timeframeNames = {
+                'daily': '日线',
+                'weekly': '周线',
+                'monthly': '月线',
+                '30': '30分',
+                '60': '60分'
+            };
+
+            // 固定顺序：30分、60分、日线、周线、月线
+            const order = ['30', '60', 'daily', 'weekly', 'monthly'];
+            const sortedData = [...analysisData].sort((a, b) => {
+                return order.indexOf(a.timeframe) - order.indexOf(b.timeframe);
+            });
+
+            let html = '';
+
+            // 1. 股票信息标题
+            html += `
+                <div style="background: linear-gradient(135deg, #1f2937, #111827); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #374151;">
+                    <div style="font-size: 18px; font-weight: 700; color: #f9fafb;">
+                        ${code}
+                        <span style="font-size: 13px; color: #9ca3af; font-weight: 400; margin-left: 8px;">多周期分析</span>
+                    </div>
+                </div>
+            `;
+
+            // 2. 关键指标对比表格
+            html += `
+                <div style="background: #1f2937; border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid #374151;">
+                    <div style="color: #f9fafb; font-size: 14px; font-weight: 600; margin-bottom: 10px;">📊 各周期关键指标对比</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #374151;">
+                                <th style="text-align: left; padding: 8px; color: #9ca3af; font-weight: 500;">周期</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">价格</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">评分</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">方向</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">威科夫阶段</th>
+                                <th style="text-align: center; padding: 8px; color: #9ca3af; font-weight: 500;">操作建议</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            sortedData.forEach(data => {
+                const tfName = timeframeNames[data.timeframe] || data.timeframe;
+                const summary = data.summary;
+                const quote = data.quote;
+                const direction = summary.direction || 'NEUTRAL';
+                const score = summary.score || 0;
+                const wyckoffPhase = summary.wyckoff_phase || '-';
+                const suggestion = summary.suggestion || '-';
+
+                let directionColor = '#9ca3af';
+                let directionText = '中性';
+                if (direction === 'LONG') {
+                    directionColor = '#10b981';
+                    directionText = '看涨';
+                } else if (direction === 'SHORT') {
+                    directionColor = '#ef4444';
+                    directionText = '看跌';
+                }
+
+                let scoreColor = '#9ca3af';
+                if (score >= 3) scoreColor = '#10b981';
+                else if (score >= 1) scoreColor = '#f59e0b';
+                else if (score <= -1) scoreColor = '#ef4444';
+
+                // 威科夫阶段颜色
+                let phaseColor = '#9ca3af';
+                let phaseIcon = '';
+                if (wyckoffPhase === 'U') { phaseColor = '#10b981'; phaseIcon = '📈'; }
+                else if (wyckoffPhase === 'D') { phaseColor = '#ef4444'; phaseIcon = '📉'; }
+                else if (wyckoffPhase === 'A') { phaseColor = '#f59e0b'; phaseIcon = '🔄'; }
+                else if (wyckoffPhase === 'DS') { phaseColor = '#8b5cf6'; phaseIcon = '📥'; }
+
+                html += `
+                    <tr style="border-bottom: 1px solid #374151;">
+                        <td style="padding: 10px 8px; color: #f9fafb; font-weight: 600;">${tfName}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: #f9fafb;">${quote?.close ? quote.close.toFixed(2) : '-'}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: ${scoreColor}; font-weight: 700;">${score > 0 ? '+' : ''}${score}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: ${directionColor}; font-weight: 600;">${directionText}</td>
+                        <td style="text-align: center; padding: 10px 8px; color: ${phaseColor}; font-weight: 600;">${phaseIcon} ${wyckoffPhase}</td>
+                        <td style="text-align: left; padding: 10px 8px; color: #d1d5db; font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${suggestion}">${suggestion}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // 3. 周期共振分析
+            html += generateResonanceAnalysis(sortedData, timeframeNames);
+
+            contentEl.innerHTML = html;
+        }
+
+        // 生成周期共振分析
+        function generateResonanceAnalysis(analysisData, timeframeNames) {
+            // 统计各周期的方向
+            let longCount = 0;
+            let shortCount = 0;
+            let neutralCount = 0;
+            const directionDetails = [];
+
+            // 统计威科夫阶段
+            const phaseCount = {};
+            const phaseDetails = [];
+
+            analysisData.forEach(data => {
+                const tfName = timeframeNames[data.timeframe] || data.timeframe;
+                const summary = data.summary;
+                const direction = summary.direction || 'NEUTRAL';
+                const wyckoffPhase = summary.wyckoff_phase || '震荡';
+
+                if (direction === 'LONG') {
+                    longCount++;
+                    directionDetails.push({ period: tfName, direction: '看涨', color: '#10b981' });
+                } else if (direction === 'SHORT') {
+                    shortCount++;
+                    directionDetails.push({ period: tfName, direction: '看跌', color: '#ef4444' });
+                } else {
+                    neutralCount++;
+                    directionDetails.push({ period: tfName, direction: '中性', color: '#9ca3af' });
+                }
+
+                phaseCount[wyckoffPhase] = (phaseCount[wyckoffPhase] || 0) + 1;
+                phaseDetails.push({ period: tfName, phase: wyckoffPhase });
+            });
+
+            // 判断共振
+            const total = analysisData.length;
+            const longRatio = longCount / total;
+            const shortRatio = shortCount / total;
+
+            let resonanceLevel = '';
+            let resonanceColor = '';
+            let bgColor = '';
+            let suggestion = '';
+
+            if (longCount === total) {
+                resonanceLevel = '🚀 完美看涨共振';
+                resonanceColor = '#10b981';
+                bgColor = 'linear-gradient(135deg, #064e3b, #059669)';
+                suggestion = '所有周期一致看涨，形成完美共振，积极做多或持有！';
+            } else if (shortCount === total) {
+                resonanceLevel = '⚠️ 完美看跌共振';
+                resonanceColor = '#ef4444';
+                bgColor = 'linear-gradient(135deg, #7f1d1d, #dc2626)';
+                suggestion = '所有周期一致看跌，建议空仓观望！';
+            } else if (longRatio >= 0.6) {
+                resonanceLevel = '✅ 多头占优';
+                resonanceColor = '#34d399';
+                bgColor = 'linear-gradient(135deg, #065f46, #10b981)';
+                suggestion = '多数周期看涨，可适量参与，注意控制仓位。';
+            } else if (shortRatio >= 0.6) {
+                resonanceLevel = '❌ 空头占优';
+                resonanceColor = '#f87171';
+                bgColor = 'linear-gradient(135deg, #991b1b, #ef4444)';
+                suggestion = '多数周期看跌，建议控制仓位或离场观望。';
+            } else {
+                resonanceLevel = '⏳ 分歧较大';
+                resonanceColor = '#fbbf24';
+                bgColor = 'linear-gradient(135deg, #78350f, #d97706)';
+                suggestion = '各周期分歧较大，建议观望等待明确信号。';
+            }
+
+            let html = '';
+
+            // 共振分析卡片
+            html += `
+                <div style="background: ${bgColor}; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div style="color: #ffffff; font-size: 16px; font-weight: 700;">${resonanceLevel}</div>
+                        <div style="color: rgba(255,255,255,0.9); font-size: 12px;">
+                            看涨 ${longCount}/${total} | 中性 ${neutralCount}/${total} | 看跌 ${shortCount}/${total}
+                        </div>
+                    </div>
+                    <div style="color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6;">${suggestion}</div>
+                </div>
+            `;
+
+            // 详细方向分布
+            html += `
+                <div style="background: #1f2937; border-radius: 8px; padding: 12px; border: 1px solid #374151;">
+                    <div style="color: #f9fafb; font-size: 13px; font-weight: 600; margin-bottom: 8px;">📈 各周期方向详情</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            `;
+
+            directionDetails.forEach(detail => {
+                html += `
+                    <span style="background: ${detail.color}20; color: ${detail.color}; padding: 4px 10px; border-radius: 4px; font-size: 11px; border: 1px solid ${detail.color}60;">
+                        ${detail.period}: ${detail.direction}
+                    </span>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            return html;
         }
 
         // 渲染阶段卡片
