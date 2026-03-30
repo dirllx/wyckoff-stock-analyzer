@@ -20,7 +20,9 @@ from app.services.redis_service import (
     cache_analysis,
     get_cached_stock_data,
     cache_stock_data,
-    RedisService
+    RedisService,
+    get_stock_data_with_fallback,
+    get_analysis_with_fallback
 )
 from app.utils.converters import dict_to_stock_quotes
 
@@ -112,13 +114,18 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
             update_success = storage.update_stock_quotes(request.code, request.timeframe)
             quotes = storage.get_quotes(request.code, request.timeframe, limit=500)
         elif not request.end_date:
-            # 日线/周线/月线：检查缓存
-            quotes = get_cached_stock_data(request.code, request.timeframe)
-            if quotes:
-                logger.info(f"✅ 从缓存获取K线数据: {request.code} {request.timeframe} ({len(quotes)}条)")
-                # 如果是字典列表，转换为StockQuote对象
-                if quotes and isinstance(quotes[0], dict):
-                    quotes = dict_to_stock_quotes(quotes, stock.id, request.timeframe)
+            # 日线/周线/月线：检查缓存，支持降级
+            try:
+                quotes = get_cached_stock_data(request.code, request.timeframe)
+                if quotes:
+                    logger.info(f"✅ 从缓存获取K线数据: {request.code} {request.timeframe} ({len(quotes)}条)")
+                    # 如果是字典列表，转换为StockQuote对象
+                    if quotes and isinstance(quotes[0], dict):
+                        quotes = dict_to_stock_quotes(quotes, stock.id, request.timeframe)
+            except Exception as e:
+                # Redis失败时降级到数据库
+                logger.warning(f"⚠️ Redis读取失败，降级到数据库: {e}")
+                quotes = None
 
         if not quotes:
             # 缓存未命中或指定了end_date，更新数据

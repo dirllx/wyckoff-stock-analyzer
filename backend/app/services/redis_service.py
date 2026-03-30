@@ -282,3 +282,104 @@ def get_cached_multi_timeframe(code: str, timeframes: List[str]) -> Optional[dic
 def cache_multi_timeframe(code: str, timeframes: List[str], analysis: dict) -> bool:
     """缓存多周期分析结果（便捷函数）"""
     return RedisService.cache_multi_timeframe(code, timeframes, analysis)
+
+
+# ========== 降级机制支持 ==========
+
+def get_stock_data_with_fallback(code: str, timeframe: str, fallback_func, ttl: int = 3600) -> Optional[Any]:
+    """
+    获取股票数据，Redis失败时降级到数据库
+
+    Args:
+        code: 股票代码
+        timeframe: 时间周期
+        fallback_func: 降级函数，Redis失败时调用
+        ttl: 缓存时间（秒）
+
+    Returns:
+        缓存数据或降级函数返回值
+
+    Example:
+        >>> from app.services.data import DataStorage
+        >>> def get_from_db():
+        ...     storage = DataStorage(db)
+        ...     return storage.get_quotes("688234", "daily", limit=500)
+        >>> data = get_stock_data_with_fallback("688234", "daily", get_from_db)
+    """
+    try:
+        # 尝试从Redis获取
+        data = RedisService.get_stock_data(code, timeframe)
+        if data:
+            logger.info(f"✅ Redis缓存命中: {code} {timeframe}")
+            return data
+    except Exception as e:
+        logger.warning(f"⚠️ Redis读取失败，降级到数据库: {e}")
+
+    # 降级：调用fallback函数
+    try:
+        logger.info(f"🔄 降级到数据库查询: {code} {timeframe}")
+        data = fallback_func()
+
+        # 尝试写入缓存（失败不影响返回）
+        if data:
+            try:
+                RedisService.cache_stock_data(code, timeframe, data)
+                logger.info(f"✅ 数据已写入缓存: {code} {timeframe}")
+            except Exception as e:
+                logger.warning(f"⚠️ 缓存写入失败: {e}")
+
+        return data
+    except Exception as e:
+        logger.error(f"❌ 降级查询失败: {e}")
+        return None
+
+
+def get_analysis_with_fallback(code: str, timeframe: str, fallback_func, ttl: int = 1800) -> Optional[dict]:
+    """
+    获取分析结果，Redis失败时降级到重新计算
+
+    Args:
+        code: 股票代码
+        timeframe: 时间周期
+        fallback_func: 降级函数，执行分析并返回结果
+        ttl: 缓存时间（秒）
+
+    Returns:
+        缓存分析结果或重新计算的结果
+
+    Example:
+        >>> from app.services import WyckoffAnalyzer, DataStorage
+        >>> def analyze_from_db():
+        ...     storage = DataStorage(db)
+        ...     analyzer = WyckoffAnalyzer()
+        ...     stock = storage.get_or_create_stock("688234")
+        ...     quotes = storage.get_quotes("688234", "daily", limit=500)
+        ...     return analyzer.analyze(stock, quotes)
+        >>> result = get_analysis_with_fallback("688234", "daily", analyze_from_db)
+    """
+    try:
+        # 尝试从Redis获取
+        analysis = RedisService.get_analysis(code, timeframe)
+        if analysis:
+            logger.info(f"✅ Redis缓存命中: {code} {timeframe} 分析结果")
+            return analysis
+    except Exception as e:
+        logger.warning(f"⚠️ Redis读取失败，重新计算分析: {e}")
+
+    # 降级：重新计算
+    try:
+        logger.info(f"🔄 降级到重新计算: {code} {timeframe}")
+        analysis = fallback_func()
+
+        # 尝试写入缓存（失败不影响返回）
+        if analysis:
+            try:
+                RedisService.cache_analysis(code, timeframe, analysis)
+                logger.info(f"✅ 分析结果已写入缓存: {code} {timeframe}")
+            except Exception as e:
+                logger.warning(f"⚠️ 缓存写入失败: {e}")
+
+        return analysis
+    except Exception as e:
+        logger.error(f"❌ 降级计算失败: {e}")
+        return None
