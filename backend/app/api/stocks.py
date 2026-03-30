@@ -5,6 +5,7 @@ from datetime import datetime, time
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from loguru import logger
+from slowapi import Limiter
 
 from app.database import get_db
 from app.models.database import Stock, StockQuote, WyckoffSignal
@@ -27,9 +28,11 @@ from app.services.redis_service import (
 from app.utils.converters import dict_to_stock_quotes
 
 router = APIRouter()
+limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
 
 
 @router.post("/stocks/analyze", response_model=StockAnalysisResponse)
+@limiter.limit("10/minute")  # 每分钟最多10次分析请求
 async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get_db)):
     """
     分析股票威科夫信号
