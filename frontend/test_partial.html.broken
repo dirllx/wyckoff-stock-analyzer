@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="version" content="20240225-0150">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>威科夫股票分析系统</title>
+    <script src="lightweight-charts.standalone.production.js"></script>
+    <script>
+        // 这是最早执行的脚本
+        console.log('=== 第一行脚本执行 ===');
+        alert('第1个alert - 脚本开始');
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 12px;
+        }
+        .card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .card-title { font-size: 14px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .form-input {
+            padding: 8px 12px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #f9fafb;
+            font-size: 13px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary {
+            background: #374151;
+            color: #f9fafb;
+        }
+
+        /* 主图容器 */
+        .main-chart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 500px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+
+        /* 副图容器 */
+        .subchart-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            height: 200px;
+            border: 1px solid #374151;
+            margin-bottom: 12px;
+        }
+
+        /* 表格容器 */
+        .table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 12px;
+            overflow-x: auto;
+            max-height: 800px;
+            border: 1px solid #374151;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            min-width: 1200px;
+        }
+        th, td {
+            padding: 6px 4px;
+            text-align: right;
+            border-bottom: 1px solid #374151;
+        }
+        th {
+            font-weight: 600;
+            color: #9ca3af;
+            font-size: 10px;
+            background: #111827;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .red { color: #ef4444; }
+        .green { color: #10b981; }
+
+        /* 健康状态栏 */
+        .health-status-bar {
+            position: fixed;
+            top: 0px;
+            right: 8px;
+            background: rgba(17, 24, 39, 0.5);
+            border: 1px solid rgba(55, 65, 81, 0.2);
+            border-radius: 6px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            font-size: 11px;
+            backdrop-filter: blur(6px);
+        }
+
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .health-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .health-dot.healthy { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .health-dot.error { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+        .health-label { color: #9ca3af; }
+        .health-value { color: #f9fafb; font-weight: 600; }
+        .health-divider { width: 1px; height: 16px; background: #374151; }
+
+        /* Tab导航 */
+        .tab-nav {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 10px;
+            padding: 3px;
+            background: #111827;
+            border-radius: 6px;
+            border: 1px solid #374151;
+        }
+        .tab-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 5px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+        .tab-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #d1d5db;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 模式切换 */
+        .mode-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .toggle-btn {
+            padding: 8px 16px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+
+        #logArea {
+            background: #0a0e27;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+.kline-table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 0 12px 12px 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #374151;
+            max-height: 800px;
+        }
+
+        .kline-table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: auto;
+        }
+        .kline-table th,
+        .kline-table td {
+            padding: 10px 8px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+            border-left: none;
+            border-right: none;
+            border-top: 1px solid #374151;
+            border-bottom: 1px solid #374151;
+        }
+        .kline-table th {
+            background: #1f2937;
+            color: #f9fafb;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .kline-table tbody tr:first-child td {
+            padding-top: 12px;
+        }
+        .kline-table td:first-child,
+        .kline-table th:first-child {
+            text-align: left;
+            padding-left: 12px;
+        }
+        .kline-table tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .kline-table tr:hover {
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
+        .kline-table tr:active {
+            background: rgba(59, 130, 246, 0.25) !important;
+        }
+
+        /* 弹窗样式 */
+        #quoteModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+        #quoteModal.show {
+            display: flex;
+        }
+
+        .kline-red { color: #ef4444; }
+        .kline-green { color: #10b981; }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .indicator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #1f2937;
+            border-radius: 8px;
+            border: 1px solid #374151;
+        }
+        .indicator-name { font-size: 12px; color: #9ca3af; }
+        .indicator-value { font-size: 14px; font-weight: 600; }
+        .indicator-bullish { color: #10b981; }
+        .indicator-bearish { color: #ef4444; }
+        .indicator-neutral { color: #9ca3af; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .chart-toggle { display: flex; gap: 8px; }
+        .toggle-btn {
+            padding: 8px 14px;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .toggle-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .phase-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 4px;
+            cursor: help;
+            position: relative;
+        }
+        .phase-badge:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #374151;
+            pointer-events: none;
+        }
+        .phase-A { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+        .phase-U { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
+        .phase-D { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+        .phase-DS { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid #8b5cf6; }
+        .phase-neutral { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid #374151; }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            gap: 8px;
+            color: #6b7280;
+        }
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: loading-bounce 1.4s infinite ease-in-out;
+        }
+        @keyframes loading-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        /* 多周期评分和信号颜色 */
+        .score-high { color: #10b981; font-weight: 600; font-size: 16px; }
+        .score-medium { color: #f59e0b; font-weight: 600; font-size: 16px; }
+        .score-low { color: #ef4444; font-weight: 600; font-size: 16px; }
+        .signal-bullish { color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #10b981; }
+        .signal-bearish { color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #ef4444; }
+        .signal-neutral { color: #9ca3af; font-weight: 600; background: rgba(156, 163, 175, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #9ca3af; }
+
+        /* Indicator 样式 */
+        .indicator-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .indicator-name {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        .indicator-value {
+            color: #f9fafb;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .indicator-bullish { color: #10b981; }
+        .indicator-neutral { color: #9ca3af; }
+        .indicator-bearish { color: #ef4444; }
+
+    </style>
+</head>
+<body>
+    <!-- 健康状态栏 -->
+    <div class="health-status-bar">
+        <div class="health-indicator">
+            <div class="health-dot" id="overallStatusDot"></div>
+            <span class="health-label">系统:</span>
+            <span class="health-value" id="overallStatusText">检查中...</span>
+        </div>
+        <div class="health-divider"></div>
+        <div class="health-indicator">
+            <div class="health-dot" id="dbStatusDot"></div>
+            <span class="health-label">数据库:</span>
+            <span class="health-value" id="dbStatusText">-</span>
+        </div>
+        <div class="health-divider"></div>
+        <div class="health-indicator">
+            <div class="health-dot" id="redisStatusDot"></div>
+            <span class="health-label">Redis:</span>
+            <span class="health-value" id="redisStatusText">-</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <!-- Tab导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+            <button class="tab-btn" id="tab-watchlist" onclick="showTab('watchlist')">我的关注</button>
+            <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
+            <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
+            <button class="tab-btn" id="tabStatus" onclick="showTab('status')">测试状态</button>
+        </div>
+
+        <!-- 分析Tab -->
+        <div id="tab-analyze" class="tab-content active">
+            <div class="form-group">
+                <input type="text" class="form-input" id="stockCode" value="688234" placeholder="000001">
+                <select class="form-input" id="timeframe" style="width: 100px;">
+                    <option value="daily">日线</option>
+                    <option value="weekly">周线</option>
+                    <option value="monthly">月线</option>
+                    <option value="30">30分钟</option>
+                    <option value="60">60分钟</option>
+                </select>
+                <button class="btn" onclick="analyzeStock()">开始分析</button>
+                <button class="btn btn-secondary" onclick="clearResult()">清空</button>
+            </div>
+            <div id="analyzeResult"></div>
+        </div>
+
+        <!-- 我的关注Tab -->
+        <div id="tab-watchlist" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">我的关注</h2>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select class="form-input" id="watchlistSelect" style="width: 120px; margin-right: 10px;" onchange="analyzeFromWatchlist()">
+                        <option value="">选择股票</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addToWatchlist()">添加</button>
+                    <button class="btn btn-secondary" onclick="refreshWatchlist()">刷新</button>
+                </div>
+            </div>
+            <div id="watchlistContent"></div>
+        </div>
+
+        <!-- 多周期Tab -->
+        <div id="tab-multi" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">多周期分析</h2>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="000001">
+                <button class="btn btn-primary" onclick="analyzeMultiTimeframe()">开始多周期分析</button>
+            </div>
+            <div id="multiContent"></div>
+        </div>
+
+        <!-- 系统配置Tab -->
+        <div id="tab-config" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">系统配置</h2>
+            </div>
+
+            <!-- 系统信息 -->
+            <div class="indicators-grid" style="padding: 20px;">
+                <div class="indicator-item">
+                    <span class="indicator-name">API状态</span>
+                    <span class="indicator-value indicator-bullish">运行中</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">数据源</span>
+                    <span class="indicator-value">akshare</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">数据库</span>
+                    <span class="indicator-value">SQLite3</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">更新频率</span>
+                    <span class="indicator-value">每日</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">K线数量</span>
+                    <span class="indicator-value">500</span>
+                </div>
+                <div class="indicator-item">
+                    <span class="indicator-name">威科夫评分</span>
+                    <span class="indicator-value">1-10</span>
+                </div>
+            </div>
+
+            <!-- 形态配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">形态识别配置</h3>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadPatternsConfig()">刷新</button>
+                </div>
+                <div id="patternsConfig" style="padding: 20px;">
+                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                </div>
+            </div>
+
+            <!-- 周期配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">时间周期配置</h3>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadTimeframesConfig()">刷新</button>
+                </div>
+                <div id="timeframesConfig" style="padding: 20px;">
+                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                </div>
+            </div>
+
+            <!-- 飞书通知配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">飞书通知配置</h3>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadFeishuConfig()">刷新</button>
+                </div>
+                <div id="feishuConfig" style="padding: 20px;">
+                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                </div>
+            </div>
+
+            <!-- 风险监控配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">风险监控配置</h3>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadRiskConfig()">刷新</button>
+                </div>
+                <div id="riskConfig" style="padding: 20px;">
+                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                </div>
+            </div>
+
+            <!-- 实时行情 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">实时行情</h3>
+                </div>
+                <div class="form-group" style="padding: 20px;">
+                    <input type="text" class="form-input" id="realtimeCode" value="000001" placeholder="股票代码" style="width: 150px;">
+                    <button class="btn btn-primary" onclick="getRealtimeQuote()">查询实时行情</button>
+                </div>
+                <div id="realtimeResult" style="padding: 0 20px 20px;"></div>
+            </div>
+
+            <!-- 形态识别 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">形态识别</h3>
+                </div>
+                <div class="form-group" style="padding: 20px;">
+                    <input type="text" class="form-input" id="patternCode" value="000001" placeholder="股票代码" style="width: 150px;">
+                    <select class="form-input" id="patternTimeframe" style="width: 100px;">
+                        <option value="daily">日线</option>
+                        <option value="weekly">周线</option>
+                        <option value="monthly">月线</option>
+                        <option value="30">30分钟</option>
+                        <option value="60">60分钟</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="recognizePatterns()">识别形态</button>
+                </div>
+                <div id="patternResult" style="padding: 0 20px 20px;"></div>
+            </div>
+        </div>
+
+        <!-- 测试状态Tab -->
+        <div id="tab-status" class="tab-content">
+            <div style="padding: 20px; color: #9ca3af;">这里是测试结果汇总区域...</div>
+        </div>
+    </div>
+
+    <!-- 日志卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">操作日志</h2>
+            <button class="btn btn-secondary" style="float: right; padding: 6px 12px; font-size: 12px;" onclick="toggleLog()">收起/展开</button>
+        </div>
+        <div id="logArea" style="margin-top: 12px;">
+            <div style="color: #9ca3af;">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        alert('Script tag reached!');
+        // 这是主脚本
+        alert('主脚本开始执行');
+
+        // 测试JavaScript是否能执行
+        alert('JavaScript已加载');
+        console.log('=== JavaScript开始执行 ===');
+
+        // 检查图表库是否加载
+        console.log('检查图表库加载状态...');
+</body></html>

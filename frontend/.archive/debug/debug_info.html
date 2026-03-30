@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>调试信息</title>
+    <style>
+        body {
+            margin: 20px;
+            background: #0a0e27;
+            color: #fff;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .section {
+            background: #1f2937;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        .ok { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        h2 { margin-top: 0; color: #60a5fa; }
+        pre {
+            background: #111827;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>威科夫系统 - 调试面板</h1>
+
+    <div class="section">
+        <h2>1. 基础检查</h2>
+        <div id="basic-check">检查中...</div>
+    </div>
+
+    <div class="section">
+        <h2>2. 图表库检查</h2>
+        <div id="chart-lib-check">检查中...</div>
+    </div>
+
+    <div class="section">
+        <h2>3. API测试</h2>
+        <button onclick="testAPI()">测试API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. DOM容器测试</h2>
+        <div id="dom-check">
+            <div id="test-main-chart" style="height: 300px; background: #1a1a2e; border: 2px solid #4a5568;">
+                测试主图容器
+            </div>
+            <div id="test-volume-chart" style="height: 150px; background: #1a1a2e; border: 2px solid #4a5568; margin-top: 10px;">
+                测试成交量容器
+            </div>
+        </div>
+        <div id="dom-info" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. 图表渲染测试</h2>
+        <button onclick="testChartRender()">测试渲染</button>
+        <div id="render-result"></div>
+    </div>
+
+    <div class="section">
+        <h2>6. 主页面链接</h2>
+        <button onclick="window.open('http://localhost:3000/index.html', '_blank')">打开主页面</button>
+        <button onclick="window.open('http://localhost:3000/test_real_data.html', '_blank')">打开测试页面</button>
+    </div>
+
+    <script>
+        // 1. 基础检查
+        function runBasicCheck() {
+            const results = [];
+
+            // 检查文件是否可访问
+            fetch('lightweight-charts.standalone.production.js')
+                .then(r => {
+                    if (r.ok) {
+                        results.push(`<span class="ok">✓</span> 图表库文件可访问 (${r.headers.get('Content-Length')} bytes)`);
+                    } else {
+                        results.push(`<span class="error">✗</span> 图表库文件无法访问`);
+                    }
+                    displayResults('basic-check', results);
+                })
+                .catch(e => {
+                    results.push(`<span class="error">✗</span> 图表库文件加载失败: ${e.message}`);
+                    displayResults('basic-check', results);
+                });
+        }
+
+        // 2. 图表库检查
+        function checkChartLibrary() {
+            const results = [];
+
+            if (typeof LightweightCharts === 'undefined') {
+                results.push('<span class="error">✗</span> LightweightCharts 未加载');
+                displayResults('chart-lib-check', results);
+                return;
+            }
+
+            results.push('<span class="ok">✓</span> LightweightCharts 已加载');
+            results.push(`<span class="ok">✓</span> 版本信息: ${JSON.stringify(LightweightCharts.version || '未知')}`);
+
+            if (typeof LightweightCharts.createChart === 'function') {
+                results.push('<span class="ok">✓</span> createChart 方法存在');
+            } else {
+                results.push('<span class="error">✗</span> createChart 方法不存在');
+            }
+
+            displayResults('chart-lib-check', results);
+        }
+
+        // 3. API测试
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '测试中...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/stocks/688234/quotes?timeframe=daily&limit=5');
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <span class="ok">✓</span> API响应成功<br>
+                    数据条数: ${data.total}<br>
+                    第一条: <pre>${JSON.stringify(data.quotes[0], null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗</span> API请求失败: ${error.message}`;
+            }
+        }
+
+        // 4. DOM检查
+        function checkDOM() {
+            const mainChart = document.getElementById('test-main-chart');
+            const volumeChart = document.getElementById('test-volume-chart');
+
+            const info = [];
+            info.push(`主图容器: ${mainChart.clientWidth}px x ${mainChart.clientHeight}px`);
+            info.push(`成交量容器: ${volumeChart.clientWidth}px x ${volumeChart.clientHeight}px`);
+            info.push(`主图显示: ${window.getComputedStyle(mainChart).display}`);
+            info.push(`主图可见性: ${window.getComputedStyle(mainChart).visibility}`);
+
+            document.getElementById('dom-info').innerHTML = info.join('<br>');
+        }
+
+        // 5. 图表渲染测试
+        function testChartRender() {
+            const resultDiv = document.getElementById('render-result');
+            resultDiv.innerHTML = '渲染中...';
+
+            const mainContainer = document.getElementById('test-main-chart');
+            const volumeContainer = document.getElementById('test-volume-chart');
+
+            try {
+                // 清空容器
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+
+                // 创建图表
+                const mainChart = LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: 300,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                const volumeChart = LightweightCharts.createChart(volumeContainer, {
+                    width: volumeContainer.clientWidth,
+                    height: 150,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                // 添加测试数据
+                const testData = [
+                    { time: '2026-03-20', open: 70, high: 75, low: 68, close: 72 },
+                    { time: '2026-03-21', open: 72, high: 78, low: 71, close: 76 },
+                    { time: '2026-03-22', open: 76, high: 80, low: 74, close: 78 },
+                ];
+
+                const candleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444',
+                });
+
+                candleSeries.setData(testData);
+                mainChart.timeScale().fitContent();
+
+                // 添加成交量数据
+                const volumeData = [
+                    { time: '2026-03-20', value: 100000, color: '#10b981' },
+                    { time: '2026-03-21', value: 120000, color: '#10b981' },
+                    { time: '2026-03-22', value: 90000, color: '#ef4444' },
+                ];
+
+                const volumeSeries = volumeChart.addHistogramSeries();
+                volumeSeries.setData(volumeData);
+                volumeChart.timeScale().fitContent();
+
+                resultDiv.innerHTML = '<span class="ok">✓</span> 图表渲染成功！如果上方能看到K线和成交量，说明一切正常。';
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗</span> 渲染失败: ${error.message}`;
+            }
+        }
+
+        function displayResults(elementId, results) {
+            document.getElementById(elementId).innerHTML = results.join('<br>');
+        }
+
+        // 页面加载时运行检查
+        window.onload = function() {
+            runBasicCheck();
+            setTimeout(checkChartLibrary, 500);  // 延迟检查，等待库加载
+            checkDOM();
+        };
+    </script>
+</body>
+</html>

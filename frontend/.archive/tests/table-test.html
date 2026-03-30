@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格弹窗测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #0a0e27;
+            color: #f9fafb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+
+        .kline-table-container {
+            background: #1f2937;
+            border-radius: 10px;
+            padding: 0 12px 12px 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #374151;
+            max-height: 600px;
+        }
+
+        .kline-table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: auto;
+        }
+
+        .kline-table th,
+        .kline-table td {
+            padding: 10px 8px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+            border-left: none;
+            border-right: none;
+            border-top: 1px solid #374151;
+            border-bottom: 1px solid #374151;
+        }
+
+        .kline-table th {
+            background: #1f2937;
+            color: #f9fafb;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        .kline-table tbody tr:first-child td {
+            padding-top: 12px;
+        }
+
+        .kline-table td:first-child,
+        .kline-table th:first-child {
+            text-align: left;
+            padding-left: 12px;
+        }
+
+        .kline-table tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .kline-table tr:hover {
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
+
+        .kline-table tr:active {
+            background: rgba(59, 130, 246, 0.25) !important;
+        }
+
+        .kline-red { color: #ef4444; }
+        .kline-green { color: #10b981; }
+
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #059669;
+        }
+
+        /* 弹窗样式 */
+        #quoteModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+        #quoteModal.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>表格弹窗功能测试</h1>
+
+        <button class="btn" onclick="loadData()">加载数据</button>
+        <button class="btn" onclick="testModal()">测试弹窗</button>
+
+        <div class="kline-table-container">
+            <table class="kline-table" id="testTable">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>开</th>
+                        <th>高</th>
+                        <th>低</th>
+                        <th>收</th>
+                        <th>成交量</th>
+                        <th>MA5</th>
+                        <th>MA10</th>
+                        <th>MA15</th>
+                        <th>MA20</th>
+                        <th>MA30</th>
+                        <th>MA60</th>
+                        <th>MA90</th>
+                        <th>MA120</th>
+                        <th>MA250</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="15" style="color: #9ca3af; padding: 40px;">点击"加载数据"按钮开始测试</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="status" style="padding: 15px; background: #1f2937; border-radius: 8px; margin-top: 20px;">
+            <strong>状态：</strong>等待操作
+        </div>
+    </div>
+
+    <script>
+        // 示例数据
+        const sampleData = [
+            { date: '2026-03-26', open: 77.59, high: 80.1, low: 77.2, close: 79.11, volume: 489999, amount: 538937750, ma5: 77.63, ma10: 76.56, ma15: 77.78, ma20: 79.28, ma30: 79.84, ma60: 85.64, ma90: 90.35, ma120: 90.59, ma250: 84.80, volume_ma5: 1054240, obv: 4990555 },
+            { date: '2026-03-25', open: 78.50, high: 79.80, low: 78.20, close: 78.63, volume: 412000, amount: 450120000, ma5: 77.80, ma10: 76.65, ma15: 77.85, ma20: 79.35, ma30: 79.95, ma60: 85.80, ma90: 90.50, ma120: 90.72, ma250: 84.85, volume_ma5: 1100000, obv: 4491555 },
+            { date: '2026-03-24', open: 78.88, high: 79.95, low: 78.86, close: 78.88, volume: 380000, amount: 415800000, ma5: 78.05, ma10: 76.82, ma15: 77.90, ma20: 79.42, ma30: 80.10, ma60: 86.00, ma90: 90.65, ma120: 90.85, ma250: 84.90, volume_ma5: 1150000, obv: 3991555 },
+        ];
+
+        let currentQuotes = [];
+
+        function loadData() {
+            currentQuotes = sampleData;
+            const tbody = document.getElementById('tableBody');
+            const status = document.getElementById('status');
+
+            tbody.innerHTML = currentQuotes.map((q, index) => {
+                const isRed = q.close < q.open;
+                return `<tr style="cursor: pointer;" onclick="showQuoteDetail(${index})">
+                    <td>${q.date}</td>
+                    <td class="${isRed ? 'kline-red' : 'kline-green'}">${q.open.toFixed(2)}</td>
+                    <td>${q.high.toFixed(2)}</td>
+                    <td>${q.low.toFixed(2)}</td>
+                    <td class="${isRed ? 'kline-red' : 'kline-green'}">${q.close.toFixed(2)}</td>
+                    <td>${(q.volume / 10000).toFixed(0)}万</td>
+                    <td style="color:#3b82f6;">${q.ma5.toFixed(2)}</td>
+                    <td style="color:#8b5cf6;">${q.ma10.toFixed(2)}</td>
+                    <td style="color:#f59e0b;">${q.ma15.toFixed(2)}</td>
+                    <td style="color:#10b981;">${q.ma20.toFixed(2)}</td>
+                    <td style="color:#10b981;">${q.ma30.toFixed(2)}</td>
+                    <td style="color:#ec4899;">${q.ma60.toFixed(2)}</td>
+                    <td style="color:#14b8a6;">${q.ma90.toFixed(2)}</td>
+                    <td style="color:#f97316;">${q.ma120.toFixed(2)}</td>
+                    <td style="color:#06b6d4;">${q.ma250.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            status.innerHTML = `<strong>状态：</strong>✓ 已加载 ${currentQuotes.length} 条数据，点击表格行测试弹窗`;
+            console.log('数据加载完成');
+        }
+
+        function testModal() {
+            showQuoteDetail(0);
+        }
+
+        function showQuoteDetail(index) {
+            console.log('showQuoteDetail 被调用，index:', index);
+            const q = currentQuotes[index];
+
+            if (!q) {
+                alert('数据不存在');
+                return;
+            }
+
+            const modal = document.getElementById('quoteModal');
+            if (!modal) {
+                alert('弹窗元素不存在');
+                return;
+            }
+
+            const isRed = q.close < q.open;
+            const change = ((q.close - q.open) / q.open * 100).toFixed(2);
+            const changeSign = change >= 0 ? '+' : '';
+
+            // 获取昨天的数据
+            const prevQ = currentQuotes[index + 1];
+
+            // 计算MA变化箭头
+            const getMaArrow = (current, prev) => {
+                if (!current || !prev) return '';
+                if (current > prev) return '<span style="color: #10b981;">↑</span>';
+                if (current < prev) return '<span style="color: #ef4444;">↓</span>';
+                return '<span style="color: #9ca3af;">→</span>';
+            };
+
+            // 计算MA趋势
+            let maTrend = '横盘';
+            let maTrendColor = '#9ca3af';
+            let maTrendDesc = '均线无明显方向';
+            if (q.ma5 && q.ma10 && q.ma20) {
+                if (q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                    maTrend = '开口向上';
+                    maTrendColor = '#10b981';
+                    maTrendDesc = '均线多头排列，呈上升趋势';
+                } else if (q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                    maTrend = '开口向下';
+                    maTrendColor = '#ef4444';
+                    maTrendDesc = '均线空头排列，呈下降趋势';
+                }
+            }
+
+            // 计算威科夫阶段
+            let phase = '震荡';
+            let phaseTooltip = '市场横盘整理，等待方向选择';
+            let phaseColor = '#9ca3af';
+
+            if (q.close > q.ma20 && q.ma5 > q.ma10 && q.ma10 > q.ma20) {
+                phase = 'U阶段';
+                phaseTooltip = '上升趋势：均线多头排列，价格强势，适合做多';
+                phaseColor = '#10b981';
+            } else if (q.close < q.ma20 && q.ma5 < q.ma10 && q.ma10 < q.ma20) {
+                phase = 'D阶段';
+                phaseTooltip = '下降趋势：均线空头排列，价格弱势，适合做空或观望';
+                phaseColor = '#ef4444';
+            } else if (q.volume > q.volume_ma5 * 1.5) {
+                phase = 'A阶段';
+                phaseTooltip = '吸筹：成交量异常放大，主力可能在吸筹，关注后续走势';
+                phaseColor = '#f59e0b';
+            } else if (q.close < q.ma5 && q.close > q.ma20) {
+                phase = 'DS阶段';
+                phaseTooltip = '下跌吸筹：价格回调后可能在吸筹，上涨概率大，值得关注';
+                phaseColor = '#8b5cf6';
+            }
+
+            modal.innerHTML = `
+                <div style="background: #1f2937; border-radius: 12px; max-width: 750px; padding: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #374151; padding-bottom: 8px;">
+                        <h2 style="font-size: 16px; font-weight: 600; color: #f9fafb; margin: 0;">K线详细信息</h2>
+                        <button onclick="closeModal()" style="background: none; border: none; color: #9ca3af; font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">&times;</button>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">日期</div>
+                                <div style="font-size: 14px; font-weight: 600;">${q.date}</div>
+                            </div>
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 3px;">开盘</div>
+                                <div style="font-size: 13px; font-weight: 500;">${q.open.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 3px;">最高</div>
+                                <div style="font-size: 13px; font-weight: 500; color: #10b981;">${q.high.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 3px;">最低</div>
+                                <div style="font-size: 13px; font-weight: 500; color: #ef4444;">${q.low.toFixed(2)}</div>
+                            </div>
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 10px; margin-bottom: 3px;">收盘</div>
+                                <div style="font-size: 13px; font-weight: 500;">${q.close.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">涨跌幅</div>
+                                <div style="font-size: 13px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">${changeSign}${change}%</div>
+                            </div>
+                            <div style="background: #111827; padding: 8px; border-radius: 6px;">
+                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 3px;">成交量</div>
+                                <div style="font-size: 13px; font-weight: 500;">${(q.volume / 10000).toFixed(0)}万</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #111827; padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+                            <div style="color: #9ca3af; font-size: 11px; margin-bottom: 5px;">所有均线指标 <span style="font-size: 10px; color: #6b7280;">(较昨日)</span></div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px;">
+                                <div><span style="color: #3b82f6;">MA5:</span> ${q.ma5.toFixed(2)} ${getMaArrow(q.ma5, prevQ?.ma5)}</div>
+                                <div><span style="color: #8b5cf6;">MA10:</span> ${q.ma10.toFixed(2)} ${getMaArrow(q.ma10, prevQ?.ma10)}</div>
+                                <div><span style="color: #10b981;">MA20:</span> ${q.ma20.toFixed(2)} ${getMaArrow(q.ma20, prevQ?.ma20)}</div>
+                                <div><span style="color: #ec4899;">MA60:</span> ${q.ma60.toFixed(2)} ${getMaArrow(q.ma60, prevQ?.ma60)}</div>
+                                <div><span style="color: #f97316;">MA120:</span> ${q.ma120.toFixed(2)} ${getMaArrow(q.ma120, prevQ?.ma120)}</div>
+                                <div><span style="color: #06b6d4;">MA250:</span> ${q.ma250.toFixed(2)} ${getMaArrow(q.ma250, prevQ?.ma250)}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div style="background: linear-gradient(135deg, ${maTrendColor}15, ${maTrendColor}05); padding: 8px 10px; border-radius: 6px; border: 1px solid ${maTrendColor}30;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <div style="color: #9ca3af; font-size: 11px;">MA趋势</div>
+                                    <div style="background: ${maTrendColor}; color: white; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">${maTrend}</div>
+                                </div>
+                                <div style="color: #d1d5db; font-size: 11px; margin-top: 3px;">${maTrendDesc}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 8px 10px; border-radius: 6px; border: 1px solid ${phaseColor}30;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <div style="color: #9ca3af; font-size: 11px;">威科夫阶段</div>
+                                    <div style="background: ${phaseColor}; color: white; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">${phase}</div>
+                                </div>
+                                <div style="color: #e5e7eb; font-size: 11px; margin-top: 3px; line-height: 1.3;">${phaseTooltip}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding-top: 4px;">
+                        <button onclick="closeModal()" style="background: #10b981; color: white; border: none; padding: 6px 30px; border-radius: 6px; cursor: pointer; font-size: 13px;">关闭</button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('show');
+            console.log('弹窗已显示');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('quoteModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        // 点击背景关闭
+        document.getElementById('quoteModal').addEventListener('click', (e) => {
+            if (e.target.id === 'quoteModal') {
+                closeModal();
+            }
+        });
+
+        console.log('页面加载完成，弹窗元素已找到');
+    </script>
+
+    <!-- K线详情弹窗 -->
+    <div id="quoteModal"></div>
+</body>
+</html>

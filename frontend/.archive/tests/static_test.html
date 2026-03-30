@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>静态测试</title>
+</head>
+<body style="background: #1f2937; color: #f9fafb; padding: 20px;">
+    <h1>如果您看到这个页面，说明HTML可以正常显示</h1>
+    
+    <div style="background: #374151; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h2>JavaScript测试</h2>
+        <p>当前时间：<span id="time">（JavaScript未运行）</span></p>
+        <p>如果上面显示"JavaScript未运行"，说明您的浏览器禁用了JavaScript</p>
+    </div>
+    
+    <div style="background: #374151; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h2>后端API测试结果（通过curl获取）</h2>
+        <p>✅ 后端API正常工作</p>
+        <p>✅ 数据库有1只股票：688234 天岳先进</p>
+    </div>
+    
+    <div style="background: #374151; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h2>请检查浏览器设置</h2>
+        <ol>
+            <li>打开浏览器设置</li>
+            <li>搜索"JavaScript"或"脚本"</li>
+            <li>确保JavaScript已启用</li>
+            <li>刷新页面重试</li>
+        </ol>
+    </div>
+    
+    <script>
+        document.getElementById('time').innerText = new Date().toLocaleString('zh-CN');
+    </script>
+</body>
+</html>

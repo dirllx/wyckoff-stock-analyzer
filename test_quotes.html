@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试30分钟线数据</title>
+    <script src="lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+    <h1>688234 30分钟线测试</h1>
+    <div id="info"></div>
+    <div id="chart" style="width: 100%; height: 500px;"></div>
+
+    <script>
+        async function testQuotes() {
+            const infoDiv = document.getElementById('info');
+            const chartDiv = document.getElementById('chart');
+
+            try {
+                // 获取数据
+                infoDiv.innerHTML = '正在获取数据...';
+                const response = await fetch('http://localhost:8000/api/v1/stocks/688234/quotes?timeframe=30&limit=500');
+                const data = await response.json();
+
+                const quotes = data.quotes || [];
+                infoDiv.innerHTML = `
+                    <p><strong>API返回:</strong></p>
+                    <ul>
+                        <li>total: ${data.total}</li>
+                        <li>from_cache: ${data.from_cache}</li>
+                        <li>quotes数组长度: ${quotes.length}</li>
+                    </ul>
+                    <p><strong>数据范围:</strong></p>
+                    <ul>
+                        <li>开始: ${quotes[0]?.date}</li>
+                        <li>结束: ${quotes[quotes.length-1]?.date}</li>
+                    </ul>
+                `;
+
+                // 转换数据格式
+                const candlestickData = quotes.map(q => ({
+                    time: q.date.replace(' ', 'T'),
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close
+                }));
+
+                // 创建图表
+                const chart = LightweightCharts.createChart(chartDiv, {
+                    layout: {
+                        background: { color: '#1f2937' },
+                        textColor: '#d1d5db',
+                    },
+                    width: chartDiv.clientWidth,
+                    height: 500,
+                });
+
+                const candlestickSeries = chart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                });
+
+                candlestickSeries.setData(candlestickData);
+
+                chart.timeScale().fitContent();
+
+                infoDiv.innerHTML += `
+                    <p style="color: green; font-weight: bold;">
+                        ✅ 图表渲染完成，共 ${candlestickData.length} 根K线
+                    </p>
+                    <p style="color: #9ca3af;">
+                        请滚动鼠标滚轮查看所有K线
+                    </p>
+                `;
+
+            } catch (error) {
+                infoDiv.innerHTML = `<p style="color: red;">错误: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+
+        // 页面加载后执行
+        window.addEventListener('DOMContentLoaded', testQuotes);
+    </script>
+</body>
+</html>

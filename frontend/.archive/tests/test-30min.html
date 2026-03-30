@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>30分钟K线测试</title>
+    <script src="lightweight-charts.standalone.production.js"></script>
+    <style>
+        body { background: #1f2937; padding: 20px; color: #fff; font-family: Arial; }
+        #chart { width: 100%; height: 500px; background: #111827; border-radius: 10px; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #info { margin: 10px 0; padding: 10px; background: #374151; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>30分钟K线测试 - 688234</h1>
+    <div>
+        <button onclick="loadDaily()">日线</button>
+        <button onclick="load30Min()">30分钟</button>
+        <button onclick="load60Min()">60分钟</button>
+    </div>
+    <div id="info">点击按钮加载K线数据</div>
+    <div id="chart"></div>
+
+    <script>
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            layout: { background: { color: '#1f2937' }, textColor: '#d1d5db' },
+            grid: { vertLines: { color: '#374151' }, horzLines: { color: '#374151' } },
+            timeScale: { timeVisible: true },
+        });
+        const candleSeries = chart.addCandlestickSeries({
+            upColor: '#10b981',
+            downColor: '#ef4444',
+            borderVisible: false,
+        });
+
+        async function loadQuotes(timeframe) {
+            document.getElementById('info').innerHTML = `正在加载${timeframe}数据...`;
+            try {
+                const res = await fetch(`http://localhost:8000/api/v1/stocks/688234/quotes?timeframe=${timeframe}&limit=500`);
+                const data = await res.json();
+                
+                console.log(`API返回数据量: ${data.total}, 来自缓存: ${data.from_cache}`);
+                
+                // 转换时间格式
+                const chartData = data.quotes.map(q => ({
+                    time: timeframe === 'daily' 
+                        ? q.date.split(' ')[0] 
+                        : Math.floor(new Date(q.date).getTime() / 1000),
+                    open: q.open,
+                    high: q.high,
+                    low: q.low,
+                    close: q.close
+                }));
+                
+                console.log(`图表数据量: ${chartData.length}`);
+                console.log('第一条:', chartData[0]);
+                console.log('最后一条:', chartData[chartData.length - 1]);
+                
+                candleSeries.setData(chartData);
+                chart.timeScale().fitContent();
+                
+                document.getElementById('info').innerHTML = `
+                    ✅ ${timeframe}数据加载成功<br>
+                    数据量: ${data.total}条<br>
+                    日期范围: ${data.quotes[0].date} ~ ${data.quotes[data.quotes.length-1].date}
+                `;
+            } catch (error) {
+                document.getElementById('info').innerHTML = `❌ 错误: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        function loadDaily() { loadQuotes('daily'); }
+        function load30Min() { loadQuotes('30'); }
+        function load60Min() { loadQuotes('60'); }
+
+        // 默认加载30分钟
+        load30Min();
+    </script>
+</body>
+</html>

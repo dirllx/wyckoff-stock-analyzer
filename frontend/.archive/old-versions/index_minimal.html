@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>威科夫系统 - 最小版本</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0e27; color: #f9fafb; padding: 20px; font-family: Arial, sans-serif; }
+        .card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        input { padding: 8px 12px; border: 1px solid #374151; border-radius: 6px; background: #1f2937; color: white; }
+        .status { padding: 10px; background: #1f2937; border-radius: 6px; margin-top: 10px; }
+        .ok { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>威科夫系统 - 最小测试版</h1>
+
+    <div class="card">
+        <h2>健康检查</h2>
+        <button onclick="checkHealth()">检查健康状态</button>
+        <div id="healthStatus" class="status">等待检查...</div>
+    </div>
+
+    <div class="card">
+        <h2>股票分析</h2>
+        <input type="text" id="stockCode" value="688234" placeholder="股票代码">
+        <button onclick="analyzeStock()">开始分析</button>
+        <div id="result" class="status" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="card">
+        <h2>日志</h2>
+        <div id="log" style="font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        console.log('=== 页面加载开始 ===');
+
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        console.log('主机名:', currentHost);
+        console.log('API_BASE:', API_BASE);
+
+        function addLog(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+
+        addLog('✓ 脚本加载完成');
+
+        async function checkHealth() {
+            addLog('开始健康检查...');
+            const statusDiv = document.getElementById('healthStatus');
+            statusDiv.innerHTML = '检查中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                const data = await response.json();
+                statusDiv.innerHTML = `<span class="ok">✓ ${data.status}</span> 数据库: ${data.database}`;
+                addLog('✓ 健康检查成功');
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">✗ ${error.message}</span>`;
+                addLog(`✗ 健康检查失败: ${error.message}`);
+            }
+        }
+
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            addLog(`开始分析 ${code}...`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=5`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `获取到 ${data.total} 条数据`;
+                addLog(`✓ 分析成功: ${data.total}条数据`);
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<span class="error">错误: ${error.message}</span>`;
+                addLog(`✗ 分析失败: ${error.message}`);
+            }
+        }
+
+        // 自动执行健康检查
+        addLog('自动执行健康检查...');
+        checkHealth();
+
+        console.log('=== 页面加载完成 ===');
+    </script>
+</body>
+</html>

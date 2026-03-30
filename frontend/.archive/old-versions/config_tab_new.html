@@ -1,0 +1,172 @@
+        <!-- 系统配置Tab (重新设计版) -->
+        <div id="tab-config" class="tab-content">
+            <div class="card-header">
+                <h2 class="card-title">⚙️ 系统配置</h2>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="saveAllSettings()">💾 保存所有配置</button>
+                    <button class="btn btn-secondary" onclick="resetAllSettings()">🔄 重置默认</button>
+                </div>
+            </div>
+
+            <!-- 分析配置 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <h3 class="card-title">📊 分析配置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">默认分析周期</label>
+                            <select id="setting_default_timeframe" class="form-input" style="width: 100%;">
+                                <option value="30">30分钟</option>
+                                <option value="60">60分钟</option>
+                                <option value="daily" selected>日线</option>
+                                <option value="weekly">周线</option>
+                                <option value="monthly">月线</option>
+                            </select>
+                            <span style="color: #6b7280; font-size: 11px;">单股票分析时默认使用的时间周期</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">信号触发阈值（分数）</label>
+                            <input type="number" id="setting_signal_threshold" class="form-input" value="3" min="1" max="10" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">威科夫评分达到此值时触发信号</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">多周期分析默认启用</label>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_30" checked> 30分</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_60" checked> 60分</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_daily" checked> 日线</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_weekly" checked> 周线</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_monthly"> 月线</label>
+                            </div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_cache" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用分析结果缓存</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据配置 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <h3 class="card-title">💾 数据配置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">K线数据获取数量</label>
+                            <input type="number" id="setting_kline_count" class="form-input" value="500" min="100" max="1000" step="50" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">缓存有效期（小时）</label>
+                            <input type="number" id="setting_cache_ttl" class="form-input" value="1" min="0.5" max="24" step="0.5" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">分析结果缓存时长</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_redis" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用Redis缓存</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 显示配置 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <h3 class="card-title">🎨 显示配置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">关注列表每行显示</label>
+                            <select id="setting_watchlist_columns" class="form-input" style="width: 100%;">
+                                <option value="3">3个</option>
+                                <option value="4">4个</option>
+                                <option value="5" selected>5个</option>
+                                <option value="6">6个</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">默认排序方式</label>
+                            <select id="setting_default_sort" class="form-input" style="width: 100%;">
+                                <option value="default">默认</option>
+                                <option value="score_desc" selected>评分（高→低）</option>
+                                <option value="score_asc">评分（低→高）</option>
+                                <option value="price_desc">价格（高→低）</option>
+                                <option value="price_asc">价格（低→高）</option>
+                                <option value="code_asc">代码（A→Z）</option>
+                            </select>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_show_advice" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">显示投资建议详情</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 通知配置 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-header">
+                    <h3 class="card-title">📱 通知配置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">飞书Webhook URL</label>
+                            <input type="text" id="setting_feishu_webhook" class="form-input" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..." style="width: 100%; font-family: monospace; font-size: 12px;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">最小通知评分</label>
+                            <input type="number" id="setting_min_notify_score" class="form-input" value="4" min="1" max="10" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">通知限流（分钟）</label>
+                            <input type="number" id="setting_rate_limit" class="form-input" value="30" min="5" max="1440" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_notification" style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用飞书通知</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 交易建议配置 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💰 交易建议配置</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">止损建议（%）</label>
+                            <input type="number" id="setting_stop_loss" class="form-input" value="5" min="1" max="20" step="0.5" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">止盈建议（%）</label>
+                            <input type="number" id="setting_take_profit" class="form-input" value="8" min="1" max="50" step="0.5" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">建议仓位（%）</label>
+                            <input type="number" id="setting_position" class="form-input" value="20" min="5" max="100" step="5" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 4px;">
+                        <span style="color: #fbbf24; font-size: 12px;">💡 提示：这些配置用于生成投资建议，不构成实际投资建议。投资有风险，请谨慎决策。</span>
+                    </div>
+                </div>
+            </div>
+        </div>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新测试页面</title>
+</head>
+<body style="background: #111; color: #fff; padding: 30px; font-family: Arial;">
+    <h1>🔧 全新测试页面 - ${timestamp}</h1>
+    
+    <button onclick="alert('按钮工作正常！')" style="padding: 20px; font-size: 18px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">
+        点击我测试
+    </button>
+    
+    <h2>后端数据测试</h2>
+    <button onclick="testBackend()" style="padding: 15px; font-size: 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+        测试后端API
+    </button>
+    <div id="backendResult" style="margin-top: 20px; padding: 15px; background: #222; border-radius: 8px;"></div>
+    
+    <script>
+        function testBackend() {
+            fetch('http://localhost:8000/api/v1/watchlist')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('backendResult').innerHTML = 
+                        '<h3 style="color: #10b981;">✅ 后端连接成功！</h3>' +
+                        '<p>股票数量: ' + data.total + '</p>' +
+                        '<p>股票: ' + data.items.map(i => i.stock_code).join(', ') + '</p>';
+                })
+                .catch(err => {
+                    document.getElementById('backendResult').innerHTML = 
+                        '<h3 style="color: #ef4444;">❌ 连接失败: ' + err.message + '</h3>';
+                });
+        }
+    </script>
+</body>
+</html>

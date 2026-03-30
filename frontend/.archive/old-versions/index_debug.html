@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>威科夫股票分析系统 - 调试版</title>
+    <script src="lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0e27; color: #f9fafb; padding: 20px; font-family: Arial, sans-serif; }
+        .card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        input { padding: 8px 12px; border: 1px solid #374151; border-radius: 6px; background: #1f2937; color: white; }
+        .status { padding: 10px; background: #1f2937; border-radius: 6px; margin-top: 10px; }
+        .ok { color: #10b981; }
+        .error { color: #ef4444; }
+        #chart { width: 100%; height: 400px; background: #1a1a2e; border-radius: 8px; margin-top: 10px; }
+        #volumeChart { width: 100%; height: 200px; background: #1a1a2e; border-radius: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>威科夫系统 - 调试版</h1>
+
+    <div class="card">
+        <h2>健康检查</h2>
+        <button onclick="checkHealth()">检查健康状态</button>
+        <div id="healthStatus" class="status">等待检查...</div>
+    </div>
+
+    <div class="card">
+        <h2>股票分析</h2>
+        <input type="text" id="stockCode" value="688234" placeholder="股票代码">
+        <button onclick="analyzeStock()">开始分析</button>
+        <div id="result" class="status" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="card">
+        <h2>K线图表</h2>
+        <div id="phaseLegend" style="margin-bottom: 10px; font-size: 11px; display: flex; gap: 15px; flex-wrap: wrap;">
+            <span style="color: #10b981;">▲ U阶段(上升)</span>
+            <span style="color: #ef4444;">▼ D阶段(下降)</span>
+            <span style="color: #f59e0b;">● A阶段(吸筹)</span>
+            <span style="color: #8b5cf6;">● DS阶段(下跌吸筹)</span>
+            <span style="color: #3b82f6;">─ MA5/MA10/MA20</span>
+        </div>
+        <div id="chart"></div>
+        <div id="volumeChart"></div>
+    </div>
+
+    <div class="card">
+        <h2>调试日志</h2>
+        <div id="log" style="font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        console.log('=== [调试] 页面加载开始 ===');
+        addLog('=== [调试] 页面加载开始 ===');
+
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        console.log('[调试] 主机名:', currentHost);
+        console.log('[调试] API_BASE:', API_BASE);
+        addLog(`[调试] 主机名: ${currentHost}`);
+        addLog(`[调试] API_BASE: ${API_BASE}`);
+
+        function addLog(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+
+        addLog('✓ 脚本加载完成');
+
+        async function checkHealth() {
+            addLog('--- [调试] 开始健康检查 ---');
+            const statusDiv = document.getElementById('healthStatus');
+            statusDiv.innerHTML = '检查中...';
+
+            try {
+                addLog(`[调试] 发送请求到: ${API_BASE}/api/v1/health`);
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                addLog(`[调试] 响应状态: ${response.status}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                addLog(`[调试] 响应数据: ${JSON.stringify(data)}`);
+                statusDiv.innerHTML = `<span class="ok">✓ ${data.status}</span> 数据库: ${data.database}`;
+                addLog('✓ 健康检查成功');
+            } catch (error) {
+                addLog(`✗ 健康检查失败: ${error.message}`);
+                statusDiv.innerHTML = `<span class="error">✗ ${error.message}</span>`;
+                console.error('[调试] 错误详情:', error);
+            }
+        }
+
+        let currentQuotesData = null;
+
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            addLog(`--- [调试] 开始分析 ${code} ---`);
+
+            try {
+                const url = `${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=500`;
+                addLog(`[调试] 请求URL: ${url}`);
+                const response = await fetch(url);
+                addLog(`[调试] 响应状态: ${response.status}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                addLog(`[调试] 获取到 ${data.total} 条数据`);
+
+                if (data.quotes && data.quotes.length > 0) {
+                    addLog(`[调试] 第一条数据: ${JSON.stringify(data.quotes[0])}`);
+                }
+
+                document.getElementById('result').innerHTML = `获取到 ${data.total} 条数据`;
+                addLog('✓ 分析成功');
+
+                // 保存数据并渲染图表
+                currentQuotesData = data.quotes;
+                addLog('[调试] 准备渲染图表...');
+                renderCharts();
+            } catch (error) {
+                addLog(`✗ 分析失败: ${error.message}`);
+                document.getElementById('result').innerHTML = `<span class="error">错误: ${error.message}</span>`;
+                console.error('[调试] 错误详情:', error);
+            }
+        }
+
+        function renderCharts() {
+            addLog('[调试] 进入 renderCharts 函数');
+
+            if (!currentQuotesData || currentQuotesData.length === 0) {
+                addLog('✗ 没有数据，无法渲染图表');
+                return;
+            }
+
+            addLog(`[调试] 数据条数: ${currentQuotesData.length}`);
+
+            try {
+                addLog('[调试] 开始渲染K线图表...');
+                const mainContainer = document.getElementById('chart');
+                const volumeContainer = document.getElementById('volumeChart');
+
+                if (!mainContainer || !volumeContainer) {
+                    addLog('✗ 容器元素未找到！');
+                    return;
+                }
+
+                addLog(`[调试] 主图容器尺寸: ${mainContainer.clientWidth}x${mainContainer.clientHeight}`);
+
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+
+                addLog('[调试] 创建主图...');
+                const mainChart = LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: 400,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                addLog('[调试] 准备K线数据...');
+                const chartData = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    open: Number(q.open),
+                    high: Number(q.high),
+                    low: Number(q.low),
+                    close: Number(q.close)
+                }));
+
+                addLog(`[调试] K线数据准备完成: ${chartData.length}条`);
+                addLog(`[调试] 第一条K线: ${JSON.stringify(chartData[0])}`);
+
+                addLog('[调试] 添加K线系列...');
+                const candleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444',
+                });
+
+                addLog('[调试] 设置K线数据...');
+                candleSeries.setData(chartData);
+
+                addLog('[调试] 添加MA线...');
+                const ma5Data = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    value: Number(q.ma5)
+                })).filter(d => d.value);
+
+                const ma10Data = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    value: Number(q.ma10)
+                })).filter(d => d.value);
+
+                const ma20Data = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    value: Number(q.ma20)
+                })).filter(d => d.value);
+
+                addLog(`[调试] MA5数据: ${ma5Data.length}条`);
+                addLog(`[调试] MA10数据: ${ma10Data.length}条`);
+                addLog(`[调试] MA20数据: ${ma20Data.length}条`);
+
+                if (ma5Data.length > 0) {
+                    const ma5Series = mainChart.addLineSeries({ color: '#3b82f6', lineWidth: 1 });
+                    ma5Series.setData(ma5Data);
+                    addLog('[调试] MA5线添加成功');
+                }
+
+                if (ma10Data.length > 0) {
+                    const ma10Series = mainChart.addLineSeries({ color: '#8b5cf6', lineWidth: 1 });
+                    ma10Series.setData(ma10Data);
+                    addLog('[调试] MA10线添加成功');
+                }
+
+                if (ma20Data.length > 0) {
+                    const ma20Series = mainChart.addLineSeries({ color: '#10b981', lineWidth: 1 });
+                    ma20Series.setData(ma20Data);
+                    addLog('[调试] MA20线添加成功');
+                }
+
+                addLog('[调试] 添加威科夫阶段标注...');
+                const phaseMarkers = [];
+                let lastPhase = null;
+
+                for (let i = 0; i < Math.min(currentQuotesData.length, 50); i++) {
+                    const q = currentQuotesData[i];
+                    const phase = calculateWyckoffPhase(q);
+
+                    if (phase && phase !== lastPhase && phase !== '震荡') {
+                        phaseMarkers.push({
+                            time: q.date.split(' ')[0],
+                            position: getMarkerPosition(phase),
+                            color: getPhaseColor(phase),
+                            shape: getMarkerShape(phase),
+                            text: phase
+                        });
+                        lastPhase = phase;
+                    }
+                }
+
+                addLog(`[调试] 阶段标注: ${phaseMarkers.length}个`);
+                if (phaseMarkers.length > 0) {
+                    candleSeries.setMarkers(phaseMarkers);
+                }
+
+                addLog('[调试] 适配时间轴...');
+                mainChart.timeScale().fitContent();
+
+                addLog('[调试] 创建成交量图...');
+                const volumeChart = LightweightCharts.createChart(volumeContainer, {
+                    width: volumeContainer.clientWidth,
+                    height: 200,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                const volumeData = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    value: Number(q.volume),
+                    color: Number(q.close) < Number(q.open) ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)'
+                }));
+
+                const volumeSeries = volumeChart.addHistogramSeries();
+                volumeSeries.setData(volumeData);
+
+                addLog('[调试] 添加成交量MA5线...');
+                const volumeMA5Data = currentQuotesData.map(q => ({
+                    time: q.date.split(' ')[0],
+                    value: Number(q.volume_ma5)
+                })).filter(d => d.value);
+
+                if (volumeMA5Data.length > 0) {
+                    const volumeMA5Series = volumeChart.addLineSeries({
+                        color: '#f59e0b',
+                        lineWidth: 1,
+                        priceScaleId: 'volume-ma'
+                    });
+                    volumeMA5Series.setData(volumeMA5Data);
+                    addLog('[调试] 成交量MA5线添加成功');
+                }
+
+                addLog('[调试] 标注异常放量...');
+                const abnormalVolumeMarkers = [];
+                for (let i = 0; i < currentQuotesData.length; i++) {
+                    const vol = Number(currentQuotesData[i].volume);
+                    const ma5Vol = Number(currentQuotesData[i].volume_ma5);
+                    if (ma5Vol && vol > ma5Vol * 1.5) {
+                        abnormalVolumeMarkers.push({
+                            time: currentQuotesData[i].date.split(' ')[0],
+                            position: 'aboveBar',
+                            color: '#ef4444',
+                            shape: 'circle',
+                            size: 1.5
+                        });
+                    }
+                }
+
+                addLog(`[调试] 异常放量标注: ${abnormalVolumeMarkers.length}个`);
+                if (abnormalVolumeMarkers.length > 0) {
+                    volumeSeries.setMarkers(abnormalVolumeMarkers);
+                }
+
+                addLog('[调试] 适配成交量时间轴...');
+                volumeChart.timeScale().fitContent();
+
+                addLog('[调试] 同步时间轴...');
+                mainChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                    volumeChart.timeScale().setVisibleLogicalRange(range);
+                });
+
+                addLog('✓ K线图表渲染完成');
+            } catch (error) {
+                addLog(`✗ 图表渲染失败: ${error.message}`);
+                console.error('[调试] 渲染错误:', error);
+            }
+        }
+
+        function calculateWyckoffPhase(quote) {
+            const close = Number(quote.close);
+            const ma5 = Number(quote.ma5);
+            const ma10 = Number(quote.ma10);
+            const ma20 = Number(quote.ma20);
+            const volume = Number(quote.volume);
+            const volume_ma5 = Number(quote.volume_ma5 || 0);
+
+            if (ma20 && ma5 > ma10 && ma10 > ma20 && close > ma20) {
+                return 'U';
+            }
+            if (ma20 && ma5 < ma10 && ma10 < ma20 && close < ma20) {
+                return 'D';
+            }
+            if (volume_ma5 && volume > volume_ma5 * 1.5) {
+                return 'A';
+            }
+            if (ma5 && ma20 && close < ma5 && close > ma20) {
+                return 'DS';
+            }
+            return '震荡';
+        }
+
+        function getPhaseColor(phase) {
+            const colors = {
+                'U': '#10b981',
+                'D': '#ef4444',
+                'A': '#f59e0b',
+                'DS': '#8b5cf6'
+            };
+            return colors[phase] || '#6b7280';
+        }
+
+        function getMarkerPosition(phase) {
+            return (phase === 'D' || phase === 'DS') ? 'belowBar' : 'aboveBar';
+        }
+
+        function getMarkerShape(phase) {
+            return (phase === 'U' || phase === 'D') ? 'arrowUp' : 'circle';
+        }
+
+        // 自动执行健康检查
+        addLog('[调试] 自动执行健康检查...');
+        checkHealth();
+
+        console.log('=== [调试] 页面加载完成 ===');
+        addLog('=== [调试] 页面加载完成 ===');
+    </script>
+</body>
+</html>

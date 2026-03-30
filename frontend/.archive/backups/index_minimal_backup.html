@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>威科夫股票分析系统</title>
+    <script src="lightweight-charts.standalone.production.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0e27; color: #f9fafb; padding: 20px; font-family: Arial, sans-serif; }
+        .card { background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        input { padding: 8px 12px; border: 1px solid #374151; border-radius: 6px; background: #1f2937; color: white; }
+        .status { padding: 10px; background: #1f2937; border-radius: 6px; margin-top: 10px; }
+        .ok { color: #10b981; }
+        .error { color: #ef4444; }
+        #chart { width: 100%; height: 400px; background: #1a1a2e; border-radius: 8px; margin-top: 10px; }
+        #volumeChart { width: 100%; height: 200px; background: #1a1a2e; border-radius: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>威科夫系统 - 最小测试版</h1>
+
+    <div class="card">
+        <h2>健康检查</h2>
+        <button onclick="checkHealth()">检查健康状态</button>
+        <div id="healthStatus" class="status">等待检查...</div>
+    </div>
+
+    <div class="card">
+        <h2>股票分析</h2>
+        <input type="text" id="stockCode" value="688234" placeholder="股票代码">
+        <button onclick="analyzeStock()">开始分析</button>
+        <div id="result" class="status" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="card">
+        <h2>K线图表</h2>
+        <div id="phaseLegend" style="margin-bottom: 10px; font-size: 11px; display: flex; gap: 15px; flex-wrap: wrap;">
+            <span style="color: #10b981;">▲ U阶段(上升)</span>
+            <span style="color: #ef4444;">▼ D阶段(下降)</span>
+            <span style="color: #f59e0b;">● A阶段(吸筹)</span>
+            <span style="color: #8b5cf6;">● DS阶段(下跌吸筹)</span>
+            <span style="color: #3b82f6;">─ MA5/MA10/MA20</span>
+        </div>
+        <div id="chart"></div>
+        <div id="volumeChart"></div>
+    </div>
+
+    <div class="card">
+        <h2>日志</h2>
+        <div id="log" style="font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        console.log('=== 页面加载开始 ===');
+
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        console.log('主机名:', currentHost);
+        console.log('API_BASE:', API_BASE);
+
+        function addLog(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<div>' + msg + '</div>';
+            console.log(msg);
+        }
+
+        addLog('✓ 脚本加载完成');
+
+        async function checkHealth() {
+            addLog('开始健康检查...');
+            const statusDiv = document.getElementById('healthStatus');
+            statusDiv.innerHTML = '检查中...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                const data = await response.json();
+                statusDiv.innerHTML = `<span class="ok">✓ ${data.status}</span> 数据库: ${data.database}`;
+                addLog('✓ 健康检查成功');
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">✗ ${error.message}</span>`;
+                addLog(`✗ 健康检查失败: ${error.message}`);
+            }
+        }
+
+        let currentQuotesData = null;
+
+        async function analyzeStock() {
+            const code = document.getElementById('stockCode').value;
+            addLog(`开始分析 ${code}...`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=500`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `获取到 ${data.total} 条数据`;
+                addLog(`✓ 分析成功: ${data.total}条数据`);
+
+                // 保存数据并渲染图表
+                currentQuotesData = data.quotes;
+                renderCharts();
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<span class="error">错误: ${error.message}</span>`;
+                addLog(`✗ 分析失败: ${error.message}`);
+            }
+        }
+
+        function renderCharts() {
+            if (!currentQuotesData || currentQuotesData.length === 0) {
+                addLog('没有数据，无法渲染图表');
+                return;
+            }
+
+            try {
+                addLog('开始渲染K线图表...');
+                const mainContainer = document.getElementById('chart');
+                const volumeContainer = document.getElementById('volumeChart');
+
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+
+                // 创建主图
+                const mainChart = LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: 400,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                // 准备K线数据（去重处理）
+                const dateMap = new Map();
+                for (const q of currentQuotesData) {
+                    const date = q.date.split(' ')[0];
+                    if (!dateMap.has(date)) {
+                        dateMap.set(date, {
+                            time: date,
+                            open: Number(q.open),
+                            high: Number(q.high),
+                            low: Number(q.low),
+                            close: Number(q.close)
+                        });
+                    }
+                }
+                const chartData = Array.from(dateMap.values());
+
+                const candleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#10b981',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#10b981',
+                    wickDownColor: '#ef4444',
+                });
+
+                candleSeries.setData(chartData);
+
+                // 添加MA线（使用API提供的MA数据，去重处理）
+                const ma5Data = Array.from(dateMap.keys()).map(date => ({
+                    time: date,
+                    value: Number(currentQuotesData.find(q => q.date.split(' ')[0] === date)?.ma5)
+                })).filter(d => d.value);
+
+                const ma10Data = Array.from(dateMap.keys()).map(date => ({
+                    time: date,
+                    value: Number(currentQuotesData.find(q => q.date.split(' ')[0] === date)?.ma10)
+                })).filter(d => d.value);
+
+                const ma20Data = Array.from(dateMap.keys()).map(date => ({
+                    time: date,
+                    value: Number(currentQuotesData.find(q => q.date.split(' ')[0] === date)?.ma20)
+                })).filter(d => d.value);
+
+                if (ma5Data.length > 0) {
+                    const ma5Series = mainChart.addLineSeries({ color: '#3b82f6', lineWidth: 1 });
+                    ma5Series.setData(ma5Data);
+                }
+
+                if (ma10Data.length > 0) {
+                    const ma10Series = mainChart.addLineSeries({ color: '#8b5cf6', lineWidth: 1 });
+                    ma10Series.setData(ma10Data);
+                }
+
+                if (ma20Data.length > 0) {
+                    const ma20Series = mainChart.addLineSeries({ color: '#10b981', lineWidth: 1 });
+                    ma20Series.setData(ma20Data);
+                }
+
+                // 添加威科夫阶段标注（使用去重后的数据）
+                const phaseMarkers = [];
+                let lastPhase = null;
+
+                for (const date of dateMap.keys()) {
+                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    if (q) {
+                        const phase = calculateWyckoffPhase(q);
+
+                        if (phase && phase !== lastPhase && phase !== '震荡') {
+                            phaseMarkers.push({
+                                time: date,
+                                position: getMarkerPosition(phase),
+                                color: getPhaseColor(phase),
+                                shape: getMarkerShape(phase),
+                                text: phase
+                            });
+                            lastPhase = phase;
+                        }
+                    }
+                }
+
+                if (phaseMarkers.length > 0) {
+                    candleSeries.setMarkers(phaseMarkers);
+                }
+
+                mainChart.timeScale().fitContent();
+
+                // 创建成交量图
+                const volumeChart = LightweightCharts.createChart(volumeContainer, {
+                    width: volumeContainer.clientWidth,
+                    height: 200,
+                    layout: { background: { color: '#1a1a2e' }, textColor: '#d1d5db' }
+                });
+
+                const volumeData = Array.from(dateMap.keys()).map(date => {
+                    const quote = currentQuotesData.find(q => q.date.split(' ')[0] === date);
+                    return {
+                        time: date,
+                        value: Number(quote?.volume),
+                        color: Number(quote?.close) < Number(quote?.open) ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)'
+                    };
+                });
+
+                const volumeSeries = volumeChart.addHistogramSeries();
+                volumeSeries.setData(volumeData);
+
+                // 添加成交量MA5线（使用API提供的volume_ma5，去重处理）
+                const volumeMA5Data = Array.from(dateMap.keys()).map(date => ({
+                    time: date,
+                    value: Number(currentQuotesData.find(q => q.date.split(' ')[0] === date)?.volume_ma5)
+                })).filter(d => d.value);
+
+                if (volumeMA5Data.length > 0) {
+                    const volumeMA5Series = volumeChart.addLineSeries({
+                        color: '#f59e0b',
+                        lineWidth: 1,
+                        priceScaleId: 'volume-ma'
+                    });
+                    volumeMA5Series.setData(volumeMA5Data);
+                }
+
+                // 标注异常放量（使用去重后的数据）
+                const abnormalVolumeMarkers = [];
+                for (const date of dateMap.keys()) {
+                    const q = currentQuotesData.find(quote => quote.date.split(' ')[0] === date);
+                    if (q) {
+                        const vol = Number(q.volume);
+                        const ma5Vol = Number(q.volume_ma5);
+                        if (ma5Vol && vol > ma5Vol * 1.5) {
+                            abnormalVolumeMarkers.push({
+                                time: date,
+                                position: 'aboveBar',
+                                color: '#ef4444',
+                                shape: 'circle',
+                                size: 1.5
+                            });
+                        }
+                    }
+                }
+
+                if (abnormalVolumeMarkers.length > 0) {
+                    volumeSeries.setMarkers(abnormalVolumeMarkers);
+                }
+
+                volumeChart.timeScale().fitContent();
+
+                // 同步时间轴
+                mainChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                    volumeChart.timeScale().setVisibleLogicalRange(range);
+                });
+
+                addLog('✓ K线图表渲染完成');
+            } catch (error) {
+                addLog(`✗ 图表渲染失败: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        // 计算移动平均线
+        function calculateMA(data, period) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) {
+                    result.push(null);
+                } else {
+                    const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+                    result.push(sum / period);
+                }
+            }
+            return result;
+        }
+
+        // 计算威科夫阶段（使用API提供的MA数据）
+        function calculateWyckoffPhase(quote) {
+            const close = Number(quote.close);
+            const ma5 = Number(quote.ma5);
+            const ma10 = Number(quote.ma10);
+            const ma20 = Number(quote.ma20);
+            const volume = Number(quote.volume);
+            const volume_ma5 = Number(quote.volume_ma5 || 0);
+
+            if (ma20 && ma5 > ma10 && ma10 > ma20 && close > ma20) {
+                return 'U';
+            }
+            if (ma20 && ma5 < ma10 && ma10 < ma20 && close < ma20) {
+                return 'D';
+            }
+            if (volume_ma5 && volume > volume_ma5 * 1.5) {
+                return 'A';
+            }
+            if (ma5 && ma20 && close < ma5 && close > ma20) {
+                return 'DS';
+            }
+            return '震荡';
+        }
+
+        // 获取阶段颜色
+        function getPhaseColor(phase) {
+            const colors = {
+                'U': '#10b981',
+                'D': '#ef4444',
+                'A': '#f59e0b',
+                'DS': '#8b5cf6'
+            };
+            return colors[phase] || '#6b7280';
+        }
+
+        // 获取标记位置
+        function getMarkerPosition(phase) {
+            return (phase === 'D' || phase === 'DS') ? 'belowBar' : 'aboveBar';
+        }
+
+        // 获取标记形状
+        function getMarkerShape(phase) {
+            return (phase === 'U' || phase === 'D') ? 'arrowUp' : 'circle';
+        }
+
+        // 自动执行健康检查
+        addLog('自动执行健康检查...');
+        checkHealth();
+
+        console.log('=== 页面加载完成 ===');
+    </script>
+</body>
+</html>
