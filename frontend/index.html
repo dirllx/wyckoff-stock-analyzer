@@ -3349,7 +3349,7 @@
         }
 
         // 渲染各阶段详细周期卡片
-        function renderPhaseDetailCards(phaseTitle, phaseData, timeframeNames) {
+        function renderPhaseDetailCards(phaseTitle, phaseData, timeframeNames, isMobile = false, compact = false) {
             let html = '';
 
             if (!phaseData || phaseData.length === 0) {
@@ -3364,9 +3364,17 @@
                 return order.indexOf(a.timeframe) - order.indexOf(b.timeframe);
             });
 
-            html += `<div style="margin: 16px 0 8px 0;">`;
-            html += `<div style="color: #f9fafb; font-size: 13px; font-weight: 600; margin-bottom: 6px; padding-left: 4px;">${phaseTitle}</div>`;
-            html += '<div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">';
+            const margin = compact ? '8px 0 4px 0' : '16px 0 8px 0';
+            const titleFontSize = compact ? '11px' : '13px';
+            const titleMargin = compact ? '4px' : '6px';
+            const cardPadding = compact ? '6px 8px' : '8px 10px';
+            const cardMinWidth = compact ? '140px' : '180px';
+            const priceFontSize = compact ? '15px' : '18px';
+            const gap = compact ? '6px' : '8px';
+
+            html += `<div style="margin: ${margin};">`;
+            html += `<div style="color: #f9fafb; font-size: ${titleFontSize}; font-weight: 600; margin-bottom: ${titleMargin}; padding-left: 4px;">${phaseTitle}</div>`;
+            html += `<div style="display: flex; gap: ${gap}; overflow-x: auto; padding-bottom: 4px;">`;
 
             sortedData.forEach(data => {
                 const tfName = timeframeNames[data.timeframe] || data.timeframe;
@@ -3391,27 +3399,27 @@
                 else if (score <= -1) scoreColor = '#ef4444';
 
                 html += `
-                    <div style="background: #111827; border-radius: 6px; padding: 8px 10px; border: 1px solid ${directionColor}40; min-width: 180px; flex-shrink: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="color: #f9fafb; font-size: 12px; font-weight: 600;">${tfName}</span>
-                            <div style="display: flex; gap: 4px; align-items: center;">
-                                <span style="font-size: 11px; color: ${directionColor};">${directionIcon}</span>
-                                <span style="font-size: 11px; font-weight: 600; color: ${scoreColor};">${score}</span>
+                    <div style="background: #111827; border-radius: 6px; padding: ${cardPadding}; border: 1px solid ${directionColor}40; min-width: ${cardMinWidth}; flex-shrink: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="color: #f9fafb; font-size: 11px; font-weight: 600;">${tfName}</span>
+                            <div style="display: flex; gap: 3px; align-items: center;">
+                                <span style="font-size: 10px; color: ${directionColor};">${directionIcon}</span>
+                                <span style="font-size: 10px; font-weight: 600; color: ${scoreColor};">${score}</span>
                             </div>
                         </div>
                         ${quote ? `
-                        <div style="font-size: 18px; font-weight: 700; color: #f9fafb; margin-bottom: 6px;">
+                        <div style="font-size: ${priceFontSize}; font-weight: 700; color: #f9fafb; margin-bottom: 4px;">
                             ${quote.close?.toFixed(2) || '-'}
-                            ${quote.volume ? `<span style="font-size: 10px; color: #9ca3af; margin-left: 4px;">量${(quote.volume / 10000).toFixed(0)}万</span>` : ''}
+                            ${quote.volume ? `<span style="font-size: 9px; color: #9ca3af; margin-left: 4px;">量${(quote.volume / 10000).toFixed(0)}万</span>` : ''}
                         </div>
                         ` : ''}
                         ${summary.wyckoff_phase ? `
-                        <div style="color: ${summary.wyckoff_phase.includes('上涨') || summary.wyckoff_phase.includes('U') ? '#10b981' : summary.wyckoff_phase.includes('下跌') || summary.wyckoff_phase.includes('D') ? '#ef4444' : '#9ca3af'}; font-size: 10px; margin-bottom: 4px; font-weight: 500;">${summary.wyckoff_phase}</div>
+                        <div style="color: ${summary.wyckoff_phase.includes('上涨') || summary.wyckoff_phase.includes('U') ? '#10b981' : summary.wyckoff_phase.includes('下跌') || summary.wyckoff_phase.includes('D') ? '#ef4444' : '#9ca3af'}; font-size: 9px; margin-bottom: 3px; font-weight: 500;">${summary.wyckoff_phase}</div>
                         ` : ''}
                         ${summary.ma_trend && summary.ma_trend.length > 0 ? `
-                        <div style="display: flex; gap: 3px; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 2px; flex-wrap: wrap;">
                             ${summary.ma_trend.slice(0, 3).map(trend => `
-                                <span style="padding: 2px 5px; border-radius: 3px; font-size: 9px; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
+                                <span style="padding: 1px 4px; border-radius: 3px; font-size: 8px; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
                             `).join('')}
                         </div>
                         ` : ''}
@@ -4303,7 +4311,8 @@
                         resultDiv.innerHTML = '<div style="color: #10b981; text-align: center; padding: 20px;">🔄 正在分析...</div>';
 
                         try {
-                            const timeframes = ['daily', 'weekly', 'monthly'];
+                            // 多周期分析：包含日/周/月 + 30/60分钟线（实时数据）
+                            const timeframes = ['daily', 'weekly', 'monthly', '30', '60'];
 
                             const promises = timeframes.map(tf =>
                                 fetch(`${API_BASE}/api/v1/stocks/analyze`, {
@@ -4520,20 +4529,36 @@
             const midAnalysis = generatePhaseAnalysis(midTerm, 'mid');
             const longAnalysis = generatePhaseAnalysis(longTerm, 'long');
 
+            // 周期名称映射
+            const timeframeNames = {
+                'daily': '日线',
+                'weekly': '周线',
+                'monthly': '月线',
+                '30': '30分',
+                '60': '60分'
+            };
+
             // 检测是否为移动端
             const isMobile = window.innerWidth < 768;
 
             let html = '<div style="text-align: left;">';
 
-            // 三个阶段卡片 - 移动端垂直排列，桌面端横向排列
+            // 1. 三个阶段综合卡片 - 移动端垂直排列，桌面端横向排列
             html += `<div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin-bottom: 8px;">`;
             html += renderPhaseCard('⚡ 短线', shortAnalysis, '#3b82f6', '30分/60分/日线', isMobile, true);
             html += renderPhaseCard('📈 中线', midAnalysis, '#8b5cf6', '60分/日线/周线', isMobile, true);
             html += renderPhaseCard('🎯 长线', longAnalysis, '#10b981', '日线/周线/月线', isMobile, true);
             html += '</div>';
 
-            // 综合建议
+            // 2. 综合建议
             html += generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis, isMobile, true);
+
+            // 3. 各阶段详细周期卡片（新增）
+            html += '<div style="margin-top: 12px; border-top: 1px solid #374151; padding-top: 8px;">';
+            html += renderPhaseDetailCards('⚡ 短线分析', shortTerm, timeframeNames, isMobile, true);
+            html += renderPhaseDetailCards('📈 中线分析', midTerm, timeframeNames, isMobile, true);
+            html += renderPhaseDetailCards('🎯 长线分析', longTerm, timeframeNames, isMobile, true);
+            html += '</div>';
 
             html += '</div>';
             container.innerHTML = html;

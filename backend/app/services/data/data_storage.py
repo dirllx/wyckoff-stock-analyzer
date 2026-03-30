@@ -265,6 +265,32 @@ class DataStorage:
             # 获取股票
             stock = self.get_or_create_stock(code)
 
+            # 分钟线数据特殊处理：实时获取，每次都更新最近的数据
+            if timeframe in ["1", "5", "15", "30", "60"]:
+                logger.info(f"分钟线数据实时更新: {code} {timeframe}分钟")
+
+                # 删除该股票该周期的旧数据（分钟线数据量小，可以直接删除重建）
+                self.db.query(StockQuote).filter(
+                    StockQuote.stock_id == stock.id,
+                    StockQuote.timeframe == timeframe
+                ).delete()
+
+                # 获取最新的分钟线数据（akshare会返回最近的数据）
+                quotes_df = self.fetcher.get_stock_quotes(
+                    code=code,
+                    period=timeframe
+                )
+
+                if quotes_df.empty:
+                    logger.warning(f"股票{code} {timeframe}分钟线无数据")
+                    return False
+
+                # 保存数据
+                self.save_quotes(code, quotes_df, timeframe)
+                logger.info(f"✅ {code} {timeframe}分钟线实时更新成功，共{len(quotes_df)}条")
+                return True
+
+            # 日线/周线/月线数据的增量更新逻辑
             # 检查现有数据量
             existing_count = self.db.query(StockQuote).filter(
                 StockQuote.stock_id == stock.id,

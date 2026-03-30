@@ -1,7 +1,7 @@
 """
 股票分析API（修复版）
 """
-from datetime import datetime
+from datetime import datetime, time
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -133,10 +133,16 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
         storage = DataStorage(db)
         stock = storage.get_or_create_stock(request.code)
 
-        # 如果指定了end_date，跳过缓存检查（因为需要特定日期的数据）
+        # 分钟线数据：每次都强制更新，确保实时性
+        # 日线/周线/月线：使用缓存，提高性能
         quotes = None
-        if not request.end_date:
-            # ========== Redis缓存：先检查K线数据缓存 ==========
+        if request.timeframe in ['1', '5', '15', '30', '60']:
+            # 分钟线：强制更新，不使用缓存
+            logger.info(f"⚡ 分钟线数据强制更新: {request.code} {request.timeframe}")
+            update_success = storage.update_stock_quotes(request.code, request.timeframe)
+            quotes = storage.get_quotes(request.code, request.timeframe, limit=500)
+        elif not request.end_date:
+            # 日线/周线/月线：检查缓存
             quotes = get_cached_stock_data(request.code, request.timeframe)
             if quotes:
                 logger.info(f"✅ 从缓存获取K线数据: {request.code} {request.timeframe} ({len(quotes)}条)")
@@ -161,7 +167,6 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
                 try:
                     # 统一解析日期格式：支持 YYYY-MM-DD (ISO 8601) 或 YYYYMMDD
                     date_str = request.end_date.replace('-', '')
-                    from datetime import datetime
                     target_date = datetime.strptime(date_str, "%Y%m%d")
 
                     # 过滤出<=目标日期的数据
@@ -220,7 +225,6 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
                 # 对于分钟线，验证是否在交易时段内
                 is_trading_time = True
                 if request.timeframe in ['30', '60']:
-                    from datetime import time
                     signal_time = quote_date.time()
                     # A股交易时间：9:30-11:30, 13:00-15:00
                     morning_start = time(9, 30)
@@ -236,11 +240,14 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
 
                 if is_trading_time:
                     # 检查是否已有该周期的当日信号
+                    start_of_day = datetime.combine(quote_date.date(), time(0, 0, 0))
+                    end_of_day = datetime.combine(quote_date.date(), time(23, 59, 59))
+
                     existing_signal = db.query(WyckoffSignal).filter(
                         WyckoffSignal.stock_id == stock.id,
                         WyckoffSignal.timeframe == request.timeframe,
-                        WyckoffSignal.date >= datetime.combine(quote_date.date(), datetime.min.time()),
-                        WyckoffSignal.date < datetime.combine(quote_date.date(), datetime.max.time())
+                        WyckoffSignal.date >= start_of_day,
+                        WyckoffSignal.date < end_of_day
                     ).first()
 
                     if not existing_signal:

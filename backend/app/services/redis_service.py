@@ -19,8 +19,10 @@ class RedisService:
 
     # 缓存过期时间（秒）
     TTL = {
-        "stock_data": 3600,          # 股票数据：1小时
-        "analysis_result": 1800,     # 分析结果：30分钟
+        "stock_data": 3600,          # 股票数据（日线/周线/月线）：1小时
+        "stock_data_minute": 300,    # 股票数据（分钟线）：5分钟 - 交易时段内实时更新
+        "analysis_result": 1800,     # 分析结果（日线/周线/月线）：30分钟
+        "analysis_result_minute": 300,  # 分析结果（分钟线）：5分钟
         "realtime_quote": 60,        # 实时行情：1分钟
         "batch_analysis": 7200,      # 批量分析：2小时
         "multi_timeframe": 1800,     # 多周期分析：30分钟
@@ -113,7 +115,9 @@ class RedisService:
         :param data: K线数据
         """
         key = cls._make_key("stock", code, timeframe)
-        return cls.set(key, data, cls.TTL["stock_data"])
+        # 分钟线使用5分钟缓存，日线/周线/月线使用1小时缓存
+        ttl = cls.TTL["stock_data_minute"] if timeframe in ["1", "5", "15", "30", "60"] else cls.TTL["stock_data"]
+        return cls.set(key, data, ttl)
 
     @classmethod
     def get_stock_data(cls, code: str, timeframe: str) -> Optional[List[dict]]:
@@ -134,7 +138,9 @@ class RedisService:
         :param analysis: 分析结果
         """
         key = cls._make_key("analysis", code, timeframe)
-        return cls.set(key, analysis, cls.TTL["analysis_result"])
+        # 分钟线使用5分钟缓存，日线/周线/月线使用30分钟缓存
+        ttl = cls.TTL["analysis_result_minute"] if timeframe in ["1", "5", "15", "30", "60"] else cls.TTL["analysis_result"]
+        return cls.set(key, analysis, ttl)
 
     @classmethod
     def get_analysis(cls, code: str, timeframe: str) -> Optional[dict]:
