@@ -4,11 +4,17 @@
 from typing import Dict, List
 from sqlalchemy.orm import Session
 import pandas as pd
+from loguru import logger
+from datetime import datetime
 
 from app.services.config_service import ConfigService
 from app.services.data.data_storage import DataStorage
 from app.services.analysis.wyckoff_analyzer import WyckoffAnalyzer
-from app.models.database import Stock
+from app.models.database import Stock, StockQuote
+from app.services.redis_service import (
+    get_cached_stock_data,
+    cache_stock_data
+)
 
 
 class MultiTimeframeService:
@@ -19,6 +25,36 @@ class MultiTimeframeService:
         self.config_service = ConfigService(db)
         self.storage = DataStorage(db)
         self.wyckoff_analyzer = WyckoffAnalyzer()
+
+    def _dict_to_stock_quotes(self, quotes_dict: List[dict], stock_id: int, timeframe: str) -> List[StockQuote]:
+        """
+        将字典列表转换为StockQuote对象列表
+        """
+        quotes = []
+        for q_dict in quotes_dict:
+            quote = StockQuote(
+                stock_id=stock_id,
+                timeframe=timeframe,
+                date=datetime.strptime(q_dict["date"], "%Y-%m-%d %H:%M:%S"),
+                open=q_dict.get("open"),
+                high=q_dict.get("high"),
+                low=q_dict.get("low"),
+                close=q_dict.get("close"),
+                volume=q_dict.get("volume"),
+                ma5=q_dict.get("ma5"),
+                ma10=q_dict.get("ma10"),
+                ma15=q_dict.get("ma15"),
+                ma20=q_dict.get("ma20"),
+                ma30=q_dict.get("ma30"),
+                ma60=q_dict.get("ma60"),
+                ma90=q_dict.get("ma90"),
+                ma120=q_dict.get("ma120"),
+                ma250=q_dict.get("ma250"),
+                volume_ma5=q_dict.get("volume_ma5"),
+                obv=q_dict.get("obv")
+            )
+            quotes.append(quote)
+        return quotes
 
     def analyze_all_timeframes(self, code: str) -> Dict:
         """
@@ -43,14 +79,57 @@ class MultiTimeframeService:
         long_signals = 0
         short_signals = 0
         total_confidence = 0
+        cache_hit_count = 0  # 缓存命中计数
 
         for timeframe in enabled_timeframes:
-            # 获取K线数据
-            quotes = self.storage.get_quotes_by_timeframe(
-                stock_id=stock.id,
-                timeframe=timeframe,
-                limit=100
-            )
+            # ========== Redis缓存：先检查该周期的K线数据 ==========
+            quotes = get_cached_stock_data(code, timeframe)
+
+            if quotes:
+                # 缓存命中
+                logger.info(f"✅ 从缓存获取K线数据: {code} {timeframe}")
+                cache_hit_count += 1
+
+                # 如果是字典列表，转换为StockQuote对象
+                if quotes and isinstance(quotes[0], dict):
+                    quotes = self._dict_to_stock_quotes(quotes, stock.id, timeframe)
+            else:
+                # 缓存未命中，从数据库获取
+                logger.info(f"缓存未命中，从数据库获取: {code} {timeframe}")
+                quotes = self.storage.get_quotes_by_timeframe(
+                    stock_id=stock.id,
+                    timeframe=timeframe,
+                    limit=100
+                )
+
+                # 转换为字典格式（与Redis存储格式一致）
+                if quotes:
+                    quotes_dict = [
+                        {
+                            "date": q.date.strftime("%Y-%m-%d %H:%M:%S"),
+                            "open": q.open,
+                            "high": q.high,
+                            "low": q.low,
+                            "close": q.close,
+                            "volume": q.volume,
+                            "ma5": q.ma5,
+                            "ma10": q.ma10,
+                            "ma15": q.ma15,
+                            "ma20": q.ma20,
+                            "ma30": q.ma30,
+                            "ma60": q.ma60,
+                            "ma90": q.ma90,
+                            "ma120": q.ma120,
+                            "ma250": q.ma250,
+                            "volume_ma5": q.volume_ma5,
+                            "obv": q.obv
+                        }
+                        for q in quotes
+                    ]
+
+                    # 缓存K线数据
+                    cache_stock_data(code, timeframe, quotes_dict)
+                    # 保持quotes为StockQuote对象列表，不需要转换
 
             if not quotes or len(quotes) < 20:
                 # 数据不足，跳过
@@ -73,6 +152,9 @@ class MultiTimeframeService:
                 short_signals += 1
                 total_confidence += analysis_result["confidence"]
 
+        # 记录缓存统计
+        logger.info(f"多周期分析完成: {code}, 缓存命中 {cache_hit_count}/{len(enabled_timeframes)} 个周期")
+
         # 计算综合信号
         summary = self._calculate_summary(
             long_signals,
@@ -84,7 +166,12 @@ class MultiTimeframeService:
         return {
             "stock_code": code,
             "timeframes": results,
-            "summary": summary
+            "summary": summary,
+            "cache_stats": {
+                "cache_hit_count": cache_hit_count,
+                "total_timeframes": len(enabled_timeframes),
+                "cache_hit_rate": round(cache_hit_count / len(enabled_timeframes) * 100, 1) if enabled_timeframes else 0
+            }
         }
 
     def _calculate_summary(

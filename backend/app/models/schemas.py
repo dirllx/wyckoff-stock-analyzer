@@ -12,6 +12,7 @@ class StockAnalysisRequest(BaseModel):
     """股票分析请求"""
     code: str = Field(..., description="股票代码", example="688234")
     timeframe: Optional[str] = Field("daily", description="时间周期", example="daily")
+    end_date: Optional[str] = Field(None, description="分析截止日期 (YYYYMMDD格式)，不填则使用最新数据")
 
 
 class SignalVerifyRequest(BaseModel):
@@ -94,6 +95,7 @@ class StockAnalysisResponse(BaseModel):
     current_quote: Optional[StockQuoteResponse]
     signals: List[WyckoffSignalResponse]
     analysis_summary: dict
+    from_cache: Optional[bool] = False  # 是否来自缓存
 
 
 class HealthResponse(BaseModel):

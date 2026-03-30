@@ -353,16 +353,18 @@
             z-index: 999999;
             pointer-events: none;
             display: none;
-            padding: 8px 12px;
+            padding: 10px 14px;
             background: rgba(17, 24, 39, 0.98);
             color: #e5e7eb;
-            border-radius: 6px;
-            font-size: 11px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(75, 85, 99, 0.5);
-            max-width: 300px;
-            line-height: 1.4;
-            backdrop-filter: blur(6px);
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(75, 85, 99, 0.6);
+            max-width: 350px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            backdrop-filter: blur(8px);
         }
 
         /* 弹窗威科夫阶段tooltip */
@@ -507,6 +509,168 @@
             backdrop-filter: blur(6px);
         }
 
+        /* 关注列表网格布局 - 默认4列 */
+        .watchlist-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* ========== 移动端优化 ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            /* 卡片优化 */
+            .card {
+                padding: 8px 10px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+            }
+
+            .card-header {
+                padding: 8px;
+                margin-bottom: 8px;
+            }
+
+            .card-title {
+                font-size: 16px;
+            }
+
+            /* 按钮优化 */
+            .btn {
+                padding: 8px 12px;
+                font-size: 13px;
+                min-height: 40px;
+                min-width: 44px;
+            }
+
+            .form-input {
+                padding: 10px 12px;
+                font-size: 14px;
+                min-height: 40px;
+            }
+
+            /* 标签导航优化 */
+            .tab-nav {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .tab-btn {
+                flex: 1;
+                min-width: 60px;
+                padding: 10px 8px;
+                font-size: 12px;
+                min-height: 40px;
+            }
+
+            /* 表格优化 - 横向滚动 */
+            .kline-table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .kline-table {
+                font-size: 11px;
+                min-width: 800px;
+            }
+
+            .kline-table th,
+            .kline-table td {
+                padding: 8px 4px;
+                font-size: 10px;
+                white-space: nowrap;
+            }
+
+            /* K线图表优化 */
+            #mainChart,
+            #volumeChart {
+                min-height: 250px !important;
+            }
+
+            /* 关注列表优化 */
+            .watchlist-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            /* 配置表单优化 */
+            .form-group {
+                gap: 8px;
+            }
+
+            /* 股票输入框移动端优化 */
+            #stockCode {
+                width: 18% !important; /* 缩小1/4: 24% * 3/4 = 18% */
+                min-width: 80px !important;
+            }
+
+            #watchlistCode {
+                min-width: 150px !important;
+            }
+
+            /* 关注按钮移动端加宽10% */
+            .form-group .btn-primary[onclick="addToWatchlist()"] {
+                padding: 11px 22px !important; /* 从10px 20px增加10% */
+            }
+
+            /* 统一日分析和多周期的关注按钮宽度 */
+            .btn-secondary[onclick*="showWatchlistPicker"] {
+                min-width: 75px !important;      /* 增加1/6: 64px * 7/6 = 74.67px ≈ 75px */
+                padding: 7px 13px !important;     /* 增加1/6: 6px * 7/6, 11px * 7/6 */
+                text-align: center;
+            }
+
+            /* 分析结果优化 */
+            .analysis-result {
+                padding: 12px;
+            }
+
+            /* 弹窗优化 */
+            .modal-content {
+                max-width: 95%;
+                max-height: 90vh;
+                margin: 5vh auto;
+            }
+
+            /* 信号三角形优化 */
+            .signal-bars span {
+                transform: scale(0.9);
+            }
+
+            /* 输入框组优化 */
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group input,
+            .input-group button {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+
+        /* 超小屏幕优化（手机竖屏） */
+        @media (max-width: 480px) {
+            .card-title {
+                font-size: 14px;
+            }
+
+            .kline-table {
+                font-size: 10px;
+            }
+
+            .watchlist-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+        }
+
     </style>
     <!-- 禁止缓存 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -538,7 +702,7 @@
     <div class="card">
         <!-- Tab导航 -->
         <div class="tab-nav">
-            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">分析</button>
+            <button class="tab-btn active" id="tabAnalyze" onclick="showTab('analyze')">日分析</button>
             <button class="tab-btn" id="tabMulti" onclick="showTab('multi')">多周期</button>
             <button class="tab-btn" id="btnWatchlist" onclick="showTab('watchlist')">我的关注</button>
             <button class="tab-btn" id="tabConfig" onclick="showTab('config')">系统配置</button>
@@ -554,7 +718,7 @@
                 </datalist>
 
                 <!-- 关注列表快速选择按钮 -->
-                <button class="btn btn-secondary" onclick="showWatchlistPicker('stockCode')" style="padding: 6px 12px; margin-right: 8px;" title="从关注列表选择">
+                <button class="btn btn-secondary" onclick="showWatchlistPicker('stockCode')" style="padding: 6px 12px; margin-right: 4px;" title="从关注列表选择">
                     ⭐ 关注
                 </button>
 
@@ -565,7 +729,7 @@
                     <option value="monthly">月线</option>
                     <option value="weekly">周线</option>
                 </select>
-                <button class="btn" onclick="analyzeStock()">开始分析</button>
+                <button class="btn" onclick="analyzeStock()">分析</button>
                 <button class="btn btn-secondary" onclick="clearResult()">清空</button>
             </div>
             <div id="analyzeResult"></div>
@@ -617,6 +781,12 @@
                     </label>
 
                     <div style="flex: 1;"></div>
+                    <button onclick="toggleBatchSelect()" id="batchSelectBtn" style="padding: 4px 12px; background: #8b5cf6; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 8px;">
+                        ☑️ 批量选择
+                    </button>
+                    <button onclick="batchDeleteSelected()" id="batchDeleteBtn" style="padding: 4px 12px; background: #dc2626; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;">
+                        🗑️ 删除选中
+                    </button>
                     <span id="filterStats" style="color: #10b981; font-size: 11px;"></span>
                 </div>
             </div>
@@ -631,7 +801,7 @@
                 <!-- 文本输入区 -->
                 <textarea
                     id="batchImportText"
-                    placeholder="粘贴文本，自动识别股票代码&#10;&#10;支持格式：&#10;• 603520&#10;• SH603520、sz300001&#10;• 股票代码:603520&#10;• 或任何包含6位数字的文本"
+                    placeholder="粘贴文本，自动识别股票代码||支持格式：|• 603520|• SH603520、sz300001|• 股票代码:603520|• 或任何包含6位数字的文本"
                     style="width: 100%; min-height: 120px; padding: 12px; background: #111827; border: 1px solid #374151; border-radius: 6px; color: #f9fafb; font-size: 13px; resize: vertical; margin-bottom: 12px;"
                 ></textarea>
 
@@ -653,7 +823,7 @@
             <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <input type="text" class="form-input" id="watchlistCode" placeholder="输入股票代码（如：603520）" style="flex: 1;">
-                    <button class="btn btn-primary" onclick="addToWatchlist()">➕ 添加</button>
+                    <button class="btn btn-primary" onclick="addToWatchlist()" style="padding: 10px 20px;">➕ 添加</button>
                 </div>
                 <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">
                     💡 提示：分析股票后会自动添加到关注列表 | 支持批量导入文本中的股票代码
@@ -666,12 +836,8 @@
 
         <!-- 多周期Tab -->
         <div id="tab-multi" class="tab-content">
-            <div class="card-header">
-                <h2 class="card-title">📊 多周期综合分析</h2>
-            </div>
-
             <!-- 分析控制区 -->
-            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
+            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px 16px 0 16px; border: 1px solid #374151;">
                 <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                     <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="股票代码" style="flex: 1; min-width: 120px;">
 
@@ -679,6 +845,14 @@
                     <button class="btn btn-secondary" onclick="showWatchlistPicker('multiStockCode')" style="padding: 6px 12px;" title="从关注列表选择">
                         ⭐ 关注
                     </button>
+
+                    <!-- 日期选择器 -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #9ca3af; font-size: 13px;">分析日期:</span>
+                        <select id="multiAnalysisDate" class="form-input" style="min-width: 140px; padding: 6px 12px;" onchange="onMultiDateChange()">
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
 
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                         <span style="color: #9ca3af; font-size: 13px;">选择周期:</span>
@@ -697,11 +871,13 @@
                         <label style="color: #f9fafb; font-size: 13px;">
                             <input type="checkbox" class="timeframe-checkbox" value="weekly" checked> 周线
                         </label>
-                        <button class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 8px;" onclick="selectAllTimeframes()">全选</button>
-                        <button class="btn btn-secondary" style="padding: 4px 12px; font-size: 11px;" onclick="clearAllTimeframes()">清空</button>
                     </div>
-                    <button class="btn" onclick="analyzeMultiTimeframe()">🚀 开始分析</button>
-                    <button class="btn btn-secondary" onclick="clearMultiResult()">清空</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn" style="padding: 4px 12px; font-size: 11px;" onclick="selectAllTimeframes()">全选</button>
+                        <button class="btn btn-secondary" style="padding: 4px 12px; font-size: 11px;" onclick="clearAllTimeframes()">清空周期</button>
+                        <button class="btn" onclick="analyzeMultiTimeframe()">🚀 分析</button>
+                        <button class="btn btn-secondary" onclick="clearMultiResult()">清空</button>
+                    </div>
                 </div>
             </div>
 
@@ -716,133 +892,181 @@
             </div>
 
             <!-- 综合分析结果 -->
-            <div id="multiContent"></div>
+            <div id="multiContent" style="padding: 0 16px;"></div>
         </div>
 
         <!-- 系统配置Tab -->
         <div id="tab-config" class="tab-content">
             <div class="card-header">
-                <h2 class="card-title">系统配置</h2>
+                <h2 class="card-title">⚙️ 系统配置</h2>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="saveAllSettings()">💾 保存所有配置</button>
+                    <button class="btn btn-secondary" onclick="resetAllSettings()">🔄 重置默认</button>
+                </div>
             </div>
 
-            <!-- 后端API配置 -->
+            <!-- 分析配置 -->
             <div class="card" style="margin-bottom: 16px;">
                 <div class="card-header">
-                    <h3 class="card-title">🌐 后端API配置</h3>
+                    <h3 class="card-title">📊 分析配置</h3>
                 </div>
                 <div style="padding: 20px;">
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: #9ca3af; font-size: 13px;">API地址:</label>
-                        <input type="text" id="apiBaseUrl" class="form-input" value="http://localhost:8000" placeholder="http://localhost:8000" style="flex: 1; min-width: 250px;">
-                        <button class="btn btn-primary" onclick="saveApiConfig()" style="padding: 6px 16px;">💾 保存配置</button>
-                        <button class="btn btn-secondary" onclick="testApiConnection()" style="padding: 6px 16px;">🔍 测试连接</button>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">默认分析周期</label>
+                            <select id="setting_default_timeframe" class="form-input" style="width: 100%;">
+                                <option value="30">30分钟</option>
+                                <option value="60">60分钟</option>
+                                <option value="daily" selected>日线</option>
+                                <option value="weekly">周线</option>
+                                <option value="monthly">月线</option>
+                            </select>
+                            <span style="color: #6b7280; font-size: 11px;">单股票分析时默认使用的时间周期</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">信号触发阈值（分数）</label>
+                            <input type="number" id="setting_signal_threshold" class="form-input" value="3" min="1" max="10" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">威科夫评分达到此值时触发信号</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">多周期分析默认启用</label>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_30" checked> 30分</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_60" checked> 60分</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_daily" checked> 日线</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_weekly" checked> 周线</label>
+                                <label style="color: #f9fafb; font-size: 12px;"><input type="checkbox" id="setting_tf_monthly"> 月线</label>
+                            </div>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_cache" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用分析结果缓存</span>
+                            </label>
+                        </div>
                     </div>
-                    <div id="apiConfigStatus" style="margin-top: 12px; font-size: 12px;"></div>
                 </div>
             </div>
 
-            <!-- 系统信息 -->
-            <div class="indicators-grid" style="padding: 20px;">
-                <div class="indicator-item">
-                    <span class="indicator-name">API状态</span>
-                    <span class="indicator-value indicator-bullish">运行中</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-name">数据源</span>
-                    <span class="indicator-value">akshare</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-name">数据库</span>
-                    <span class="indicator-value">SQLite3</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-name">更新频率</span>
-                    <span class="indicator-value">每日</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-name">K线数量</span>
-                    <span class="indicator-value">500</span>
-                </div>
-                <div class="indicator-item">
-                    <span class="indicator-name">威科夫评分</span>
-                    <span class="indicator-value">1-10</span>
-                </div>
-            </div>
-
-            <!-- 形态配置 -->
-            <div class="card">
+            <!-- 数据配置 -->
+            <div class="card" style="margin-bottom: 16px;">
                 <div class="card-header">
-                    <h3 class="card-title">形态识别配置</h3>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadPatternsConfig()">刷新</button>
+                    <h3 class="card-title">💾 数据配置</h3>
                 </div>
-                <div id="patternsConfig" style="padding: 20px;">
-                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
-                </div>
-            </div>
-
-            <!-- 周期配置 -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">时间周期配置</h3>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadTimeframesConfig()">刷新</button>
-                </div>
-                <div id="timeframesConfig" style="padding: 20px;">
-                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
-                </div>
-            </div>
-
-            <!-- 飞书通知配置 -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">飞书通知配置</h3>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadFeishuConfig()">刷新</button>
-                </div>
-                <div id="feishuConfig" style="padding: 20px;">
-                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">K线数据获取数量</label>
+                            <input type="number" id="setting_kline_count" class="form-input" value="500" min="100" max="1000" step="50" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">缓存有效期（小时）</label>
+                            <input type="number" id="setting_cache_ttl" class="form-input" value="1" min="0.5" max="24" step="0.5" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">分析结果缓存时长</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_redis" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用Redis缓存</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 风险监控配置 -->
-            <div class="card">
+            <!-- 显示配置 -->
+            <div class="card" style="margin-bottom: 16px;">
                 <div class="card-header">
-                    <h3 class="card-title">风险监控配置</h3>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadRiskConfig()">刷新</button>
+                    <h3 class="card-title">🎨 显示配置</h3>
                 </div>
-                <div id="riskConfig" style="padding: 20px;">
-                    <div style="text-align: center; color: #9ca3af;">点击刷新加载配置</div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">关注列表每行显示</label>
+                            <select id="setting_watchlist_columns" class="form-input" style="width: 100%;">
+                                <option value="3">3个</option>
+                                <option value="4" selected>4个</option>
+                                <option value="5">5个</option>
+                                <option value="6">6个</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">默认排序方式</label>
+                            <select id="setting_default_sort" class="form-input" style="width: 100%;">
+                                <option value="default">默认</option>
+                                <option value="score_desc" selected>评分（高→低）</option>
+                                <option value="score_asc">评分（低→高）</option>
+                                <option value="price_desc">价格（高→低）</option>
+                                <option value="price_asc">价格（低→高）</option>
+                                <option value="code_asc">代码（A→Z）</option>
+                            </select>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_show_advice" checked style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">显示投资建议详情</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 实时行情 -->
-            <div class="card">
+            <!-- 通知配置 -->
+            <div class="card" style="margin-bottom: 16px;">
                 <div class="card-header">
-                    <h3 class="card-title">实时行情</h3>
+                    <h3 class="card-title">📱 通知配置</h3>
                 </div>
-                <div class="form-group" style="padding: 20px;">
-                    <input type="text" class="form-input" id="realtimeCode" value="000001" placeholder="股票代码" style="width: 150px;">
-                    <button class="btn btn-primary" onclick="getRealtimeQuote()">查询实时行情</button>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">飞书Webhook URL</label>
+                            <input type="text" id="setting_feishu_webhook" class="form-input" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..." style="width: 100%; font-family: monospace; font-size: 12px;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">最小通知评分</label>
+                            <input type="number" id="setting_min_notify_score" class="form-input" value="4" min="1" max="10" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">通知限流（分钟）</label>
+                            <input type="number" id="setting_rate_limit" class="form-input" value="30" min="5" max="1440" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="setting_enable_notification" style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">启用飞书通知</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div id="realtimeResult" style="padding: 0 20px 20px;"></div>
             </div>
 
-            <!-- 形态识别 -->
-            <div class="card">
+            <!-- 交易建议配置 -->
+            <div class="card" style="margin-bottom: 16px;">
                 <div class="card-header">
-                    <h3 class="card-title">形态识别</h3>
+                    <h3 class="card-title">💰 交易建议配置</h3>
                 </div>
-                <div class="form-group" style="padding: 20px;">
-                    <input type="text" class="form-input" id="patternCode" value="000001" placeholder="股票代码" style="width: 150px;">
-                    <select class="form-input" id="patternTimeframe" style="width: 100px;">
-                        <option value="daily">日线</option>
-                        <option value="weekly">周线</option>
-                        <option value="monthly">月线</option>
-                        <option value="30">30分钟</option>
-                        <option value="60">60分钟</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="recognizePatterns()">识别形态</button>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">止损建议（%）</label>
+                            <input type="number" id="setting_stop_loss" class="form-input" value="5" min="1" max="20" step="0.5" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">止盈建议（%）</label>
+                            <input type="number" id="setting_take_profit" class="form-input" value="8" min="1" max="50" step="0.5" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">建议仓位（%）</label>
+                            <input type="number" id="setting_position" class="form-input" value="20" min="5" max="100" step="5" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 4px;">
+                        <span style="color: #fbbf24; font-size: 12px;">💡 提示：这些配置用于生成投资建议，不构成实际投资建议。投资有风险，请谨慎决策。</span>
+                    </div>
                 </div>
-                <div id="patternResult" style="padding: 0 20px 20px;"></div>
             </div>
+
         </div>
 
         <!-- 测试状态Tab -->
@@ -857,11 +1081,12 @@
             <h2 class="card-title">操作日志</h2>
             <button class="btn btn-secondary" style="float: right; padding: 6px 12px; font-size: 12px;" onclick="toggleLog()">收起/展开</button>
         </div>
-        <div id="logArea" style="margin-top: 12px;">
+        <div id="logArea" style="margin-top: 12px; display: none;">
             <div style="color: #9ca3af;">等待操作...</div>
         </div>
     </div>
 
+    <script src="user_settings.js"></script>
     <script>
         // 动态检测 API 地址：根据当前访问地址自动构建后端 API 地址
         // 如果通过 100.96.99.33:3000 访问，则 API_BASE = 100.96.99.33:8000
@@ -881,7 +1106,7 @@
         let healthCheckInterval = null;
         let mainChart = null;
         let volumeChart = null;
-        let useTableMode = true;
+        let useTableMode = true;  // 默认显示表格（图表有兼容性问题）
         let currentWatchlistTab = 'favorite';  // 当前关注的子标签：favorite=自选股, browse=浏览股
 
         // ========== 日志系统 ==========
@@ -1038,6 +1263,113 @@
             if (tab === 'watchlist') {
                 refreshWatchlist();
             }
+
+            // 如果切换到配置页面，自动加载配置
+            if (tab === 'config' && typeof loadAllSettings === 'function') {
+                loadAllSettings();
+            }
+        }
+
+        // ========== 信号强度函数 ==========
+        function getSignalStrength(quote) {
+            if (!quote || quote.close == null) return '';
+
+            const close = quote.close;
+            let strength = 0;
+            let tooltip = '';
+
+            // 判断信号强度（从高到低判断）
+            if (quote.ma250 != null && close > quote.ma250) {
+                strength = 4;
+                tooltip = '▰▰▰▰ 强势（4格）|收盘价站上250日线|长期上升趋势确立';
+            } else if (quote.ma120 != null && close > quote.ma120) {
+                strength = 3;
+                tooltip = '▰▰▰▱ 较强（3格）|收盘价站上120日线|中期上升趋势';
+            } else if (quote.ma90 != null && close > quote.ma90) {
+                strength = 2;
+                tooltip = '▰▰▱▱ 中等（2格）|收盘价站上90日线|短期有支撑';
+            } else if (quote.ma60 != null && close > quote.ma60) {
+                strength = 1;
+                tooltip = '▰▱▱▱ 偏强（1格）|收盘价站上60日线|初步支撑位';
+            } else {
+                tooltip = '▱▱▱▱ 弱势（0格）|收盘价在60日线下方|处于下降趋势';
+            }
+
+            // 生成苹果手机信号的条形样式（缩小20%）
+            // 使用圆角矩形条，底部平齐，高度从左到右递增形成阶梯
+            const bars = [];
+            const containerHeight = 16; // 容器总高度（缩小20%: 20px → 16px）
+            const barWidth = 4; // 条宽度（缩小20%: 5px → 4px）
+            const gap = 2; // 间隙（缩小20%: 3px → 2.4px ≈ 2px）
+
+            for (let i = 1; i <= 4; i++) {
+                const barHeight = (5 + (i * 4)) * 0.8; // 缩小20%: 9→7.2, 13→10.4, 17→13.6, 21→16.8
+                const isActive = i <= strength;
+                // 绿色或白色（不是灰色）
+                const color = isActive ? '#10b981' : '#ffffff';
+
+                // 使用圆角矩形条，底部对齐，形成阶梯状上升
+                bars.push(`<span style="display: inline-block; width: ${barWidth}px; height: ${barHeight}px; background: ${color}; border-radius: 1.5px; margin-right: ${gap}px; vertical-align: bottom; opacity: ${isActive ? '1' : '0.4'};"></span>`);
+            }
+
+            return `<span style="display: inline-block; cursor: help; line-height: ${containerHeight}px;" title="${tooltip}">${bars.join('')}</span>`;
+        }
+
+        // ========== OBV Tooltip函数 ==========
+        function getOBVTooltip(quote, prevQuote, allQuotes, currentIndex) {
+            if (quote.obv == null) {
+                return 'OBV能量潮指标||说明：|累计成交量指标|上涨日加成交量|下跌日减成交量|用于验证价格趋势';
+            }
+
+            const currentObv = quote.obv;
+            const currentObvM = (currentObv / 1000000).toFixed(2);
+            let tooltip = `OBV能量潮：${currentObvM}M`;
+
+            // 如果有前一天的OBV数据，计算差异
+            if (prevQuote && prevQuote.obv != null) {
+                const prevObv = prevQuote.obv;
+                const change = currentObv - prevObv;
+                const changePercent = (change / Math.abs(prevObv) * 100).toFixed(2);
+                const changeM = (change / 1000000).toFixed(2);
+
+                let changeText = '';
+                let trendText = '';
+
+                if (change > 0) {
+                    changeText = `+${changeM}M (+${changePercent}%)`;
+                    trendText = '📈 资金流入';
+                } else if (change < 0) {
+                    changeText = `${changeM}M (${changePercent}%)`;
+                    trendText = '📉 资金流出';
+                } else {
+                    changeText = '0.00M (0.00%)';
+                    trendText = '➡️ 持平';
+                }
+
+                tooltip += `||较昨日：${changeText}|${trendText}`;
+
+                // 判断OBV趋势状态
+                const recentQuotes = allQuotes.slice(Math.max(0, currentIndex - 5), currentIndex + 1);
+                const recentObv = recentQuotes.map(q => q.obv).filter(obv => obv != null);
+
+                if (recentObv.length >= 3) {
+                    const obvTrend = recentObv[recentObv.length - 1] - recentObv[0];
+                    if (obvTrend > 0) {
+                        tooltip += '||近5日趋势：持续上升|资金持续流入';
+                    } else if (obvTrend < 0) {
+                        tooltip += '||近5日趋势：持续下降|资金持续流出';
+                    } else {
+                        tooltip += '||近5日趋势：震荡整理|资金进出平衡';
+                    }
+                }
+            } else {
+                tooltip += '||（无前一日数据对比）';
+            }
+
+            // 添加OBV指标说明
+            tooltip += '||━━━━━━━━━━━━|指标含义：|OBV上涨 = 资金净流入|OBV下跌 = 资金净流出|用于验证价格走势的可靠性';
+
+            return tooltip;
         }
 
         // ========== 日期格式化函数 ==========
@@ -1224,8 +1556,9 @@
             if (hasMa90) headerHtml += '<th>MA90</th>';
             if (hasMa120) headerHtml += '<th>MA120</th>';
             if (hasMa250) headerHtml += '<th>MA250</th>';
-            if (hasObv) headerHtml += '<th>OBV</th>';
-            headerHtml += '<th>阶段</th>';
+            if (hasObv) headerHtml += '<th style="cursor: help;" title="OBV能量潮指标">OBV</th>';
+            headerHtml += '<th style="cursor: help;" title="信号强度指标">信号</th>';
+            headerHtml += '<th style="cursor: help;" title="威科夫阶段">阶段</th>';
             headerHtml += '</tr>';
             klineTableHead.innerHTML = headerHtml;
 
@@ -1267,14 +1600,25 @@
                 // 计算原始索引（倒序数组索引转换回正序数组索引）
                 const originalIndex = uniqueQuotes.length - 1 - i;
 
+                // 获取前一天的数据用于OBV对比
+                const prevQuote = originalIndex > 0 ? uniqueQuotes[originalIndex - 1] : null;
+
                 // 动态生成表格行，只显示有值的列
                 let rowHtml = '<tr style="cursor: pointer;" onclick="showQuoteDetail(' + originalIndex + ')">';
+
+                // 日期列 - 无tooltip
                 rowHtml += `<td>${formatDateString(q.date, timeframe)}</td>`;
+
+                // OHLC列 - 无tooltip
                 rowHtml += `<td class="${closeClass}">${q.open != null ? q.open.toFixed(2) : '-'}</td>`;
                 rowHtml += `<td>${q.high != null ? q.high.toFixed(2) : '-'}</td>`;
                 rowHtml += `<td>${q.low != null ? q.low.toFixed(2) : '-'}</td>`;
                 rowHtml += `<td class="${closeClass}">${q.close != null ? q.close.toFixed(2) : '-'}</td>`;
+
+                // 成交量列 - 无tooltip
                 rowHtml += `<td>${q.volume != null ? (q.volume / 10000).toFixed(0) + '万' : '-'}</td>`;
+
+                // MA均线列 - 无tooltip
                 rowHtml += `<td style="color:#3b82f6;">${q.ma5 != null ? q.ma5.toFixed(2) : '-'}</td>`;
                 rowHtml += `<td style="color:#8b5cf6;">${q.ma10 != null ? q.ma10.toFixed(2) : '-'}</td>`;
                 if (hasMa15) rowHtml += `<td style="color:#f59e0b;">${q.ma15 != null ? q.ma15.toFixed(2) : '-'}</td>`;
@@ -1284,8 +1628,18 @@
                 if (hasMa90) rowHtml += `<td style="color:#14b8a6;">${q.ma90 != null ? q.ma90.toFixed(2) : '-'}</td>`;
                 if (hasMa120) rowHtml += `<td style="color:#f97316;">${q.ma120 != null ? q.ma120.toFixed(2) : '-'}</td>`;
                 if (hasMa250) rowHtml += `<td style="color:#06b6d4;">${q.ma250 != null ? q.ma250.toFixed(2) : '-'}</td>`;
-                if (hasObv) rowHtml += `<td style="color:#f97316;">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>`;
-                rowHtml += `<td><span class="phase-badge ${phaseClass}" data-tooltip="${phaseTooltip}">${phase === 'U' ? 'U上升' : phase === 'D' ? 'D下降' : phase === 'A' ? 'A吸筹' : phase === 'DS' ? 'DS下跌吸筹' : '震荡'} ${phase === 'U' ? '📈' : phase === 'D' ? '📉' : phase === 'A' ? '🔄' : phase === 'DS' ? '📥' : '⚡'}</span></td>`;
+
+                // OBV列 - 保留tooltip，使用data-tooltip
+                if (hasObv) {
+                    const obvTooltip = getOBVTooltip(q, prevQuote, uniqueQuotes, originalIndex);
+                    rowHtml += `<td style="color:#f97316; cursor: help;" data-tooltip="${obvTooltip}">${q.obv != null ? (q.obv / 1000000).toFixed(1) : '-'}M</td>`;
+                }
+
+                // 信号列 - 保留tooltip
+                rowHtml += `<td style="text-align: center;">${getSignalStrength(q)}</td>`;
+
+                // 威科夫阶段列 - 保留tooltip
+                rowHtml += `<td><span class="phase-badge ${phaseClass}" style="cursor: help;" data-tooltip="${phaseTooltip}">${phase === 'U' ? 'U上升' : phase === 'D' ? 'D下降' : phase === 'A' ? 'A吸筹' : phase === 'DS' ? 'DS下跌吸筹' : '震荡'} ${phase === 'U' ? '📈' : phase === 'D' ? '📉' : phase === 'A' ? '🔄' : phase === 'DS' ? '📥' : '⚡'}</span></td>`;
                 rowHtml += '</tr>';
 
                 return rowHtml;
@@ -1295,39 +1649,50 @@
         }
 
         function renderCharts() {
-            if (!currentQuotesData || currentQuotesData.length === 0) return;
+            console.log('[renderCharts] 开始渲染图表');
+
+            if (!currentQuotesData || currentQuotesData.length === 0) {
+                addLog('图表渲染', false, '没有数据可渲染');
+                return;
+            }
 
             try {
                 const mainContainer = document.getElementById('mainChart');
                 const volumeContainer = document.getElementById('volumeChart');
 
-                mainContainer.innerHTML = '';
-                volumeContainer.innerHTML = '';
-
-                if (typeof window.LightweightCharts === 'undefined') {
-                    mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">图表库加载失败</div>';
-                    addLog('图表渲染', false, '图表库未加载');
+                if (!mainContainer || !volumeContainer) {
+                    addLog('图表渲染', false, '图表容器未找到');
+                    alert('请先点击"分析"按钮获取数据');
                     return;
                 }
 
+                // 检查图表库
+                if (typeof window.LightweightCharts === 'undefined') {
+                    addLog('图表渲染', false, '图表库未加载');
+                    alert('图表库未加载，请刷新页面重试');
+                    return;
+                }
+
+                // 清空容器
+                mainContainer.innerHTML = '';
+                volumeContainer.innerHTML = '';
+
                 // 创建主图
                 mainChart = window.LightweightCharts.createChart(mainContainer, {
-                    width: mainContainer.clientWidth,
-                    height: 500,
                     layout: {
-                        background: { color: '#ffffff' },
-                        textColor: '#333333',
+                        background: { color: '#1f2937' },
+                        textColor: '#d1d5db',
                     },
                     grid: {
-                        vertLines: { color: '#e1e1e1', style: 1, visible: true },
-                        horzLines: { color: '#e1e1e1', style: 1, visible: true },
+                        vertLines: { color: '#374151', style: 1, visible: true },
+                        horzLines: { color: '#374151', style: 1, visible: true },
                     },
                     rightPriceScale: {
-                        borderColor: '#cccccc',
+                        borderColor: '#374151',
                         visible: true,
                     },
                     timeScale: {
-                        borderColor: '#cccccc',
+                        borderColor: '#374151',
                         visible: true,
                         timeVisible: true,
                     },
@@ -1459,15 +1824,13 @@
 
                 // 创建成交量图
                 volumeChart = window.LightweightCharts.createChart(volumeContainer, {
-                    width: volumeContainer.clientWidth,
-                    height: 200,
                     layout: {
-                        background: { color: '#ffffff' },
-                        textColor: '#333333',
+                        background: { color: '#1f2937' },
+                        textColor: '#d1d5db',
                     },
                     grid: {
                         vertLines: { visible: false },
-                        horzLines: { color: '#e1e1e1', style: 1, visible: true },
+                        horzLines: { color: '#374151', style: 1, visible: true },
                     },
                     timeScale: {
                         visible: false,
@@ -1538,14 +1901,27 @@
                 });
 
                 mainChart.timeScale().fitContent();
-                addLog('图表渲染', true, '主图和成交量图渲染完成');
-                updateTestStatus('图表渲染', true, '主图和成交量图成功');
-                updateTestStatus('总体状态', true, '所有功能正常');
 
+                addLog('图表渲染', true, '主图和成交量图渲染完成');
+
+                // 显示成功信息（3秒后自动消失）
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(16, 185, 129, 0.95); color:white; padding:20px 30px; border-radius:12px; font-size:16px; text-align:center; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                successMsg.innerHTML = `
+                    <div style="font-size:24px; margin-bottom:8px;">✅</div>
+                    <div style="font-weight:bold; margin-bottom:4px;">图表渲染完成</div>
+                    <div style="font-size:12px; opacity:0.9;">K线数据: ${candlestickData.length}条</div>
+                `;
+                document.body.appendChild(successMsg);
+
+                setTimeout(() => {
+                    successMsg.style.transition = 'opacity 0.5s';
+                    successMsg.style.opacity = '0';
+                    setTimeout(() => successMsg.remove(), 500);
+                }, 3000);
             } catch (error) {
                 console.error('图表渲染失败:', error);
                 addLog('图表渲染', false, error.message);
-                updateTestStatus('图表渲染', false, error.message);
             }
         }
 
@@ -1720,8 +2096,9 @@
                     <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                         <button class="btn" onclick="showMode('table')" id="btnTable">表格</button>
                         <button class="btn btn-secondary" onclick="showMode('chart')" id="btnChart">图表</button>
+                        <button class="btn btn-secondary" onclick="testChartLibrary()" style="font-size:11px; padding:6px 12px;">测试图表库</button>
                     </div>
-                    
+
                     <div class="kline-table-container" id="tableMode" style="display: ${useTableMode ? 'block' : 'none'};">
                         <table class="kline-table" id="klineTable">
                             <thead id="klineTableHead">
@@ -1730,7 +2107,7 @@
                             <tbody id="klineBody"></tbody>
                         </table>
                     </div>
-                    <div style="height: 500px;" id="chartMode" style="display: ${!useTableMode ? 'block' : 'none'};">
+                    <div id="chartMode" style="display: ${!useTableMode ? 'block' : 'none'};">
                         <!-- 威科夫阶段图例 -->
                         <div style="margin-bottom: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; font-size: 11px; display: flex; gap: 15px; flex-wrap: wrap; border: 1px solid #374151;">
                             <span style="color: #10b981;">▲ U阶段(上升)</span>
@@ -1743,8 +2120,18 @@
                             <span style="color: #f59e0b;">─ 成交量MA5</span>
                             <span style="color: #ef4444;">● 异常放量</span>
                         </div>
-                        <div style="height: 500px;" id="mainChart">图表将在这里显示</div>
-                        <div style="height: 200px; margin-top: 12px;" id="volumeChart">成交量图</div>
+                        <div id="mainChart" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 500px; width: 100%; border: 1px solid #374151; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box;">
+                            <div>
+                                <div style="font-size:18px; margin-bottom:8px;">📊 K线图</div>
+                                <div style="font-size:12px;">点击"分析"按钮后，再切换到此模式查看</div>
+                            </div>
+                        </div>
+                        <div id="volumeChart" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 200px; width: 100%; border: 1px solid #374151; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box;">
+                            <div>
+                                <div style="font-size:14px; margin-bottom:6px;">📈 成交量图</div>
+                                <div style="font-size:11px;">等待数据...</div>
+                            </div>
+                        </div>
                     </div>
                 `;
 
@@ -1815,7 +2202,12 @@
                 chartMode.style.display = 'block';
                 tableMode.style.display = 'none';
                 useTableMode = false;
-                renderCharts();
+
+                // 添加延迟确保DOM更新后再渲染图表（移动端需要更长延迟）
+                setTimeout(() => {
+                    console.log('[showMode] 切换到图表模式，准备渲染');
+                    renderCharts();
+                }, 300);
             }
         }
 
@@ -1824,8 +2216,166 @@
             addLog('清空结果', '已清空分析结果');
         }
 
+        // 测试图表库
+        function testChartLibrary() {
+            const mainContainer = document.getElementById('mainChart');
+            if (!mainContainer) {
+                alert('图表容器不存在，请先点击"分析"按钮');
+                return;
+            }
+
+            // 检查图表库
+            if (typeof window.LightweightCharts === 'undefined') {
+                mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#ef4444; text-align:center; padding:20px;"><div style="font-size:24px; margin-bottom:10px;">❌</div><div style="font-size:16px; margin-bottom:8px;">图表库未加载</div><div style="font-size:12px; color:#9ca3af;">请刷新页面重试</div></div>';
+                alert('图表库未加载，请刷新页面');
+                return;
+            }
+
+            // 清空容器
+            mainContainer.innerHTML = '';
+            mainContainer.style.background = '#1f2937';
+
+            // 尝试创建一个简单的测试图表
+            try {
+                const testChart = window.LightweightCharts.createChart(mainContainer, {
+                    width: mainContainer.clientWidth,
+                    height: mainContainer.clientHeight,
+                    layout: {
+                        background: { color: '#1f2937' },
+                        textColor: '#d1d5db',
+                    },
+                    grid: {
+                        vertLines: { color: '#374151', style: 1, visible: true },
+                        horzLines: { color: '#374151', style: 1, visible: true },
+                    },
+                });
+
+                // 添加测试数据
+                const testData = [];
+                for (let i = 0; i < 50; i++) {
+                    const time = new Date();
+                    time.setDate(time.getDate() - (50 - i));
+                    testData.push({
+                        time: time.toISOString().split('T')[0],
+                        value: 100 + Math.random() * 50
+                    });
+                }
+
+                const lineSeries = testChart.addLineSeries({
+                    color: '#10b981',
+                    lineWidth: 2,
+                });
+
+                lineSeries.setData(testData);
+                testChart.timeScale().fitContent();
+
+                alert('✅ 测试图表已创建！\n\n如果您看到一条绿色曲线，说明图表库工作正常。\n如果看不到，说明是渲染问题。');
+
+            } catch (e) {
+                mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#ef4444; text-align:center; padding:20px;"><div style="font-size:16px;">创建测试图表失败</div><div style="font-size:12px; margin-top:8px;">' + e.message + '</div></div>';
+                alert('❌ 创建测试图表失败: ' + e.message);
+            }
+        }
 
         // ========== 多周期分析 ==========
+
+        // 存储交易日期缓存
+        const tradingDatesCache = {};
+
+        // 获取股票的交易日期列表
+        async function fetchTradingDates(code) {
+            if (tradingDatesCache[code]) {
+                return tradingDatesCache[code];
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=1`);
+                const data = await response.json();
+
+                if (data.data && data.data.quotes && data.data.quotes.length > 0) {
+                    // 获取最近100个交易日的日期
+                    const response2 = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=daily&limit=100`);
+                    const data2 = await response2.json();
+
+                    if (data2.data && data2.data.quotes) {
+                        const dates = data2.data.quotes
+                            .map(q => q.date ? q.date.split(' ')[0] : '')
+                            .filter(d => d)
+                            .reverse(); // 最新的在前
+
+                        tradingDatesCache[code] = dates;
+                        return dates;
+                    }
+                }
+
+                return [];
+            } catch (error) {
+                console.error('获取交易日期失败:', error);
+                return [];
+            }
+        }
+
+        // 加载日期选择器
+        async function loadDateSelector(code) {
+            const dateSelect = document.getElementById('multiAnalysisDate');
+            if (!dateSelect) return;
+
+            dateSelect.innerHTML = '<option value="">加载中...</option>';
+
+            const dates = await fetchTradingDates(code);
+
+            if (dates.length === 0) {
+                dateSelect.innerHTML = '<option value="">无数据</option>';
+                return;
+            }
+
+            // 填充日期选项，最近的在前
+            dateSelect.innerHTML = dates.map(date => {
+                const displayDate = date.replace(/-/g, '/');
+                return `<option value="${date}">${displayDate}</option>`;
+            }).join('');
+
+            // 默认选择第一个（最近的交易日）
+            dateSelect.value = dates[0];
+        }
+
+        // 股票代码变化时重新加载日期
+        function onMultiDateChange() {
+            // 日期变化时清空之前的分析结果
+            clearMultiResult();
+        }
+
+        // 清空多周期分析结果
+        function clearMultiResult() {
+            const contentEl = document.getElementById('multiContent');
+            if (contentEl) {
+                contentEl.innerHTML = '<div style="text-align:center; padding:40px; color:#9ca3af;">请选择日期后点击"开始分析"按钮</div>';
+            }
+        }
+
+        // 监听股票代码输入框变化
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeInput = document.getElementById('multiStockCode');
+            if (codeInput) {
+                let debounceTimer;
+                codeInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const code = e.target.value.trim();
+                        if (code && code.length >= 6) {
+                            loadDateSelector(code);
+                        }
+                    }, 500);
+                });
+            }
+
+            // 初始加载默认股票的日期
+            const defaultCode = document.getElementById('multiStockCode')?.value;
+            if (defaultCode) {
+                loadDateSelector(defaultCode);
+            }
+        });
+
         async function analyzeMultiTimeframe() {
             const code = document.getElementById('multiStockCode').value;
             if (!code) {
@@ -1843,8 +2393,11 @@
                 return;
             }
 
-            console.log(`多周期分析: ${code}, 周期: ${timeframes.join(', ')}`);
-            addLog('多周期分析', `股票代码: ${code}, 周期: ${timeframes.length}个`);
+            // 获取选择的日期
+            const analysisDate = document.getElementById('multiAnalysisDate')?.value;
+
+            console.log(`多周期分析: ${code}, 周期: ${timeframes.join(', ')}, 日期: ${analysisDate || '最新'}`);
+            addLog('多周期分析', `股票代码: ${code}, 周期: ${timeframes.length}个${analysisDate ? ', 日期: ' + analysisDate : ''}`);
 
             const loadingEl = document.getElementById('multiLoading');
             const contentEl = document.getElementById('multiContent');
@@ -1860,10 +2413,20 @@
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-                        const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        // 构建请求URL，如果选择了日期则添加end_date参数
+                        let url = `${API_BASE}/api/v1/stocks/analyze`;
+                        const requestBody = { code, timeframe };
+
+                        if (analysisDate) {
+                            // 统一使用 ISO 8601 格式 (YYYY-MM-DD)
+                            const isoDate = analysisDate.replace(/\//g, '-');
+                            requestBody.end_date = isoDate;
+                        }
+
+                        const response = await fetch(url, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code, timeframe }),
+                            body: JSON.stringify(requestBody),
                             signal: controller.signal
                         });
                         clearTimeout(timeoutId);
@@ -2337,22 +2900,25 @@
             const midAnalysis = generatePhaseAnalysis(midTerm, 'mid');
             const longAnalysis = generatePhaseAnalysis(longTerm, 'long');
 
+            // 检测是否为移动端
+            const isMobile = window.innerWidth < 768;
+
             let html = '';
 
-            // 1. 三个阶段综合评分卡片（横向排列）
-            html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0;">';
+            // 1. 三个阶段综合评分卡片（移动端垂直排列，桌面端横向排列）
+            html += `<div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '8px' : '8px'}; margin: 16px 0 8px 0;">`;
 
             // 短线卡片
-            html += renderPhaseCard('⚡ 短线', shortAnalysis, '#3b82f6', '30分/60分/日线');
+            html += renderPhaseCard('⚡ 短线', shortAnalysis, '#3b82f6', '30分/60分/日线', isMobile);
             // 中线卡片
-            html += renderPhaseCard('📈 中线', midAnalysis, '#8b5cf6', '60分/日线/周线');
+            html += renderPhaseCard('📈 中线', midAnalysis, '#8b5cf6', '60分/日线/周线', isMobile);
             // 长线卡片
-            html += renderPhaseCard('🎯 长线', longAnalysis, '#10b981', '日线/周线/月线');
+            html += renderPhaseCard('🎯 长线', longAnalysis, '#10b981', '日线/周线/月线', isMobile);
 
             html += '</div>';
 
             // 2. 综合操作建议
-            html += generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis);
+            html += generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis, isMobile);
 
             // 3. 各阶段详细周期卡片
             html += renderPhaseDetailCards('⚡ 短线分析', shortTerm, timeframeNames);
@@ -2384,12 +2950,13 @@
             let html = '';
 
             // 先显示共振分析（综合结论）
-            const resonanceHtml = generateResonanceAnalysis(sortedData, timeframeNames);
+            const isMobile = window.innerWidth < 768;
+            const resonanceHtml = generateResonanceAnalysis(sortedData, timeframeNames, isMobile);
             html += resonanceHtml;
 
             // 2. 再显示详细数据表格
             html += `
-                <div style="background: #1f2937; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #374151;">
+                <div style="background: #1f2937; border-radius: 8px; padding: 10px; margin: 16px 0 10px 0; border: 1px solid #374151;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <div style="color: #f9fafb; font-size: 13px; font-weight: 600;">📊 各周期详细数据</div>
                         <div style="color: #9ca3af; font-size: 10px;">🖱️ 悬停查看 | 威科夫使用前端规则</div>
@@ -2402,7 +2969,8 @@
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 80px;">时间</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">价格</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">涨跌</th>
-                                    <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 80px;">均线</th>
+                                    <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 50px;">信号</th>
+                                    <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">均线</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">量能</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">阶段</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">判断</th>
@@ -2461,6 +3029,7 @@
                         <td style="text-align: center; padding: 8px 4px; color: #9ca3af; font-size: 10px;">${timeDisplay}</td>
                         <td style="text-align: center; padding: 8px 4px; color: #f9fafb; font-size: 12px; font-weight: 500;">${quote?.close ? quote.close.toFixed(2) : '-'}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${priceChangeColor}; font-weight: 600; font-size: 11px;" data-tooltip="涨跌幅: ${priceChangeText}">${priceChangeText}</td>
+                        <td style="text-align: center; padding: 8px 4px;">${getSignalStrength(quote)}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${maStatus.color}; font-size: 11px;" data-tooltip="${maTooltip}">${maStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${volumeStatus.color}; font-size: 11px;" data-tooltip="${volTooltip}">${volumeStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${phaseResult.phase === 'U' ? '#10b981' : phaseResult.phase === 'D' ? '#ef4444' : phaseResult.phase === 'A' ? '#f59e0b' : phaseResult.phase === 'DS' ? '#8b5cf6' : '#9ca3af'}; font-weight: 600; font-size: 11px;" data-tooltip="${wyckoffTooltip}">${wyckoffPhase}</td>
@@ -2479,7 +3048,7 @@
         }
 
         // 生成周期共振分析
-        function generateResonanceAnalysis(analysisData, timeframeNames) {
+        function generateResonanceAnalysis(analysisData, timeframeNames, isMobile = false) {
             // 统计各周期的方向
             let longCount = 0;
             let shortCount = 0;
@@ -2590,17 +3159,17 @@
 
             // 共振分析卡片（融合最终意见、综合结论、方向详情）
             html += `
-                <div style="background: ${bgColor}; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.2);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <div style="color: #ffffff; font-size: 18px; font-weight: 700;">${resonanceLevel}</div>
-                        <div style="color: rgba(255,255,255,0.9); font-size: 13px;">
+                <div style="background: ${bgColor}; border-radius: ${isMobile ? '6px' : '8px'}; padding: ${isMobile ? '12px' : '16px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 12px 0'}; border: 1px solid rgba(255,255,255,0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isMobile ? '8px' : '10px'};">
+                        <div style="color: #ffffff; font-size: ${isMobile ? '16px' : '18px'}; font-weight: 700;">${resonanceLevel}</div>
+                        <div style="color: rgba(255,255,255,0.9); font-size: ${isMobile ? '11px' : '13px'};">
                             看涨 ${longCount}/${total} | 中性 ${neutralCount}/${total} | 看跌 ${shortCount}/${total}
                         </div>
                     </div>
-                    <div style="color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">${suggestion}</div>
+                    <div style="color: rgba(255,255,255,0.95); font-size: ${isMobile ? '13px' : '14px'}; line-height: 1.6; margin-bottom: ${isMobile ? '10px' : '12px'};">${suggestion}</div>
 
                     <!-- 各周期方向标签 -->
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'}; margin-bottom: ${isMobile ? '10px' : '12px'};">
             `;
 
             directionDetails.forEach(detail => {
@@ -2637,13 +3206,13 @@
                 </div>
             `;
 
-            // 详细指标分析（三列卡片）
+            // 详细指标分析（移动端单列，桌面端三列）
             html += `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+                <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 10px 0'};">
                     <!-- 均线分析 -->
-                    <div style="background: #1f2937; border-radius: 6px; padding: 10px; border: 1px solid #374151;">
-                        <div style="color: #f9fafb; font-size: 12px; font-weight: 600; margin-bottom: 6px;">📊 均线状态</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">📊 均线状态</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'};">
             `;
 
             maStatusDetails.forEach(detail => {
@@ -2660,9 +3229,9 @@
                     </div>
 
                     <!-- 量能分析 -->
-                    <div style="background: #1f2937; border-radius: 6px; padding: 10px; border: 1px solid #374151;">
-                        <div style="color: #f9fafb; font-size: 12px; font-weight: 600; margin-bottom: 6px;">📈 量能状态</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">📈 量能状态</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'};">
             `;
 
             volumeStatusDetails.forEach(detail => {
@@ -2679,9 +3248,9 @@
                     </div>
 
                     <!-- 威科夫阶段 -->
-                    <div style="background: #1f2937; border-radius: 6px; padding: 10px; border: 1px solid #374151;">
-                        <div style="color: #f9fafb; font-size: 12px; font-weight: 600; margin-bottom: 6px;">🎯 威科夫阶段</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">🎯 威科夫阶段</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'};">
             `;
 
             phaseDetails.forEach(detail => {
@@ -2707,24 +3276,31 @@
         }
 
         // 渲染阶段卡片
-        function renderPhaseCard(title, analysis, colorBase, timeframes) {
+        function renderPhaseCard(title, analysis, colorBase, timeframes, isMobile = false, compact = false) {
             const scoreColor = analysis.direction === 'LONG' ? '#10b981' :
                              analysis.direction === 'SHORT' ? '#ef4444' : '#9ca3af';
 
+            const padding = compact ? (isMobile ? '6px' : '8px') : (isMobile ? '10px' : '12px');
+            const marginBottom = compact ? '4px' : (isMobile ? '6px' : '8px');
+            const titleFontSize = compact ? (isMobile ? '11px' : '12px') : (isMobile ? '12px' : '13px');
+            const scoreFontSize = compact ? (isMobile ? '14px' : '16px') : (isMobile ? '16px' : '18px');
+            const infoFontSize = compact ? (isMobile ? '9px' : '10px') : (isMobile ? '10px' : '11px');
+            const infoMarginBottom = compact ? '2px' : (isMobile ? '4px' : '6px');
+
             return `
-                <div style="background: linear-gradient(135deg, ${colorBase}20, ${colorBase}40); border-radius: 8px; padding: 12px; border: 1px solid ${colorBase}60;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="color: #ffffff; font-size: 13px; font-weight: 600;">${title}</span>
-                        <span style="color: ${scoreColor}; font-size: 18px; font-weight: 700;">${analysis.avgScore}</span>
+                <div style="background: linear-gradient(135deg, ${colorBase}20, ${colorBase}40); border-radius: ${isMobile ? '6px' : '8px'}; padding: ${padding}; border: 1px solid ${colorBase}60;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${marginBottom};">
+                        <span style="color: #ffffff; font-size: ${titleFontSize}; font-weight: 600;">${title}</span>
+                        <span style="color: ${scoreColor}; font-size: ${scoreFontSize}; font-weight: 700;">${analysis.avgScore}</span>
                     </div>
-                    <div style="color: ${colorBase}; font-size: 11px; margin-bottom: 6px;">${timeframes}</div>
-                    <div style="color: #d1d5db; font-size: 11px; line-height: 1.4;">${analysis.trend}</div>
+                    <div style="color: ${colorBase}; font-size: ${infoFontSize}; margin-bottom: ${infoMarginBottom};">${timeframes}</div>
+                    <div style="color: #d1d5db; font-size: ${infoFontSize}; line-height: 1.3;">${analysis.trend}</div>
                 </div>
             `;
         }
 
         // 生成综合操作建议
-        function generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis) {
+        function generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis, isMobile = false, compact = false) {
             // 判断整体趋势
             const allLong = shortAnalysis.direction === 'LONG' && midAnalysis.direction === 'LONG' && longAnalysis.direction === 'LONG';
             const allShort = shortAnalysis.direction === 'SHORT' && midAnalysis.direction === 'SHORT' && longAnalysis.direction === 'SHORT';
@@ -2757,10 +3333,17 @@
                 bgColor = 'linear-gradient(135deg, #374151, #6b7280)';
             }
 
+            const padding = compact ? (isMobile ? '6px' : '8px') : (isMobile ? '8px' : '10px');
+            const margin = compact ? (isMobile ? '8px 0 4px 0' : '10px 0 5px 0') : (isMobile ? '12px 0 6px 0' : '16px 0 8px 0');
+            const titleMarginBottom = compact ? '2px' : (isMobile ? '3px' : '4px');
+            const titleFontSize = compact ? (isMobile ? '10px' : '11px') : (isMobile ? '11px' : '12px');
+            const textFontSize = compact ? (isMobile ? '11px' : '12px') : (isMobile ? '12px' : '13px');
+            const lineHeight = compact ? '1.3' : '1.4';
+
             return `
-                <div style="background: ${bgColor}; border-radius: 8px; padding: 10px; margin: 8px 0; border: 1px solid rgba(255,255,255,0.1);">
-                    <div style="color: #fbbf24; font-size: 12px; font-weight: 600; margin-bottom: 4px;">💡 综合操作建议</div>
-                    <div style="color: #ffffff; font-size: 13px; line-height: 1.4;">${suggestion}</div>
+                <div style="background: ${bgColor}; border-radius: ${isMobile ? '6px' : '8px'}; padding: ${padding}; margin: ${margin}; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="color: #fbbf24; font-size: ${titleFontSize}; font-weight: 600; margin-bottom: ${titleMarginBottom};">💡 综合操作建议</div>
+                    <div style="color: #ffffff; font-size: ${textFontSize}; line-height: ${lineHeight};">${suggestion}</div>
                 </div>
             `;
         }
@@ -2781,7 +3364,7 @@
                 return order.indexOf(a.timeframe) - order.indexOf(b.timeframe);
             });
 
-            html += `<div style="margin: 12px 0 8px 0;">`;
+            html += `<div style="margin: 16px 0 8px 0;">`;
             html += `<div style="color: #f9fafb; font-size: 13px; font-weight: 600; margin-bottom: 6px; padding-left: 4px;">${phaseTitle}</div>`;
             html += '<div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">';
 
@@ -3194,6 +3777,178 @@
             renderWatchlistCards();
         }
 
+        // 生成详细的投资建议
+        function getInvestmentAdvice(score, direction, currentPrice, summary) {
+            if (!currentPrice || currentPrice === 0) {
+                return `<div style="color: #9ca3af; font-size: 12px;">暂无价格数据</div>`;
+            }
+
+            let advice = '';
+            let adviceColor = '#9ca3af';
+            let bgColor = '#374151';
+            let icon = '→';
+
+            // 根据分数和方向生成建议
+            if (score >= 4 && direction === 'LONG') {
+                // 强烈买入信号
+                advice = `💡 强烈建议买入`;
+                adviceColor = '#10b981';
+                bgColor = '#064e3b';
+                icon = '🚀';
+            } else if (score >= 3 && direction === 'LONG') {
+                // 买入信号
+                advice = `💡 建议买入`;
+                adviceColor = '#34d399';
+                bgColor = '#065f46';
+                icon = '📈';
+            } else if (score >= 1 && direction === 'LONG') {
+                // 观望偏多
+                advice = `💡 可考虑逢低买入`;
+                adviceColor = '#fbbf24';
+                bgColor = '#78350f';
+                icon = '⚡';
+            } else if (score >= -1 && direction === 'NEUTRAL') {
+                // 中性
+                advice = `⏸️ 建议观望等待`;
+                adviceColor = '#9ca3af';
+                bgColor = '#374151';
+                icon = '⏸️';
+            } else if (score <= -3 && direction === 'SHORT') {
+                // 强烈卖出信号
+                advice = `⚠️ 建议减仓或卖出`;
+                adviceColor = '#ef4444';
+                bgColor = '#7f1d1d';
+                icon = '🔴';
+            } else if (score <= -1 && direction === 'SHORT') {
+                // 卖出信号
+                advice = `⚠️ 注意风险，谨慎持有`;
+                adviceColor = '#f87171';
+                bgColor = '#991b1b';
+                icon = '⚠️';
+            } else {
+                advice = `⏸️ 观望等待信号`;
+                adviceColor = '#9ca3af';
+                bgColor = '#374151';
+                icon = '⏸️';
+            }
+
+            // 计算参考价格（基于当前价格的±3%）
+            const buyPrice = (currentPrice * 0.97).toFixed(2);
+            const sellPrice = (currentPrice * 1.03).toFixed(2);
+            const stopLoss = (currentPrice * 0.95).toFixed(2);
+            const takeProfit = (currentPrice * 1.08).toFixed(2);
+
+            return `
+                <div style="background: ${bgColor}; padding: 8px; border-radius: 6px; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="font-size: 14px;">${icon}</span>
+                        <span style="color: ${adviceColor}; font-weight: 600; font-size: 13px;">${advice}</span>
+                    </div>
+                    ${direction === 'LONG' ? `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; margin-top: 6px;">
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">买入价:</span>
+                                <span style="color: #34d399; font-weight: 600;">≤${buyPrice}</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">止损:</span>
+                                <span style="color: #f87171; font-weight: 600;">${stopLoss}</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">止盈:</span>
+                                <span style="color: #fbbf24; font-weight: 600;">${takeProfit}</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">现价:</span>
+                                <span style="color: #f3f4f6; font-weight: 600;">${currentPrice.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: #9ca3af; line-height: 1.3;">
+                            💰 分仓建仓，控制仓位在20-30%
+                        </div>
+                    ` : direction === 'SHORT' ? `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; margin-top: 6px;">
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">减仓位:</span>
+                                <span style="color: #f87171; font-weight: 600;">≥${sellPrice}</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 4px 6px; border-radius: 4px;">
+                                <span style="color: #9ca3af;">支撑:</span>
+                                <span style="color: #34d399; font-weight: 600;">${buyPrice}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: #9ca3af; line-height: 1.3;">
+                            ⚠️ 注意控制风险，建议减仓或空仓观望
+                        </div>
+                    ` : `
+                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: #9ca3af; line-height: 1.3;">
+                            ⏸️ 等待明确信号再入场，关注趋势变化
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // 生成紧凑的投资建议（用于关注列表小卡片）
+        function getCompactInvestmentAdviceUnified(score, direction, currentPrice, summary) {
+            if (!currentPrice || currentPrice === 0) {
+                return `<div style="color: #9ca3af; font-size: 10px;">暂无数据</div>`;
+            }
+
+            // 使用与多周期综合建议一致的逻辑
+            let suggestion = '';
+            let bgColor = '#1f2937';
+
+            if (score >= 5 && direction === 'LONG') {
+                suggestion = '🚀 多周期共振看涨，短中长期趋势一致向上，积极做多！';
+                bgColor = 'linear-gradient(135deg, #065f46, #10b981)';
+            } else if (score >= 4 && direction === 'LONG') {
+                suggestion = '✅ 长线向好，短线波动，可考虑波段操作';
+                bgColor = 'linear-gradient(135deg, #1e3a8a, #3b82f6)';
+            } else if (score >= 3 && direction === 'LONG') {
+                suggestion = '✅ 中长线看涨，短线整理，可逢低布局，耐心持有';
+                bgColor = 'linear-gradient(135deg, #1e3a8a, #3b82f6)';
+            } else if (score >= 1 && direction === 'LONG') {
+                suggestion = '⏸️ 长线趋势向上，但中短线转弱，暂时观望，等待企稳';
+                bgColor = 'linear-gradient(135deg, #78350f, #f59e0b)';
+            } else if (score <= -3 && direction === 'SHORT') {
+                suggestion = '⚠️ 三周期共振看跌，短中长期趋势一致向下，空仓观望！';
+                bgColor = 'linear-gradient(135deg, #7f1d1d, #ef4444)';
+            } else if (score <= -1 && direction === 'SHORT') {
+                suggestion = '❌ 长线转弱，建议控制仓位或离场观望';
+                bgColor = 'linear-gradient(135deg, #7f1d1d, #ef4444)';
+            } else {
+                suggestion = '⏳ 各周期分歧较大，建议观望等待共振信号出现';
+                bgColor = 'linear-gradient(135deg, #374151, #6b7280)';
+            }
+
+            return `
+                <div style="background: ${bgColor}; border-radius: 4px; padding: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="color: #fbbf24; font-size: 9px; margin-bottom: 2px;">💡 综合操作建议</div>
+                    <div style="color: #ffffff; font-size: 10px; line-height: 1.3;">${suggestion}</div>
+                </div>
+            `;
+        }
+
+        // 生成投资建议说明文字
+        function getInvestmentAdviceDescription(score, direction) {
+            if (score >= 4 && direction === 'LONG') {
+                return '💰 建议分批买入，控制仓位20-30%。设置止损-5%，止盈+8%。';
+            } else if (score >= 3 && direction === 'LONG') {
+                return '📈 趋势向好，可逢低买入。建议控制仓位，设置好止损。';
+            } else if (score >= 1 && direction === 'LONG') {
+                return '⚡ 有上涨潜力，可小仓位试探。注意观察趋势变化。';
+            } else if (score >= -1 && direction === 'NEUTRAL') {
+                return '⏸️ 方向不明确，建议观望等待。关注突破信号。';
+            } else if (score <= -3 && direction === 'SHORT') {
+                return '⚠️ 风险较大，建议减仓或空仓。注意控制回撤。';
+            } else if (score <= -1 && direction === 'SHORT') {
+                return '⚠️ 谨慎持有，注意风险。建议控制仓位或离场观望。';
+            } else {
+                return '⏸️ 等待明确信号。关注量能变化和趋势突破。';
+            }
+        }
+
         // 渲染关注列表卡片
         function renderWatchlistCards() {
             try {
@@ -3214,10 +3969,14 @@
                     return;
                 }
 
-                // 渲染紧凑的股票卡片网格
+                // 从设置中获取每行列数，默认4列
+                const settings = JSON.parse(localStorage.getItem('wyckoff_settings') || '{}');
+                const columnsPerRow = parseInt(settings.watchlist_columns) || 4;
+
+                // 渲染紧凑的股票卡片网格（使用设置的列数，移动端自适应）
                 let html = `
-                    <div style="background: #1f2937; border-radius: 12px; padding: 16px; margin-top: 12px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px;">
+                    <div style="background: #1f2937; border-radius: 12px; padding: 12px; margin-top: 12px;">
+                        <div class="watchlist-grid" style="display: grid; grid-template-columns: repeat(${columnsPerRow}, 1fr); gap: 8px;">
                 `;
 
                 data.forEach((item, index) => {
@@ -3249,51 +4008,64 @@
                     else if (score <= -1) scoreColor = '#ef4444';
 
                     html += `
-                        <div style="background: #374151; padding: 12px; border-radius: 8px; border: 1px solid #4b5563;">
-                            <!-- 顶部：代码、名称、价格 -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <div style="flex: 1;">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                        <strong style="font-size: 16px; color: #f9fafb;">${item.stock_code}</strong>
-                                        ${item.stock_name ? `<span style="color: #10b981; font-size: 13px;">${item.stock_name}</span>` : ''}
-                                        <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; background: ${directionColor}20; color: ${directionColor};">${directionIcon}</span>
-                                    </div>
-                                    <div style="font-size: 20px; font-weight: 700; color: #f9fafb;">
-                                        ${currentPrice ? currentPrice.toFixed(2) : '-'}
-                                        <span style="font-size: 12px; margin-left: 8px; color: ${scoreColor};">(${score}分)</span>
-                                    </div>
+                        <div style="background: #374151; padding: 8px; border-radius: 6px; border: 1px solid #4b5563; position: relative;">
+                            <!-- 批量选择复选框 -->
+                            ${isBatchSelectMode ? `
+                                <div style="position: absolute; top: 8px; left: 8px; z-index: 10;">
+                                    <input type="checkbox"
+                                           id="checkbox_${item.stock_code}"
+                                           ${isItemSelected(item.stock_code) ? 'checked' : ''}
+                                           onchange="toggleItemSelection('${item.stock_code}')"
+                                           style="width: 16px; height: 16px; cursor: pointer;">
                                 </div>
+                            ` : ''}
+
+                            <!-- 顶部：代码、名称、价格、信号（同一行） -->
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; ${isBatchSelectMode ? 'margin-left: 24px;' : ''}">
+                                <strong style="font-size: 14px; color: #f9fafb;">${item.stock_code}</strong>
+                                ${item.stock_name ? `<span style="color: #10b981; font-size: 11px;">${item.stock_name}</span>` : ''}
+                                <span style="padding: 2px 6px; border-radius: 3px; font-size: 10px; background: ${directionColor}20; color: ${directionColor};">${directionIcon}</span>
+                                <div style="flex: 1;"></div>
+                                <span style="font-size: 16px; font-weight: 700; color: #f9fafb;">
+                                    ${currentPrice ? currentPrice.toFixed(2) : '-'}
+                                </span>
+                                ${getSignalStrength(quote)}
+                                <span style="font-size: 11px; color: ${scoreColor};">(${score}分)</span>
                             </div>
 
                             <!-- 中部：威科夫阶段和建议 -->
-                            <div style="background: #1f2937; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <div style="background: #1f2937; padding: 8px; border-radius: 5px; margin-bottom: 6px;">
+                                <!-- 阶段 -->
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
                                     <span style="color: #9ca3af;">阶段：</span>
                                     <span style="color: #d1d5db; font-weight: 600;">${phase}</span>
                                 </div>
-                                ${summary?.suggestion ? `
-                                <div style="color: #9ca3af; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                    ${summary.suggestion.substring(0, 50)}${summary.suggestion.length > 50 ? '...' : ''}
-                                </div>
-                                ` : ''}
+
+                                <!-- 投资建议 -->
+                                ${getCompactInvestmentAdviceUnified(score, direction, currentPrice, summary)}
+                            </div>
+
+                            <!-- 投资建议说明 -->
+                            <div style="background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; margin-bottom: 6px; font-size: 10px; color: #9ca3af; line-height: 1.4;">
+                                ${getInvestmentAdviceDescription(score, direction)}
                             </div>
 
                             <!-- 底部：操作按钮 -->
-                            <div style="display: flex; gap: 6px;">
-                                <button onclick="analyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')" style="flex: 1; background: #3b82f6; padding: 6px 8px; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer;" title="日线分析">
-                                    📊 分析
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="analyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')" style="flex: 1; background: #3b82f6; padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="日线分析">
+                                    📊
                                 </button>
-                                <button onclick="multiAnalyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')" style="flex: 1; background: linear-gradient(135deg, #8b5cf6, #a78bfa); padding: 6px 8px; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer;" title="多周期分析">
-                                    📈 多周期
+                                <button onclick="multiAnalyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')" style="flex: 1; background: linear-gradient(135deg, #8b5cf6, #a78bfa); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="多周期分析">
+                                    📈
                                 </button>
-                                ${isFavorite ?
-                                    `<button onclick="deleteFromWatchlist('${item.stock_code}')" style="flex: 1; background: #dc2626; padding: 6px 8px; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer;">
-                                        🗑️
-                                    </button>` :
-                                    `<button onclick="favoriteStock('${item.stock_code}')" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); padding: 6px 8px; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                                ${!isFavorite ?
+                                    `<button onclick="favoriteStock('${item.stock_code}')" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="添加到自选股">
                                         ⭐
-                                    </button>`
+                                    </button>` : ''
                                 }
+                                <button onclick="deleteFromWatchlist('${item.stock_code}')" style="flex: 1; background: #dc2626; padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="删除">
+                                    🗑️
+                                </button>
                             </div>
                         </div>
                     `;
@@ -3399,12 +4171,13 @@
             content.style.cssText = `
                 background: #1f2937;
                 border-radius: 12px;
-                padding: 24px;
-                max-width: 90%;
-                max-height: 90%;
+                max-width: 800px;
+                width: 95%;
+                max-height: 72.6vh;
+                padding: 16px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                 overflow-y: auto;
                 position: relative;
-                min-width: 600px;
             `;
 
             // 关闭按钮
@@ -3429,10 +4202,10 @@
             closeBtn.onclick = () => document.body.removeChild(modal);
 
             content.innerHTML = `
-                <div style="margin-bottom: 16px; padding-right: 40px;">
-                    <h2 style="color: #f9fafb; margin: 0;">${type === 'single' ? '📊 ' + code + (name ? ' ' + name : '') + ' 日线分析' : '📈 ' + code + (name ? ' ' + name : '') + ' 多周期分析'}</h2>
+                <div style="margin-bottom: 10px; padding-right: 40px;">
+                    <h2 style="color: #f9fafb; margin: 0; font-size: 16px;">${type === 'single' ? '📊 ' + code + (name ? ' ' + name : '') + ' 日线分析' : '📈 ' + code + (name ? ' ' + name : '') + ' 多周期分析'}</h2>
                 </div>
-                <div id="modal-content" style="color: #10b981; text-align: center; padding: 40px;">
+                <div id="modal-content" style="color: #10b981; text-align: center; padding: 20px;">
                     🔄 正在加载...
                 </div>
             `;
@@ -3457,29 +4230,115 @@
                     // 渲染分析结果
                     modalContent.innerHTML = renderSingleAnalysisResult(code, data);
                 } else {
-                    // 多周期分析
-                    const timeframes = ['daily', 'weekly', 'monthly'];
-                    modalContent.innerHTML = '<div style="color: #10b981; text-align: center; padding: 20px;">🔄 正在获取日线、周线、月线数据...</div>';
+                    // 多周期分析 - 先显示日期选择器
+                    modalContent.innerHTML = `
+                        <div style="text-align: left;">
+                            <div style="background: #111827; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                                <div style="color: #9ca3af; font-size: 12px; margin-bottom: 8px;">📅 选择分析日期</div>
+                                <select id="modalDateSelect" style="
+                                    width: 100%;
+                                    padding: 8px 12px;
+                                    background: #1f2937;
+                                    border: 1px solid #374151;
+                                    border-radius: 6px;
+                                    color: #f9fafb;
+                                    font-size: 13px;
+                                    cursor: pointer;
+                                ">
+                                    <option value="">加载中...</option>
+                                </select>
+                                <div style="color: #6b7280; font-size: 11px; margin-top: 6px;">
+                                    将分析选定日期的日线、周线、月线数据
+                                </div>
+                            </div>
+                            <div id="modalAnalysisResult" style="color: #10b981; text-align: center; padding: 20px;">
+                                请选择日期后点击分析按钮
+                            </div>
+                            <div style="text-align: center; margin-top: 12px;">
+                                <button id="modalAnalyzeBtn" style="
+                                    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+                                    padding: 10px 24px;
+                                    border: none;
+                                    color: white;
+                                    border-radius: 6px;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                ">开始分析</button>
+                            </div>
+                        </div>
+                    `;
 
-                    const promises = timeframes.map(tf =>
-                        fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code, timeframe: tf })
-                        }).then(res => res.json())
-                    );
+                    // 加载交易日期
+                    try {
+                        const dates = await fetchTradingDates(code);
+                        const dateSelect = document.getElementById('modalDateSelect');
 
-                    const results = await Promise.all(promises);
+                        if (dates.length > 0) {
+                            dateSelect.innerHTML = dates.map(date => {
+                                const displayDate = date.replace(/-/g, '/');
+                                return `<option value="${date}">${displayDate}</option>`;
+                            }).join('');
+                            // 默认选择第一个（最近的交易日）
+                            dateSelect.value = dates[0];
+                        } else {
+                            dateSelect.innerHTML = '<option value="">无交易数据</option>';
+                        }
+                    } catch (error) {
+                        console.error('加载交易日期失败:', error);
+                        document.getElementById('modalDateSelect').innerHTML = '<option value="">加载失败</option>';
+                    }
 
-                    const analysisData = results.map((result, index) => ({
-                        timeframe: timeframes[index],
-                        summary: result.analysis_summary || {},
-                        quote: result.current_quote,
-                        signals: result.signals || []
-                    }));
+                    // 绑定分析按钮事件
+                    const analyzeBtn = document.getElementById('modalAnalyzeBtn');
+                    analyzeBtn.onclick = async () => {
+                        const selectedDate = document.getElementById('modalDateSelect').value;
 
-                    // 渲染多周期结果
-                    renderMultiTimeframeAnalysisInModal(code, analysisData, modalContent);
+                        if (!selectedDate) {
+                            alert('请选择有效的交易日期');
+                            return;
+                        }
+
+                        const resultDiv = document.getElementById('modalAnalysisResult');
+                        resultDiv.innerHTML = '<div style="color: #10b981; text-align: center; padding: 20px;">🔄 正在分析...</div>';
+
+                        try {
+                            const timeframes = ['daily', 'weekly', 'monthly'];
+
+                            const promises = timeframes.map(tf =>
+                                fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        code,
+                                        timeframe: tf,
+                                        end_date: selectedDate.replace(/\//g, '')
+                                    })
+                                }).then(res => res.json())
+                            );
+
+                            const results = await Promise.all(promises);
+
+                            const analysisData = results.map((result, index) => ({
+                                timeframe: timeframes[index],
+                                summary: result.analysis_summary || {},
+                                quote: result.current_quote,
+                                signals: result.signals || []
+                            }));
+
+                            // 渲染多周期结果
+                            renderMultiTimeframeAnalysisInModal(code, analysisData, resultDiv);
+
+                            // 更新按钮文本，允许重新分析
+                            analyzeBtn.textContent = '重新分析';
+                        } catch (error) {
+                            console.error('分析失败:', error);
+                            resultDiv.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 40px;">❌ 分析失败: ${error.message}</div>`;
+                        }
+                    };
+
+                    // 自动开始分析（使用默认选中的日期）
+                    analyzeBtn.click();
                 }
 
                 addLog('分析完成', `${code} ${type === 'single' ? '日线' : '多周期'}分析完成`);
@@ -3557,7 +4416,101 @@
             }
 
             html += '</div>';
+
+            // 异步加载历史信号
+            setTimeout(() => loadAndDisplaySignals(code, container), 100);
+
             return html;
+        }
+
+        // 加载并显示历史信号
+        async function loadAndDisplaySignals(code, container) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/stocks/${code}/signals`);
+                if (!response.ok) return;
+
+                const signals = await response.json();
+                if (!signals || signals.length === 0) return;
+
+                // 检查时间是否在A股交易时段内
+                const isTradingTime = (signal) => {
+                    const date = new Date(signal.date);
+                    const hour = date.getHours();
+                    const minute = date.getMinutes();
+                    const time = hour * 60 + minute;
+
+                    // 日线、周线、月线不过滤时间
+                    if (!['30', '60'].includes(signal.timeframe)) {
+                        return true;
+                    }
+
+                    // A股交易时间：
+                    // 上午：9:30-11:30 (570-690分钟)
+                    // 下午：13:00-15:00 (780-900分钟)
+                    const morningStart = 9 * 60 + 30;  // 9:30
+                    const morningEnd = 11 * 60 + 30;   // 11:30
+                    const afternoonStart = 13 * 60;    // 13:00
+                    const afternoonEnd = 15 * 60;      // 15:00
+
+                    return (time >= morningStart && time <= morningEnd) ||
+                           (time >= afternoonStart && time <= afternoonEnd);
+                };
+
+                // 过滤出有效的信号（评分>=3）且在交易时段内
+                const validSignals = signals.filter(s => s.score >= 3 && isTradingTime(s));
+
+                if (validSignals.length === 0) return;
+
+                // 检测是否为移动端
+                const isMobile = window.innerWidth < 768;
+
+                // 创建信号卡片HTML（紧凑模式）
+                let signalsHtml = `
+                    <div style="margin-top: 8px; padding: 10px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div style="color: #fbbf24; font-size: 12px; font-weight: 600;">📡 历史信号记录</div>
+                            <div style="color: #9ca3af; font-size: 10px;">最近 ${validSignals.length} 条</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(auto-fit, minmax(250px, 1fr))'}; gap: 8px;">
+                `;
+
+                validSignals.slice(0, 6).forEach(signal => {
+                    // 根据周期类型决定日期格式：分钟线显示时分，日线以上只显示日期
+                    const isIntraday = signal.timeframe === '30' || signal.timeframe === '60';
+                    const dateObj = new Date(signal.date);
+                    const signalDate = isIntraday
+                        ? `${dateObj.toLocaleDateString('zh-CN')} ${dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+                        : dateObj.toLocaleDateString('zh-CN');
+
+                    const scoreColor = signal.score >= 5 ? '#10b981' : signal.score >= 4 ? '#f59e0b' : '#9ca3af';
+                    const directionIcon = signal.direction === 'LONG' ? '📈' : signal.direction === 'SHORT' ? '📉' : '➡️';
+                    const directionColor = signal.direction === 'LONG' ? '#10b981' : signal.direction === 'SHORT' ? '#ef4444' : '#9ca3af';
+
+                    signalsHtml += `
+                        <div style="background: #111827; padding: 8px; border-radius: 4px; border-left: 2px solid ${scoreColor};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="color: ${directionColor}; font-size: 11px;">${directionIcon} ${signal.direction === 'LONG' ? '做多' : signal.direction === 'SHORT' ? '做空' : '中性'}</span>
+                                <span style="color: ${scoreColor}; font-size: 13px; font-weight: 600;">${signal.score}分</span>
+                            </div>
+                            <div style="color: #9ca3af; font-size: 10px; margin-bottom: 3px;">
+                                📅 ${signalDate} · 📊 ${signal.timeframe || '-'}
+                            </div>
+                            ${signal.reason ? `<div style="color: #d1d5db; font-size: 10px; line-height: 1.3; margin-top: 3px;">${signal.reason.substring(0, 60)}${signal.reason.length > 60 ? '...' : ''}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                signalsHtml += `
+                        </div>
+                    </div>
+                `;
+
+                // 将信号卡片添加到容器末尾
+                container.insertAdjacentHTML('beforeend', signalsHtml);
+
+            } catch (error) {
+                console.error('加载历史信号失败:', error);
+            }
         }
 
         // 在弹窗中渲染多周期分析结果
@@ -3567,20 +4520,26 @@
             const midAnalysis = generatePhaseAnalysis(midTerm, 'mid');
             const longAnalysis = generatePhaseAnalysis(longTerm, 'long');
 
+            // 检测是否为移动端
+            const isMobile = window.innerWidth < 768;
+
             let html = '<div style="text-align: left;">';
 
-            // 三个阶段卡片
-            html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">';
-            html += renderPhaseCard('⚡ 短线', shortAnalysis, '#3b82f6', '30分/60分/日线');
-            html += renderPhaseCard('📈 中线', midAnalysis, '#8b5cf6', '60分/日线/周线');
-            html += renderPhaseCard('🎯 长线', longAnalysis, '#10b981', '日线/周线/月线');
+            // 三个阶段卡片 - 移动端垂直排列，桌面端横向排列
+            html += `<div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin-bottom: 8px;">`;
+            html += renderPhaseCard('⚡ 短线', shortAnalysis, '#3b82f6', '30分/60分/日线', isMobile, true);
+            html += renderPhaseCard('📈 中线', midAnalysis, '#8b5cf6', '60分/日线/周线', isMobile, true);
+            html += renderPhaseCard('🎯 长线', longAnalysis, '#10b981', '日线/周线/月线', isMobile, true);
             html += '</div>';
 
             // 综合建议
-            html += generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis);
+            html += generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis, isMobile, true);
 
             html += '</div>';
             container.innerHTML = html;
+
+            // 异步加载历史信号
+            setTimeout(() => loadAndDisplaySignals(code, container), 100);
         }
 
         // 调整关注列表顺序
@@ -3675,6 +4634,98 @@
             } catch (error) {
                 console.error('删除失败:', error);
                 addLog('删除失败', `错误: ${error.message}`);
+            }
+        }
+
+        // 批量选择模式
+        let isBatchSelectMode = false;
+        let selectedItems = new Set();
+
+        function toggleBatchSelect() {
+            isBatchSelectMode = !isBatchSelectMode;
+            selectedItems.clear();
+
+            const batchSelectBtn = document.getElementById('batchSelectBtn');
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+
+            if (isBatchSelectMode) {
+                batchSelectBtn.textContent = '✓ 完成选择';
+                batchSelectBtn.style.background = '#059669';
+                batchDeleteBtn.style.display = 'inline-block';
+                addLog('批量选择', '已进入批量选择模式');
+            } else {
+                batchSelectBtn.textContent = '☑️ 批量选择';
+                batchSelectBtn.style.background = '#8b5cf6';
+                batchDeleteBtn.style.display = 'none';
+                addLog('批量选择', '已退出批量选择模式');
+            }
+
+            // 重新渲染以显示/隐藏复选框
+            renderWatchlistCards();
+        }
+
+        function toggleItemSelection(code) {
+            if (selectedItems.has(code)) {
+                selectedItems.delete(code);
+            } else {
+                selectedItems.add(code);
+            }
+
+            // 更新删除按钮文本
+            const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+            batchDeleteBtn.textContent = `🗑️ 删除选中 (${selectedItems.size})`;
+        }
+
+        function isItemSelected(code) {
+            return selectedItems.has(code);
+        }
+
+        async function batchDeleteSelected() {
+            if (selectedItems.size === 0) {
+                alert('请先选择要删除的股票');
+                return;
+            }
+
+            const count = selectedItems.size;
+            if (!confirm(`确定要删除选中的 ${count} 只股票吗？\n\n此操作不可撤销！`)) {
+                return;
+            }
+
+            addLog('批量删除', `正在删除 ${count} 只股票...`);
+
+            let successCount = 0;
+            let failCount = 0;
+            const errors = [];
+
+            for (const code of selectedItems) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        errors.push(`${code}: 删除失败`);
+                    }
+                } catch (error) {
+                    failCount++;
+                    errors.push(`${code}: ${error.message}`);
+                }
+            }
+
+            // 清空选择并退出批量选择模式
+            selectedItems.clear();
+            toggleBatchSelect();
+
+            // 刷新列表
+            refreshWatchlist();
+
+            // 显示结果
+            if (failCount === 0) {
+                alert(`✅ 批量删除成功！\n\n已删除 ${successCount} 只股票`);
+                addLog('批量删除完成', `成功删除 ${successCount} 只股票`);
+            } else {
+                alert(`⚠️ 批量删除完成\n\n成功: ${successCount} 只\n失败: ${failCount} 只\n\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? '\n...' : ''}`);
+                addLog('批量删除完成', `成功 ${successCount}，失败 ${failCount}`);
             }
         }
 
@@ -3949,14 +5000,30 @@
                     return;
                 }
 
-                const html = data.items.map(pattern => `
+                const html = data.items.map((pattern, index) => `
             <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <strong style="color: #f9fafb; font-size: 14px;">${pattern.pattern_type}</strong>
-                    <span style="color: ${pattern.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${pattern.enabled ? '已启用' : '已禁用'}</span>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="pattern_enabled_${index}" ${pattern.enabled ? 'checked' : ''} style="width: 16px; height: 16px;">
+                        <span style="color: ${pattern.enabled ? '#10b981' : '#9ca3af'}; font-weight: 600; font-size: 12px;">${pattern.enabled ? '已启用' : '已禁用'}</span>
+                    </label>
                 </div>
-                <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">精度模式: ${pattern.accuracy_mode || '默认'}</div>
-                <div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">最小置信度: ${pattern.min_confidence || 0.5}</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <div>
+                        <label style="color: #9ca3af; font-size: 12px; display: block; margin-bottom: 4px;">精度模式</label>
+                        <select id="pattern_accuracy_${index}" class="form-input" style="width: 100%; font-size: 12px;">
+                            <option value="strict" ${pattern.accuracy_mode === 'strict' ? 'selected' : ''}>严格模式</option>
+                            <option value="normal" ${pattern.accuracy_mode === 'normal' || !pattern.accuracy_mode ? 'selected' : ''}>标准模式</option>
+                            <option value="loose" ${pattern.accuracy_mode === 'loose' ? 'selected' : ''}>宽松模式</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="color: #9ca3af; font-size: 12px; display: block; margin-bottom: 4px;">最小置信度</label>
+                        <input type="number" id="pattern_confidence_${index}" class="form-input" value="${pattern.min_confidence || 0.5}" min="0" max="1" step="0.1" style="width: 100%; font-size: 12px;">
+                    </div>
+                </div>
+                <input type="hidden" id="pattern_id_${index}" value="${pattern.pattern_type}">
             </div>
         `).join('');
 
@@ -3966,6 +5033,45 @@
                 console.error('加载形态识别配置失败:', error);
                 content.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
                 addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function savePatternsConfig() {
+            try {
+                const content = document.getElementById('patternsConfig');
+                const inputs = content.querySelectorAll('input[type="hidden"]');
+                const configs = [];
+
+                inputs.forEach((input, index) => {
+                    const patternType = input.value;
+                    const enabled = document.getElementById(`pattern_enabled_${index}`).checked;
+                    const accuracyMode = document.getElementById(`pattern_accuracy_${index}`).value;
+                    const minConfidence = parseFloat(document.getElementById(`pattern_confidence_${index}`).value);
+
+                    configs.push({
+                        pattern_type: patternType,
+                        enabled: enabled,
+                        accuracy_mode: accuracyMode,
+                        min_confidence: minConfidence
+                    });
+                });
+
+                const response = await fetch(`${API_BASE}/api/v1/config/patterns/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ configs })
+                });
+
+                if (response.ok) {
+                    alert('✅ 形态识别配置保存成功！');
+                    addLog('保存成功', '形态识别配置已更新');
+                    loadPatternsConfig();
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('保存失败', error.message);
             }
         }
 
@@ -3986,18 +5092,28 @@
 
                 let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">';
 
-                data.items.forEach(tf => {
+                data.items.forEach((tf, index) => {
                     const statusClass = tf.enabled ? 'indicator-bullish' : 'indicator-neutral';
                     const statusText = tf.enabled ? '已启用' : '已禁用';
 
                     html += `
                         <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span style="font-weight: 600;">${tf.timeframe_name}</span>
-                                <span class="${statusClass}" style="font-size: 12px;">${statusText}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span style="font-weight: 600; font-size: 14px;">${tf.timeframe_name}</span>
+                                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                    <input type="checkbox" id="tf_enabled_${index}" ${tf.enabled ? 'checked' : ''} style="width: 16px; height: 16px;">
+                                    <span class="${statusClass}" style="font-size: 12px;">${statusText}</span>
+                                </label>
                             </div>
-                            <div style="font-size: 12px; color: #9ca3af;">优先级: ${tf.priority}</div>
-                            <div style="font-size: 12px; color: #9ca3af;">数据保留: ${tf.data_retention_days}天</div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #9ca3af; font-size: 11px; display: block; margin-bottom: 4px;">优先级 (1-10)</label>
+                                <input type="number" id="tf_priority_${index}" class="form-input" value="${tf.priority}" min="1" max="10" style="width: 100%; font-size: 12px;">
+                            </div>
+                            <div>
+                                <label style="color: #9ca3af; font-size: 11px; display: block; margin-bottom: 4px;">数据保留天数</label>
+                                <input type="number" id="tf_retention_${index}" class="form-input" value="${tf.data_retention_days || 90}" min="7" max="365" style="width: 100%; font-size: 12px;">
+                            </div>
+                            <input type="hidden" id="tf_id_${index}" value="${tf.timeframe}">
                         </div>
                     `;
                 });
@@ -4012,6 +5128,45 @@
             }
         }
 
+        async function saveTimeframesConfig() {
+            try {
+                const content = document.getElementById('timeframesConfig');
+                const hiddenInputs = content.querySelectorAll('input[type="hidden"]');
+                const configs = [];
+
+                hiddenInputs.forEach((input, index) => {
+                    const timeframe = input.value;
+                    const enabled = document.getElementById(`tf_enabled_${index}`).checked;
+                    const priority = parseInt(document.getElementById(`tf_priority_${index}`).value);
+                    const retentionDays = parseInt(document.getElementById(`tf_retention_${index}`).value);
+
+                    configs.push({
+                        timeframe: timeframe,
+                        enabled: enabled,
+                        priority: priority,
+                        data_retention_days: retentionDays
+                    });
+                });
+
+                const response = await fetch(`${API_BASE}/api/v1/config/timeframes/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ configs })
+                });
+
+                if (response.ok) {
+                    alert('✅ 时间周期配置保存成功！');
+                    addLog('保存成功', '时间周期配置已更新');
+                    loadTimeframesConfig();
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('保存失败', error.message);
+            }
+        }
+
         async function loadFeishuConfig() {
             console.log('加载飞书配置');
             addLog('加载配置', '飞书通知配置');
@@ -4022,23 +5177,43 @@
 
                 const content = document.getElementById('feishuConfig');
 
-                const statusClass = data.enabled ? 'indicator-bullish' : 'indicator-neutral';
-                const statusText = data.enabled ? '已启用' : '已禁用';
-
                 content.innerHTML = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                        <div style="color: #9ca3af; font-size: 12px;">状态</div>
-                        <div class="${statusClass}">${statusText}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">信号触发</div>
-                        <div style="color: #f9fafb;">${data.trigger_on_signal ? '是' : '否'}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">风险触发</div>
-                        <div style="color: #f9fafb;">${data.trigger_on_risk ? '是' : '否'}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">最小评分</div>
-                        <div style="color: #f9fafb;">${data.min_signal_score || 0}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">限流(分钟)</div>
-                        <div style="color: #f9fafb;">${data.rate_limit_minutes || 0}</div>
-                        <div style="color: #9ca3af; font-size: 12px; grid-column: 1 / -1;">Webhook URL</div>
-                        <div style="color: #f9fafb; font-size: 11px; word-break: break-all; grid-column: 1 / -1;">${data.webhook_url || '未设置'}</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">启用飞书通知</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="feishu_enabled" ${data.enabled ? 'checked' : ''} style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">${data.enabled ? '已启用' : '已禁用'}</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">信号触发通知</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="feishu_trigger_signal" ${data.trigger_on_signal ? 'checked' : ''} style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">${data.trigger_on_signal ? '已启用' : '已禁用'}</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">风险触发通知</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="feishu_trigger_risk" ${data.trigger_on_risk ? 'checked' : ''} style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">${data.trigger_on_risk ? '已启用' : '已禁用'}</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">最小信号评分</label>
+                            <input type="number" id="feishu_min_score" class="form-input" value="${data.min_signal_score || 0}" min="0" max="10" style="width: 100%;">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">限流时间（分钟）</label>
+                            <input type="number" id="feishu_rate_limit" class="form-input" value="${data.rate_limit_minutes || 0}" min="0" max="1440" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">相同通知的最小间隔时间</span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">Webhook URL</label>
+                            <input type="text" id="feishu_webhook" class="form-input" value="${data.webhook_url || ''}" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..." style="width: 100%; font-family: monospace; font-size: 12px;">
+                            <span style="color: #6b7280; font-size: 11px;">飞书机器人的Webhook地址</span>
+                        </div>
                     </div>
                 `;
 
@@ -4047,6 +5222,54 @@
                 console.error('加载飞书配置失败:', error);
                 document.getElementById('feishuConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
                 addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function saveFeishuConfig() {
+            try {
+                const config = {
+                    enabled: document.getElementById('feishu_enabled').checked,
+                    trigger_on_signal: document.getElementById('feishu_trigger_signal').checked,
+                    trigger_on_risk: document.getElementById('feishu_trigger_risk').checked,
+                    min_signal_score: parseInt(document.getElementById('feishu_min_score').value),
+                    rate_limit_minutes: parseInt(document.getElementById('feishu_rate_limit').value),
+                    webhook_url: document.getElementById('feishu_webhook').value
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    alert('✅ 飞书通知配置保存成功！');
+                    addLog('保存成功', '飞书通知配置已更新');
+                    loadFeishuConfig();
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('保存失败', error.message);
+            }
+        }
+
+        async function testFeishuNotification() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/config/feishu/test`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert('✅ 测试通知已发送！请检查飞书是否收到消息。');
+                    addLog('测试成功', '飞书测试通知已发送');
+                } else {
+                    throw new Error('发送失败');
+                }
+            } catch (error) {
+                alert(`❌ 测试失败: ${error.message}`);
+                addLog('测试失败', error.message);
             }
         }
 
@@ -4060,24 +5283,42 @@
 
                 const content = document.getElementById('riskConfig');
 
-                const statusClass = data.enabled ? 'indicator-bullish' : 'indicator-neutral';
-                const statusText = data.enabled ? '已启用' : '已禁用';
-
-                const stopLossClass = data.stop_loss_enabled ? 'indicator-bullish' : 'indicator-neutral';
-                const stopLossText = data.stop_loss_enabled ? '已启用' : '已禁用';
-
                 content.innerHTML = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
-                        <div style="color: #9ca3af; font-size: 12px;">状态</div>
-                        <div class="${statusClass}">${statusText}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">止损功能</div>
-                        <div class="${stopLossClass}">${stopLossText}</div>
-                        <div style="color: #9ca3af; font-size: 12px;">最大亏损比例</div>
-                        <div style="color: #f9fafb;">${(data.max_loss_ratio || 0) * 100}%</div>
-                        <div style="color: #9ca3af; font-size: 12px;">最大仓位比例</div>
-                        <div style="color: #f9fafb;">${(data.max_position_ratio || 0) * 100}%</div>
-                        <div style="color: #9ca3af; font-size: 12px;">预警亏损比例</div>
-                        <div style="color: #f9fafb;">${(data.warning_loss_ratio || 0) * 100}%</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">启用风险监控</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="risk_enabled" ${data.enabled ? 'checked' : ''} style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">${data.enabled ? '已启用' : '已禁用'}</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">启用止损功能</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="risk_stop_loss" ${data.stop_loss_enabled ? 'checked' : ''} style="width: 18px; height: 18px;">
+                                <span style="color: #f9fafb; font-size: 13px;">${data.stop_loss_enabled ? '已启用' : '已禁用'}</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">最大亏损比例 (%)</label>
+                            <input type="number" id="risk_max_loss" class="form-input" value="${(data.max_loss_ratio || 0) * 100}" min="1" max="50" step="0.5" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">单笔交易最大允许亏损百分比</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">最大仓位比例 (%)</label>
+                            <input type="number" id="risk_max_position" class="form-input" value="${(data.max_position_ratio || 0) * 100}" min="1" max="100" step="1" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">单个股票最大仓位占总资金比例</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">预警亏损比例 (%)</label>
+                            <input type="number" id="risk_warning_loss" class="form-input" value="${(data.warning_loss_ratio || 0) * 100}" min="1" max="30" step="0.5" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">触发预警的亏损比例</span>
+                        </div>
+                        <div>
+                            <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">连续亏损限制</label>
+                            <input type="number" id="risk_max_consecutive" class="form-input" value="${data.max_consecutive_losses || 3}" min="1" max="10" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">连续亏损达到此次数后停止交易</span>
+                        </div>
                     </div>
                 `;
 
@@ -4086,6 +5327,36 @@
                 console.error('加载风险监控配置失败:', error);
                 document.getElementById('riskConfig').innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">加载失败: ${error.message}</div>`;
                 addLog('加载失败', `错误: ${error.message}`);
+            }
+        }
+
+        async function saveRiskConfig() {
+            try {
+                const config = {
+                    enabled: document.getElementById('risk_enabled').checked,
+                    stop_loss_enabled: document.getElementById('risk_stop_loss').checked,
+                    max_loss_ratio: parseFloat(document.getElementById('risk_max_loss').value) / 100,
+                    max_position_ratio: parseFloat(document.getElementById('risk_max_position').value) / 100,
+                    warning_loss_ratio: parseFloat(document.getElementById('risk_warning_loss').value) / 100,
+                    max_consecutive_losses: parseInt(document.getElementById('risk_max_consecutive').value)
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/config/risk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    alert('✅ 风险监控配置保存成功！');
+                    addLog('保存成功', '风险监控配置已更新');
+                    loadRiskConfig();
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('保存失败', error.message);
             }
         }
 
@@ -4237,6 +5508,131 @@
             }
         }
 
+        // ========== 系统设置管理 ==========
+        function saveAllSettings() {
+            try {
+                const settings = {
+                    // 分析配置
+                    default_timeframe: document.getElementById('setting_default_timeframe')?.value || 'daily',
+                    signal_threshold: document.getElementById('setting_signal_threshold')?.value || 3,
+
+                    // 多周期分析默认周期
+                    tf_30: document.getElementById('setting_tf_30')?.checked || false,
+                    tf_60: document.getElementById('setting_tf_60')?.checked || false,
+                    tf_daily: document.getElementById('setting_tf_daily')?.checked || true,
+                    tf_weekly: document.getElementById('setting_tf_weekly')?.checked || true,
+                    tf_monthly: document.getElementById('setting_tf_monthly')?.checked || false,
+
+                    // 关注列表配置
+                    watchlist_columns: document.getElementById('setting_watchlist_columns')?.value || 4,
+
+                    // 缓存配置
+                    enable_cache: document.getElementById('setting_enable_cache')?.checked || true
+                };
+
+                localStorage.setItem('wyckoff_settings', JSON.stringify(settings));
+                alert('✅ 配置已保存');
+                addLog('系统配置', '配置已保存到本地');
+
+                // 重新渲染关注列表以应用新的列数设置
+                if (watchlistData && watchlistData.items.length > 0) {
+                    renderWatchlistCards();
+                }
+
+            } catch (error) {
+                console.error('保存配置失败:', error);
+                alert('❌ 保存配置失败: ' + error.message);
+            }
+        }
+
+        function loadAllSettings() {
+            try {
+                const saved = localStorage.getItem('wyckoff_settings');
+                if (!saved) {
+                    console.log('没有找到保存的配置，使用默认值');
+                    return;
+                }
+
+                const settings = JSON.parse(saved);
+
+                // 应用分析配置
+                if (document.getElementById('setting_default_timeframe')) {
+                    document.getElementById('setting_default_timeframe').value = settings.default_timeframe || 'daily';
+                }
+                if (document.getElementById('setting_signal_threshold')) {
+                    document.getElementById('setting_signal_threshold').value = settings.signal_threshold || 3;
+                }
+
+                // 应用多周期分析默认周期
+                if (document.getElementById('setting_tf_30')) {
+                    document.getElementById('setting_tf_30').checked = settings.tf_30 !== false;
+                }
+                if (document.getElementById('setting_tf_60')) {
+                    document.getElementById('setting_tf_60').checked = settings.tf_60 !== false;
+                }
+                if (document.getElementById('setting_tf_daily')) {
+                    document.getElementById('setting_tf_daily').checked = settings.tf_daily !== false;
+                }
+                if (document.getElementById('setting_tf_weekly')) {
+                    document.getElementById('setting_tf_weekly').checked = settings.tf_weekly !== false;
+                }
+                if (document.getElementById('setting_tf_monthly')) {
+                    document.getElementById('setting_tf_monthly').checked = settings.tf_monthly || false;
+                }
+
+                // 应用关注列表配置
+                if (document.getElementById('setting_watchlist_columns')) {
+                    document.getElementById('setting_watchlist_columns').value = settings.watchlist_columns || 4;
+                }
+
+                // 应用缓存配置
+                if (document.getElementById('setting_enable_cache')) {
+                    document.getElementById('setting_enable_cache').checked = settings.enable_cache !== false;
+                }
+
+                console.log('配置已加载:', settings);
+                addLog('系统配置', '已加载保存的配置');
+
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+
+        function resetAllSettings() {
+            if (!confirm('确定要重置所有配置为默认值吗？')) {
+                return;
+            }
+
+            localStorage.removeItem('wyckoff_settings');
+
+            // 重置为默认值
+            if (document.getElementById('setting_default_timeframe')) {
+                document.getElementById('setting_default_timeframe').value = 'daily';
+            }
+            if (document.getElementById('setting_signal_threshold')) {
+                document.getElementById('setting_signal_threshold').value = 3;
+            }
+            if (document.getElementById('setting_watchlist_columns')) {
+                document.getElementById('setting_watchlist_columns').value = 4;
+            }
+
+            // 重置多周期复选框
+            if (document.getElementById('setting_tf_30')) document.getElementById('setting_tf_30').checked = true;
+            if (document.getElementById('setting_tf_60')) document.getElementById('setting_tf_60').checked = true;
+            if (document.getElementById('setting_tf_daily')) document.getElementById('setting_tf_daily').checked = true;
+            if (document.getElementById('setting_tf_weekly')) document.getElementById('setting_tf_weekly').checked = true;
+            if (document.getElementById('setting_tf_monthly')) document.getElementById('setting_tf_monthly').checked = false;
+            if (document.getElementById('setting_enable_cache')) document.getElementById('setting_enable_cache').checked = true;
+
+            alert('✅ 配置已重置为默认值');
+            addLog('系统配置', '配置已重置');
+
+            // 重新渲染关注列表
+            if (watchlistData && watchlistData.items.length > 0) {
+                renderWatchlistCards();
+            }
+        }
+
         // ========== 页面加载 ==========
         window.addEventListener('DOMContentLoaded', () => {
             console.log('DOM加载完成');
@@ -4247,6 +5643,9 @@
 
             // 加载API配置
             loadApiConfig();
+
+            // 加载系统设置
+            loadAllSettings();
 
             setTimeout(() => {
                 startHealthCheck();
@@ -4394,7 +5793,8 @@
             }
 
             const isRed = q.close < q.open;
-            const change = ((q.close - q.open) / q.open * 100).toFixed(2);
+            // 计算涨跌幅：相对于前一日收盘价
+            const change = prevQ ? ((q.close - prevQ.close) / prevQ.close * 100).toFixed(2) : '0.00';
             const changeSign = change >= 0 ? '+' : '';
 
             // 获取当前时间周期
@@ -4611,6 +6011,7 @@
                                 <div style="background: #111827; padding: 6px; border-radius: 4px;">
                                     <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">收</div>
                                     <div style="font-size: 24px; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                                    ${getSignalStrength(q)}
                                 </div>
                             </div>
 
@@ -4624,7 +6025,22 @@
                                 <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
                                     <div style="color: #9ca3af; font-size: 11px; margin-bottom: 4px;">成交额</div>
                                     <div style="font-size: 13px; font-weight: 500;">${q.amount ? (q.amount / 100000000).toFixed(2) + '亿' : 'N/A'}</div>
-                                    ${q.obv ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">OBV${(q.obv / 1000000).toFixed(1)}M</div>` : ''}
+                                    ${q.obv ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px; cursor: help;" title="${(() => {
+                                        let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M\n\n指标说明：\n上涨日累加成交量\n下跌日累减成交量\n用于验证价格趋势`;
+                                        if (prevQ && prevQ.obv != null) {
+                                            const change = q.obv - prevQ.obv;
+                                            const changeM = (change / 1000000).toFixed(2);
+                                            const changePercent = (change / Math.abs(prevQ.obv) * 100).toFixed(2);
+                                            if (change > 0) {
+                                                tooltip += `\n\n较昨日：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
+                                            } else if (change < 0) {
+                                                tooltip += `\n\n较昨日：${changeM}M (${changePercent}%)\n📉 资金流出`;
+                                            } else {
+                                                tooltip += `\n\n较昨日：持平\n➡️ 资金平衡`;
+                                            }
+                                        }
+                                        return tooltip;
+                                    })()}">OBV${(q.obv / 1000000).toFixed(1)}M</div>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -5036,6 +6452,35 @@
             }, 3000);
         }
 
+        // 保存基础配置
+        async function saveBasicConfig() {
+            try {
+                const config = {
+                    default_kline_count: parseInt(document.getElementById('defaultKlineCount').value),
+                    min_score: parseInt(document.getElementById('minScore').value),
+                    max_score: parseInt(document.getElementById('maxScore').value),
+                    signal_expiry_days: parseInt(document.getElementById('signalExpiryDays').value),
+                    auto_update_freq: document.getElementById('autoUpdateFreq').value
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/config/basic`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    alert('✅ 基础配置保存成功！');
+                    addLog('保存成功', '基础配置已更新');
+                } else {
+                    throw new Error('保存失败');
+                }
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('保存失败', error.message);
+            }
+        }
+
         // 测试API连接
         async function testApiConnection() {
             const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
@@ -5095,19 +6540,32 @@
             tooltipElement.id = 'phase-tooltip-container';
             document.body.appendChild(tooltipElement);
 
-            // 使用事件委托处理所有phase-badge的hover
+            // 使用事件委托处理所有带tooltip的元素的hover
             document.addEventListener('mouseover', function(e) {
-                const target = e.target.closest('.phase-badge');
+                // 匹配所有可能的tooltip元素（包括已保存title的）
+                const target = e.target.closest('.phase-badge, [data-tooltip], [title], [data-original-title]');
                 if (target) {
-                    const tooltipText = target.getAttribute('data-tooltip');
+                    // 优先级：data-tooltip > title > data-original-title
+                    let tooltipText = target.getAttribute('data-tooltip') ||
+                                     target.getAttribute('title') ||
+                                     target.getAttribute('data-original-title');
+
                     if (tooltipText) {
+                        // 将|替换为真正的换行符
+                        tooltipText = tooltipText.replace(/\|/g, '\n');
                         showTooltip(target, tooltipText);
+
+                        // 如果有title属性且还没保存，保存到data-original-title并移除title
+                        if (target.hasAttribute('title') && !target.hasAttribute('data-original-title')) {
+                            target.setAttribute('data-original-title', target.getAttribute('title'));
+                            target.removeAttribute('title');
+                        }
                     }
                 }
             }, true);
 
             document.addEventListener('mouseout', function(e) {
-                const target = e.target.closest('.phase-badge');
+                const target = e.target.closest('.phase-badge, [data-tooltip], [data-original-title]');
                 if (target) {
                     hideTooltip();
                 }
@@ -5117,7 +6575,8 @@
         function showTooltip(element, text) {
             if (!tooltipElement) return;
 
-            tooltipElement.textContent = text;
+            // 设置tooltip内容，支持换行
+            tooltipElement.innerHTML = text.replace(/\n/g, '<br>');
             tooltipElement.style.display = 'block';
 
             // 计算位置

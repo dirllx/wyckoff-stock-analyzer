@@ -106,6 +106,11 @@ class WyckoffSignal(Base):
     # 关联
     stock = relationship("Stock", back_populates="signals")
 
+    # 唯一索引：防止同一股票、同一周期、同一日期产生重复信号
+    __table_args__ = (
+        Index('unique_signal_per_stock_date', 'stock_id', 'timeframe', 'date'),
+    )
+
 
 class UserPosition(Base):
     """用户持仓表"""

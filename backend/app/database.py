@@ -36,8 +36,33 @@ engine = create_engine(
 # 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Redis连接
-redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
+# Redis连接（延迟初始化，支持可选）
+redis_client = None
+
+def get_redis():
+    """
+    获取Redis客户端（延迟初始化）
+    如果Redis不可用，使用模拟Redis（内存缓存）
+    """
+    global redis_client
+    if redis_client is None:
+        try:
+            redis_client = Redis.from_url(
+                REDIS_URL,
+                decode_responses=True,
+                socket_connect_timeout=2,  # 连接超时2秒
+                socket_timeout=2,           # 读写超时2秒
+                retry_on_timeout=True      # 超时自动重试
+            )
+            # 测试连接
+            redis_client.ping()
+            print("✅ Redis连接成功")
+        except Exception as e:
+            print(f"⚠️ Redis连接失败，使用模拟Redis（内存缓存）: {e}")
+            # 使用模拟Redis
+            from app.services.mock_redis import get_mock_redis_client
+            redis_client = get_mock_redis_client()
+    return redis_client
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -84,8 +109,11 @@ def test_redis_connection() -> bool:
     测试Redis连接
     """
     try:
-        redis_client.ping()
-        return True
+        client = get_redis()
+        if client:
+            client.ping()
+            return True
+        return False
     except Exception as e:
         print(f"Redis连接失败: {e}")
         return False

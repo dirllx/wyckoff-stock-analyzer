@@ -8,6 +8,7 @@ import sys
 
 from app.database import init_db
 from app.api import health_router, stocks_router, config_router, patterns_router, multi_timeframe_router, feishu_router, risk_router, realtime_router, watchlist_router
+from app.api import user_settings_router
 
 # 配置日志
 logger.remove()
@@ -70,6 +71,7 @@ async def root():
 app.include_router(health_router, prefix="/api/v1", tags=["健康检查"])
 app.include_router(stocks_router, prefix="/api/v1", tags=["股票分析"])
 app.include_router(config_router)
+app.include_router(user_settings_router)
 app.include_router(patterns_router)
 app.include_router(multi_timeframe_router)
 app.include_router(feishu_router)

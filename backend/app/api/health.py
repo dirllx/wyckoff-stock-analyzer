@@ -27,7 +27,9 @@ def get_service_status():
             "type": "sqlite"
         },
         "redis": {
-            "status": "connected" if test_redis_connection() else "disconnected"
+            "status": "connected" if test_redis_connection() else "disconnected",
+            "url": "redis://localhost:6379/0",
+            "cache_enabled": test_redis_connection()
         }
     }
 

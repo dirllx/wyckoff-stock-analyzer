@@ -135,13 +135,13 @@ class DataFetcher:
 
             # 判断市场和获取数据
             if code.startswith("0") or code.startswith("3") or code.startswith("6"):
-                # A股
+                # A股 - 使用前复权数据
                 df = ak.stock_zh_a_hist(
                     symbol=code,
                     period=period,
                     start_date=start_date,
                     end_date=end_date,
-                    adjust=""
+                    adjust="qfq"  # 前复权
                 )
             elif "." in code or len(code) == 5:
                 # 港股

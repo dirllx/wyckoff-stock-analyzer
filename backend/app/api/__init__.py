@@ -10,6 +10,7 @@ from .feishu import router as feishu_router
 from .risk import router as risk_router
 from .realtime import router as realtime_router
 from .watchlist import router as watchlist_router
+from .user_settings import router as user_settings_router
 
 __all__ = [
     "health_router",
@@ -20,5 +21,6 @@ __all__ = [
     "feishu_router",
     "risk_router",
     "realtime_router",
-    "watchlist_router"
+    "watchlist_router",
+    "user_settings_router"
 ]
