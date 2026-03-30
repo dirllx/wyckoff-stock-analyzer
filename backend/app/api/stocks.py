@@ -22,39 +22,9 @@ from app.services.redis_service import (
     cache_stock_data,
     RedisService
 )
+from app.utils.converters import dict_to_stock_quotes
 
 router = APIRouter()
-
-
-def _dict_to_stock_quotes(quotes_dict: list, stock_id: int, timeframe: str) -> list:
-    """
-    将字典列表转换为StockQuote对象列表
-    """
-    quotes = []
-    for q_dict in quotes_dict:
-        quote = StockQuote(
-            stock_id=stock_id,
-            timeframe=timeframe,
-            date=datetime.strptime(q_dict["date"], "%Y-%m-%d %H:%M:%S"),
-            open=q_dict.get("open"),
-            high=q_dict.get("high"),
-            low=q_dict.get("low"),
-            close=q_dict.get("close"),
-            volume=q_dict.get("volume"),
-            ma5=q_dict.get("ma5"),
-            ma10=q_dict.get("ma10"),
-            ma15=q_dict.get("ma15"),
-            ma20=q_dict.get("ma20"),
-            ma30=q_dict.get("ma30"),
-            ma60=q_dict.get("ma60"),
-            ma90=q_dict.get("ma90"),
-            ma120=q_dict.get("ma120"),
-            ma250=q_dict.get("ma250"),
-            volume_ma5=q_dict.get("volume_ma5"),
-            obv=q_dict.get("obv")
-        )
-        quotes.append(quote)
-    return quotes
 
 
 @router.post("/stocks/analyze", response_model=StockAnalysisResponse)
@@ -148,7 +118,7 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
                 logger.info(f"✅ 从缓存获取K线数据: {request.code} {request.timeframe} ({len(quotes)}条)")
                 # 如果是字典列表，转换为StockQuote对象
                 if quotes and isinstance(quotes[0], dict):
-                    quotes = _dict_to_stock_quotes(quotes, stock.id, request.timeframe)
+                    quotes = dict_to_stock_quotes(quotes, stock.id, request.timeframe)
 
         if not quotes:
             # 缓存未命中或指定了end_date，更新数据
