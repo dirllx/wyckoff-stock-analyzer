@@ -74,8 +74,8 @@ class DataFetcher:
                             "market": "港股",
                             "industry": ""
                         }
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"获取港股{code}名称失败: {e}")
                 return {"code": code, "market": "港股", "name": "", "industry": ""}
 
             # 科创板A股：688开头（必须在基金判断之前）
@@ -113,8 +113,8 @@ class DataFetcher:
                             "market": "基金",
                             "industry": "ETF"
                         }
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"获取基金{code}信息失败: {e}")
                 # 如果获取失败，返回默认信息
                 return {"code": code, "market": "基金", "name": "", "industry": "ETF"}
 
@@ -154,8 +154,8 @@ class DataFetcher:
                             "market": "港股",
                             "industry": ""
                         }
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"获取港股{code}名称失败: {e}")
                 return {"code": code, "market": "港股", "name": "", "industry": ""}
             else:
                 raise ValueError(f"无法识别股票代码: {code}")
