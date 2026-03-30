@@ -20,9 +20,9 @@ class RedisService:
     # 缓存过期时间（秒）
     TTL = {
         "stock_data": 3600,          # 股票数据（日线/周线/月线）：1小时
-        "stock_data_minute": 300,    # 股票数据（分钟线）：5分钟 - 交易时段内实时更新
+        "stock_data_minute": 60,     # 股票数据（分钟线）：1分钟 - 交易时段内实时更新
         "analysis_result": 1800,     # 分析结果（日线/周线/月线）：30分钟
-        "analysis_result_minute": 300,  # 分析结果（分钟线）：5分钟
+        "analysis_result_minute": 60,  # 分析结果（分钟线）：1分钟
         "realtime_quote": 60,        # 实时行情：1分钟
         "batch_analysis": 7200,      # 批量分析：2小时
         "multi_timeframe": 1800,     # 多周期分析：30分钟

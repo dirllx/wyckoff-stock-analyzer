@@ -15,7 +15,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", Arial, sans-serif;
             background: #0a0e27;
             color: #f9fafb;
-            padding: 12px;
+            padding: 6px;
             margin: 0;
             overflow-x: hidden;
         }
@@ -26,31 +26,31 @@
         .card {
             background: #111827;
             border: 1px solid #374151;
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 10px;
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 6px;
         }
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
-        .card-title { font-size: 16px; font-weight: 600; color: #f9fafb; }
-        .form-group { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .card-title { font-size: 14px; font-weight: 600; color: #f9fafb; }
+        .form-group { display: flex; gap: 6px; margin-bottom: 4px; align-items: center; }
         .form-input {
-            padding: 8px 12px;
+            padding: 5px 8px;
             background: #1f2937;
             border: 1px solid #374151;
-            border-radius: 6px;
+            border-radius: 4px;
             color: #f9fafb;
-            font-size: 13px;
+            font-size: 12px;
         }
         .btn {
-            padding: 8px 16px;
+            padding: 5px 10px;
             border: none;
-            border-radius: 6px;
-            font-size: 13px;
+            border-radius: 4px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -66,28 +66,28 @@
         /* 主图容器 */
         .main-chart-container {
             background: #1f2937;
-            border-radius: 10px;
-            padding: 12px;
-            height: 500px;
+            border-radius: 6px;
+            padding: 8px;
+            height: 328px;
             border: 1px solid #374151;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         /* 副图容器 */
         .subchart-container {
             background: #1f2937;
-            border-radius: 10px;
-            padding: 12px;
-            height: 200px;
+            border-radius: 6px;
+            padding: 8px;
+            height: 84px;
             border: 1px solid #374151;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         /* 表格容器 */
         .table-container {
             background: #1f2937;
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 6px;
+            padding: 8px;
             overflow-x: auto;
             max-height: 800px;
             border: 1px solid #374151;
@@ -122,56 +122,56 @@
         .health-status-bar {
             position: fixed;
             top: 0px;
-            right: 8px;
-            background: rgba(17, 24, 39, 0.5);
-            border: 1px solid rgba(55, 65, 81, 0.2);
-            border-radius: 6px;
-            padding: 6px 12px;
+            right: 4px;
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+            border-radius: 3px;
+            padding: 2px 6px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 4px;
             z-index: 1000;
-            font-size: 11px;
-            backdrop-filter: blur(6px);
+            font-size: 9px;
+            backdrop-filter: blur(4px);
         }
 
         .health-indicator {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 3px;
         }
 
         .health-dot {
-            width: 8px;
-            height: 8px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
         }
 
-        .health-dot.healthy { background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .health-dot.error { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .health-dot.healthy { background: #10b981; box-shadow: 0 0 4px #10b981; }
+        .health-dot.error { background: #ef4444; box-shadow: 0 0 4px #ef4444; }
 
         .health-label { color: #9ca3af; }
         .health-value { color: #f9fafb; font-weight: 600; }
-        .health-divider { width: 1px; height: 16px; background: #374151; }
+        .health-divider { width: 1px; height: 10px; background: #374151; }
 
         /* Tab导航 */
         .tab-nav {
             display: flex;
-            gap: 3px;
-            margin-bottom: 10px;
-            padding: 3px;
+            gap: 2px;
+            margin-bottom: 6px;
+            padding: 2px;
             background: #111827;
-            border-radius: 6px;
+            border-radius: 4px;
             border: 1px solid #374151;
         }
         .tab-btn {
-            padding: 6px 12px;
+            padding: 4px 8px;
             background: transparent;
             border: none;
-            border-radius: 5px;
+            border-radius: 3px;
             color: #9ca3af;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 500;
             transition: all 0.2s ease;
             flex: 1;
@@ -239,7 +239,7 @@
         }
         .kline-table th,
         .kline-table td {
-            padding: 10px 8px;
+            padding: 6px 6px;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
@@ -254,13 +254,13 @@
             background: #1f2937;
             color: #f9fafb;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 11px;
             position: sticky;
             top: 0;
             z-index: 10;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding-top: 12px;
-            padding-bottom: 12px;
+            padding-top: 8px;
+            padding-bottom: 8px;
         }
         .kline-table tbody tr:first-child td {
             padding-top: 12px;
@@ -338,9 +338,9 @@
         }
         .phase-badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 8px;
-            font-size: 10px;
+            padding: 1.5px 4px;
+            border-radius: 4px;
+            font-size: 9px;
             font-weight: 600;
             margin-left: 4px;
             cursor: help;
@@ -426,6 +426,13 @@
         .signal-bullish { color: #10b981; font-weight: 600; background: rgba(16, 185, 129, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #10b981; font-size: 12px; }
         .signal-bearish { color: #ef4444; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #ef4444; font-size: 12px; }
         .signal-neutral { color: #9ca3af; font-weight: 600; background: rgba(156, 163, 175, 0.1); padding: 4px 12px; border-radius: 4px; border: 1px solid #9ca3af; font-size: 12px; }
+
+        /* 综合建议面板响应式设计 */
+        @media (max-width: 768px) {
+            .comprehensive-advice-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
 
         /* Indicator 样式 */
         .indicator-item {
@@ -726,8 +733,8 @@
                     <option value="30">30分钟</option>
                     <option value="60">60分钟</option>
                     <option value="daily" selected>日线</option>
-                    <option value="monthly">月线</option>
                     <option value="weekly">周线</option>
+                    <option value="monthly">月线</option>
                 </select>
                 <button class="btn" onclick="analyzeStock()">分析</button>
                 <button class="btn btn-secondary" onclick="clearResult()">清空</button>
@@ -906,7 +913,7 @@
             </div>
 
             <!-- 分析配置 -->
-            <div class="card" style="margin-bottom: 16px;">
+            <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
                     <h3 class="card-title">📊 分析配置</h3>
                 </div>
@@ -949,7 +956,7 @@
             </div>
 
             <!-- 数据配置 -->
-            <div class="card" style="margin-bottom: 16px;">
+            <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
                     <h3 class="card-title">💾 数据配置</h3>
                 </div>
@@ -976,7 +983,7 @@
             </div>
 
             <!-- 显示配置 -->
-            <div class="card" style="margin-bottom: 16px;">
+            <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
                     <h3 class="card-title">🎨 显示配置</h3>
                 </div>
@@ -1013,7 +1020,7 @@
             </div>
 
             <!-- 通知配置 -->
-            <div class="card" style="margin-bottom: 16px;">
+            <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
                     <h3 class="card-title">📱 通知配置</h3>
                 </div>
@@ -1042,7 +1049,7 @@
             </div>
 
             <!-- 交易建议配置 -->
-            <div class="card" style="margin-bottom: 16px;">
+            <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
                     <h3 class="card-title">💰 交易建议配置</h3>
                 </div>
@@ -1295,21 +1302,21 @@
                 tooltip = '▱▱▱▱ 弱势（0格）|收盘价在60日线下方|处于下降趋势';
             }
 
-            // 生成苹果手机信号的条形样式（缩小20%）
+            // 生成苹果手机信号的条形样式（缩小50%）
             // 使用圆角矩形条，底部平齐，高度从左到右递增形成阶梯
             const bars = [];
-            const containerHeight = 16; // 容器总高度（缩小20%: 20px → 16px）
-            const barWidth = 4; // 条宽度（缩小20%: 5px → 4px）
-            const gap = 2; // 间隙（缩小20%: 3px → 2.4px ≈ 2px）
+            const containerHeight = 8; // 容器总高度（缩小50%: 16px → 8px）
+            const barWidth = 2; // 条宽度（缩小50%: 4px → 2px）
+            const gap = 1; // 间隙（缩小50%: 2px → 1px）
 
             for (let i = 1; i <= 4; i++) {
-                const barHeight = (5 + (i * 4)) * 0.8; // 缩小20%: 9→7.2, 13→10.4, 17→13.6, 21→16.8
+                const barHeight = (5 + (i * 4)) * 0.4; // 缩小50%: 7.2→3.6, 10.4→5.2, 13.6→6.8, 16.8→8.4
                 const isActive = i <= strength;
                 // 绿色或白色（不是灰色）
                 const color = isActive ? '#10b981' : '#ffffff';
 
                 // 使用圆角矩形条，底部对齐，形成阶梯状上升
-                bars.push(`<span style="display: inline-block; width: ${barWidth}px; height: ${barHeight}px; background: ${color}; border-radius: 1.5px; margin-right: ${gap}px; vertical-align: bottom; opacity: ${isActive ? '1' : '0.4'};"></span>`);
+                bars.push(`<span style="display: inline-block; width: ${barWidth}px; height: ${barHeight}px; background: ${color}; border-radius: 1px; margin-right: ${gap}px; vertical-align: bottom; opacity: ${isActive ? '1' : '0.4'};"></span>`);
             }
 
             return `<span style="display: inline-block; cursor: help; line-height: ${containerHeight}px;" title="${tooltip}">${bars.join('')}</span>`;
@@ -1524,11 +1531,13 @@
         }
 
         function renderKlineTable(quotes, timeframe = 'daily') {
+            console.log(`🖥️ 渲染表格: 接收到${quotes?.length || 0}条数据`);
             const klineBody = document.getElementById('klineBody');
             const klineTableHead = document.getElementById('klineTableHead');
 
             // 直接使用传入的数据（已在analyzeStock中过去重）
             const uniqueQuotes = quotes;
+            console.log(`🖥️ 准备渲染${uniqueQuotes?.length || 0}条数据到表格`);
 
             // 检查哪些列有数据
             const hasMa15 = uniqueQuotes.some(q => q.ma15 != null);
@@ -1648,8 +1657,8 @@
             console.log('K线表格渲染完成（固定表头，最大高度800px，倒序显示，支持点击查看详情）');
         }
 
-        function renderCharts() {
-            console.log('[renderCharts] 开始渲染图表');
+        function renderCharts(timeframe = 'daily') {
+            console.log(`[renderCharts] 开始渲染图表 (${timeframe})`);
 
             if (!currentQuotesData || currentQuotesData.length === 0) {
                 addLog('图表渲染', false, '没有数据可渲染');
@@ -1690,33 +1699,80 @@
                     rightPriceScale: {
                         borderColor: '#374151',
                         visible: true,
+                        scaleMargins: {
+                            top: 0.1,
+                            bottom: 0.2,
+                        },
+                    },
+                    leftPriceScale: {
+                        visible: false,
                     },
                     timeScale: {
                         borderColor: '#374151',
                         visible: true,
                         timeVisible: true,
                     },
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                        vertLine: {
+                            color: '#758696',
+                            width: 1,
+                            style: 3,
+                            labelBackgroundColor: '#1f2937',
+                        },
+                        horzLine: {
+                            color: '#758696',
+                            width: 1,
+                            style: 3,
+                            labelBackgroundColor: '#1f2937',
+                        },
+                    },
                 });
+
+                // 时间格式转换函数
+                const convertTimeForChart = (dateStr, tf) => {
+                    if (tf === '30' || tf === '60') {
+                        // 分钟线：转换为UNIX时间戳（秒）
+                        return Math.floor(new Date(dateStr).getTime() / 1000);
+                    } else {
+                        // 日线等：使用日期字符串
+                        return dateStr.split(' ')[0];
+                    }
+                };
 
                 // currentQuotesData 已在 analyzeStock 中过去重，直接使用
                 const dateMap = new Map();
                 for (const q of currentQuotesData) {
                     if (!q.date) continue;
-                    const dateParts = q.date.split(' ');
-                    const date = dateParts[0];
-                    if (!dateMap.has(date)) {
-                        dateMap.set(date, q);
+
+                    // 根据timeframe决定时间格式
+                    let dateKey;
+                    if (timeframe === '30' || timeframe === '60') {
+                        // 分钟线：使用完整时间戳作为key（保留时间精度）
+                        dateKey = q.date;
+                    } else {
+                        // 日线/周线/月线：只使用日期部分
+                        const dateParts = q.date.split(' ');
+                        dateKey = dateParts[0];
+                    }
+
+                    if (!dateMap.has(dateKey)) {
+                        dateMap.set(dateKey, q);
                     }
                 }
 
                 // 添加K线数据
                 const candlestickData = Array.from(dateMap.values()).map(q => ({
-                    time: q.date ? q.date.split(' ')[0] : '',
+                    time: convertTimeForChart(q.date, timeframe),
                     open: q.open,
                     high: q.high,
                     low: q.low,
                     close: q.close
                 }));
+
+                console.log(`[K线数据] 总数: ${candlestickData.length}, timeframe: ${timeframe}`);
+                console.log(`[K线数据] 第一条:`, candlestickData[0]);
+                console.log(`[K线数据] 最后一条:`, candlestickData[candlestickData.length - 1]);
 
                 const candleSeries = mainChart.addCandlestickSeries({
                     upColor: '#10b981',
@@ -1724,9 +1780,16 @@
                     borderVisible: false,
                     wickUpColor: '#10b981',
                     wickDownColor: '#ef4444',
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
+                    priceScaleId: 'right',
                 });
 
                 candleSeries.setData(candlestickData);
+                console.log(`[K线数据] 已设置到图表`);
 
                 // 添加MA线（使用去重后的数据）
                 const uniqueDates = Array.from(dateMap.keys());
@@ -1734,49 +1797,117 @@
                 // MA5 - 蓝色
                 const ma5Data = uniqueDates.map(date => {
                     const q = dateMap.get(date);
-                    return { time: date, value: q?.ma5 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma5
+                    };
                 }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[MA5] 数据条数: ${ma5Data.length}`);
                 const ma5Series = mainChart.addLineSeries({
                     color: '#3b82f6',
                     lineWidth: 1,
                     title: 'MA5',
+                    priceScaleId: 'right',
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
                 });
                 ma5Series.setData(ma5Data);
 
                 // MA10 - 紫色
                 const ma10Data = uniqueDates.map(date => {
                     const q = dateMap.get(date);
-                    return { time: date, value: q?.ma10 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma10
+                    };
                 }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[MA10] 数据条数: ${ma10Data.length}`);
                 const ma10Series = mainChart.addLineSeries({
                     color: '#8b5cf6',
                     lineWidth: 1,
                     title: 'MA10',
+                    priceScaleId: 'right',
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
                 });
                 ma10Series.setData(ma10Data);
 
                 // MA20 - 绿色
                 const ma20Data = uniqueDates.map(date => {
                     const q = dateMap.get(date);
-                    return { time: date, value: q?.ma20 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma20
+                    };
                 }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[MA20] 数据条数: ${ma20Data.length}`);
                 const ma20Series = mainChart.addLineSeries({
                     color: '#10b981',
                     lineWidth: 1,
                     title: 'MA20',
+                    priceScaleId: 'right',
+                    priceFormat: {
+                        type: 'price',
+                        precision: 2,
+                        minMove: 0.01,
+                    },
                 });
                 ma20Series.setData(ma20Data);
+
+                // MA30 - 粉色
+                const ma30Data = uniqueDates.map(date => {
+                    const q = dateMap.get(date);
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma30
+                    };
+                }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[MA30] 数据条数: ${ma30Data.length}, timeframe: ${timeframe}`);
+                if (ma30Data.length > 0) {
+                    console.log(`[MA30] 第一条:`, ma30Data[0]);
+                    console.log(`[MA30] 最后一条:`, ma30Data[ma30Data.length - 1]);
+                    const ma30Series = mainChart.addLineSeries({
+                        color: '#ec4899',
+                        lineWidth: 1,
+                        title: 'MA30',
+                        priceScaleId: 'right',
+                        priceFormat: {
+                            type: 'price',
+                            precision: 2,
+                            minMove: 0.01,
+                        },
+                    });
+                    ma30Series.setData(ma30Data);
+                }
 
                 // MA60 - 橙色
                 const ma60Data = uniqueDates.map(date => {
                     const q = dateMap.get(date);
-                    return { time: date, value: q?.ma60 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma60
+                    };
                 }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[MA60] 数据条数: ${ma60Data.length}, timeframe: ${timeframe}`);
                 if (ma60Data.length > 0) {
+                    console.log(`[MA60] 第一条:`, ma60Data[0]);
+                    console.log(`[MA60] 最后一条:`, ma60Data[ma60Data.length - 1]);
                     const ma60Series = mainChart.addLineSeries({
                         color: '#f59e0b',
                         lineWidth: 1,
                         title: 'MA60',
+                        priceScaleId: 'right',
+                        priceFormat: {
+                            type: 'price',
+                            precision: 2,
+                            minMove: 0.01,
+                        },
                     });
                     ma60Series.setData(ma60Data);
                 }
@@ -1784,42 +1915,159 @@
                 // MA120 - 红色
                 const ma120Data = uniqueDates.map(date => {
                     const q = dateMap.get(date);
-                    return { time: date, value: q?.ma120 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma120
+                    };
                 }).filter(d => d.value !== undefined && d.value !== null);
                 if (ma120Data.length > 0) {
                     const ma120Series = mainChart.addLineSeries({
                         color: '#ef4444',
                         lineWidth: 1,
                         title: 'MA120',
+                        priceScaleId: 'right',
+                        priceFormat: {
+                            type: 'price',
+                            precision: 2,
+                            minMove: 0.01,
+                        },
                     });
                     ma120Series.setData(ma120Data);
                 }
 
-                // 添加威科夫阶段标注
+                // MA250 - 黄色（加粗显示，重要长期趋势线）
+                const ma250Data = uniqueDates.map(date => {
+                    const q = dateMap.get(date);
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.ma250
+                    };
+                }).filter(d => d.value !== undefined && d.value !== null);
+                if (ma250Data.length > 0) {
+                    const ma250Series = mainChart.addLineSeries({
+                        color: '#eab308',
+                        lineWidth: 2.1,  // 加粗但减少30%（3px × 0.7 = 2.1px）
+                        title: 'MA250',
+                        priceLineVisible: true,
+                        lastValueVisible: true,
+                        priceScaleId: 'right',
+                        priceFormat: {
+                            type: 'price',
+                            precision: 2,
+                            minMove: 0.01,
+                        },
+                    });
+                    ma250Series.setData(ma250Data);
+                }
+
+                // 添加威科夫阶段标注（优化版：减少标记数量）
                 const phaseMarkers = [];
                 let lastPhase = null;
+                let lastMarkerDate = null;
+                const MIN_MARKER_INTERVAL = 20; // 至少间隔20根K线（约1个月交易日）
 
                 for (const date of uniqueDates) {
                     const q = dateMap.get(date); // 直接从去重后的Map中获取
                     if (q) {
                         const phase = calculateWyckoffPhase(q);
 
-                        // 只在阶段首次出现或变化时添加marker
-                        if (phase && phase !== lastPhase && phase !== '震荡') {
-                            phaseMarkers.push({
-                                time: date,
-                                position: getMarkerPosition(phase),
-                                color: getPhaseColor(phase),
-                                shape: getMarkerShape(phase),
-                                text: phase
-                            });
-                            lastPhase = phase;
+                        // 只标记U（上升）和D（下降）关键阶段，忽略震荡期的A/DS
+                        // 且至少间隔MIN_MARKER_INTERVAL根K线
+                        if (phase && phase !== lastPhase &&
+                            (phase === 'U' || phase === 'D')) {
+
+                            // 计算距离上一个标记的间隔（天数）
+                            const daysSinceLastMarker = lastMarkerDate ?
+                                (new Date(date) - new Date(lastMarkerDate)) / (1000 * 60 * 60 * 24) :
+                                MIN_MARKER_INTERVAL;
+
+                            if (daysSinceLastMarker >= MIN_MARKER_INTERVAL) {
+                                phaseMarkers.push({
+                                    time: date,  // dateMap的key已经是正确格式（日线：YYYY-MM-DD，分钟线：YYYY-MM-DD HH:MM:SS）
+                                    position: getMarkerPosition(phase),
+                                    color: getPhaseColor(phase),
+                                    shape: getMarkerShape(phase),
+                                    text: phase,
+                                    size: 2  // 稍微大一点，更醒目
+                                });
+                                lastPhase = phase;
+                                lastMarkerDate = date;
+                            }
                         }
                     }
                 }
 
                 if (phaseMarkers.length > 0) {
                     candleSeries.setMarkers(phaseMarkers);
+                }
+
+                // ========== 添加趋势预测K线 ==========
+                if (currentAnalysisSummary && currentQuotesData.length >= 20) {
+                    try {
+                        // 生成预测K线数据
+                        const predictions = predictFutureCandles(currentQuotesData, currentAnalysisSummary);
+
+                        if (predictions.length > 0) {
+                            // 创建预测K线系列（使用半透明颜色和虚线边框）
+                            const predictedSeries = mainChart.addCandlestickSeries({
+                                name: '预测',
+                                upColor: 'rgba(16, 185, 129, 0.3)',
+                                downColor: 'rgba(239, 68, 68, 0.3)',
+                                borderVisible: true,
+                                borderUpColor: 'rgba(16, 185, 129, 0.6)',
+                                borderDownColor: 'rgba(239, 68, 68, 0.6)',
+                                wickUpColor: 'rgba(16, 185, 129, 0.4)',
+                                wickDownColor: 'rgba(239, 68, 68, 0.4)',
+                                priceFormat: {
+                                    type: 'price',
+                                    precision: 2,
+                                    minMove: 0.01,
+                                },
+                                priceScaleId: 'right',
+                            });
+
+                            predictedSeries.setData(predictions);
+
+                            // 更新预测K线区块（右）
+                            const lastPrediction = predictions[predictions.length - 1];
+                            const confidencePercent = Math.round(lastPrediction.confidence * 100);
+                            const predictionInfoDiv = document.getElementById('prediction-confidence');
+                            if (predictionInfoDiv) {
+                                let confidenceLevel = '';
+                                let confidenceColor = '';
+                                if (confidencePercent >= 70) {
+                                    confidenceLevel = '强烈';
+                                    confidenceColor = '#10b981';
+                                } else if (confidencePercent >= 50) {
+                                    confidenceLevel = '中等';
+                                    confidenceColor = '#34d399';
+                                } else if (confidencePercent >= 30) {
+                                    confidenceLevel = '较弱';
+                                    confidenceColor = '#fbbf24';
+                                } else {
+                                    confidenceLevel = '低';
+                                    confidenceColor = '#ef4444';
+                                }
+
+                                predictionInfoDiv.innerHTML = `
+                                    <div style="font-size: 12px; font-weight: 700; color: ${confidenceColor}; margin-bottom: 2px;">
+                                        ${confidencePercent}%
+                                    </div>
+                                    <div style="color: #d1d5db; font-size: 9px; line-height: 1.2; margin-bottom: 3px;">
+                                        预测${predictions.length}日K线
+                                    </div>
+                                    <div style="padding-top: 3px; border-top: 1px solid #374151; font-size: 8px; color: #6b7280;">
+                                        <div>置信度: ${confidenceLevel}</div>
+                                        <div>每天衰减15%</div>
+                                    </div>
+                                `;
+                            }
+
+                            console.log(`[预测] 已生成 ${predictions.length} 根预测K线，平均置信度 ${confidencePercent}%`);
+                        }
+                    } catch (error) {
+                        console.error('[预测] 生成预测K线失败:', error);
+                    }
                 }
 
                 // 创建成交量图
@@ -1841,7 +2089,7 @@
                 const volumeData = uniqueDates.map(date => {
                     const q = dateMap.get(date); // 直接从去重后的Map中获取
                     return {
-                        time: date,
+                        time: convertTimeForChart(date, timeframe),
                         value: q?.volume,
                         color: q?.close < q?.open ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)'
                     };
@@ -1860,7 +2108,10 @@
                 // 添加成交量MA5线
                 const volumeMA5Data = uniqueDates.map(date => {
                     const q = dateMap.get(date); // 直接从去重后的Map中获取
-                    return { time: date, value: q?.volume_ma5 };
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.volume_ma5
+                    };
                 }).filter(d => d.value);
 
                 if (volumeMA5Data.length > 0) {
@@ -1872,27 +2123,143 @@
                     volumeMA5Series.setData(volumeMA5Data);
                 }
 
-                // 标注异常放量（成交量 > volume_ma5 * 1.5）
+                // 标注异常放量（增强版：更大、更明显、使用图标）
                 const abnormalVolumeMarkers = [];
+                let lastVolumeMarkerDate = null;
+                const MIN_VOLUME_INTERVAL = 10; // 至少间隔10根K线
+
                 for (const date of uniqueDates) {
-                    const q = dateMap.get(date); // 直接从去重后的Map中获取
+                    const q = dateMap.get(date);
                     if (q) {
                         const vol = Number(q.volume);
                         const ma5Vol = Number(q.volume_ma5);
-                        if (ma5Vol && vol > ma5Vol * 1.5) {
-                            abnormalVolumeMarkers.push({
-                                time: date,
-                                position: 'aboveBar',
-                                color: '#ef4444',
-                                shape: 'circle',
-                                size: 1.5
-                            });
+
+                        // 异常放量：2倍以上MA5成交量
+                        if (ma5Vol && vol > ma5Vol * 2.0) {
+                            const daysSinceLastMarker = lastVolumeMarkerDate ?
+                                (new Date(date) - new Date(lastVolumeMarkerDate)) / (1000 * 60 * 60 * 24) :
+                                MIN_VOLUME_INTERVAL;
+
+                            if (daysSinceLastMarker >= MIN_VOLUME_INTERVAL) {
+                                abnormalVolumeMarkers.push({
+                                    time: date,  // dateMap的key已经是正确格式（日线：YYYY-MM-DD，分钟线：YYYY-MM-DD HH:MM:SS）
+                                    position: 'aboveBar',
+                                    color: '#ef4444',
+                                    shape: 'circle',
+                                    size: 0.8,  // 缩小尺寸
+                                    text: ''  // 不显示文字
+                                });
+                                lastVolumeMarkerDate = date;
+                            }
                         }
                     }
                 }
 
                 if (abnormalVolumeMarkers.length > 0) {
                     volumeSeries.setMarkers(abnormalVolumeMarkers);
+                }
+
+                // ========== 标注主图异常情况 ==========
+                const mainChartMarkers = [];
+                const markerMap = new Map(); // 用于去重，每个时间点只保留一个标记
+
+                for (const date of uniqueDates) {
+                    const q = dateMap.get(date);
+                    if (!q) continue;
+
+                    const close = Number(q.close);
+                    const high = Number(q.high);
+                    const low = Number(q.low);
+                    const ma5 = Number(q.ma5);
+                    const ma10 = Number(q.ma10);
+                    const ma20 = Number(q.ma20);
+
+                    // 优先级1：异常波动（单日涨跌幅超过8%）- 最重要
+                    const idx = uniqueDates.indexOf(date);
+                    if (idx > 0) {
+                        const prevDate = uniqueDates[idx - 1];
+                        const prevQ = dateMap.get(prevDate);
+                        if (prevQ) {
+                            const prevClose = Number(prevQ.close);
+                            const changePct = Math.abs((close - prevClose) / prevClose * 100);
+
+                            if (changePct >= 8) {
+                                const isUp = close > prevClose;
+                                markerMap.set(date, {
+                                    time: date,
+                                    position: 'aboveBar',
+                                    color: isUp ? '#10b981' : '#ef4444',
+                                    shape: isUp ? 'arrowUp' : 'arrowDown',
+                                    size: 1.0,  // 减少50% (2.0 → 1.0)
+                                    text: ''
+                                });
+                                continue; // 已添加标记，跳过后续检查
+                            }
+                        }
+                    }
+
+                    // 优先级2：均线突破（突破MA20且伴随放量）
+                    const vol = Number(q.volume);
+                    const ma5Vol = Number(q.volume_ma5);
+                    if (ma20 && ma5 && vol > ma5Vol * 1.3) {
+                        // 向上突破MA20 - 使用圆圈
+                        if (close > ma20 && ma5 > ma20) {
+                            const prevDate = uniqueDates[idx - 1];
+                            const prevQ = prevDate ? dateMap.get(prevDate) : null;
+                            if (prevQ && Number(prevQ.close) <= Number(prevQ.ma20)) {
+                                if (!markerMap.has(date)) {
+                                    markerMap.set(date, {
+                                        time: date,
+                                        position: 'belowBar',
+                                        color: '#3b82f6',  // 蓝色圆圈
+                                        shape: 'circle',
+                                        size: 1.5,
+                                        text: ''
+                                    });
+                                }
+                                continue;
+                            }
+                        }
+                        // 向下突破MA20 - 使用方块
+                        else if (close < ma20 && ma5 < ma20) {
+                            const prevDate = uniqueDates[idx - 1];
+                            const prevQ = prevDate ? dateMap.get(prevDate) : null;
+                            if (prevQ && Number(prevQ.close) >= Number(prevQ.ma20)) {
+                                if (!markerMap.has(date)) {
+                                    markerMap.set(date, {
+                                        time: date,
+                                        position: 'aboveBar',
+                                        color: '#f97316',  // 橙色方块
+                                        shape: 'square',
+                                        size: 1.3,
+                                        text: ''
+                                    });
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    // 优先级3：异常缩量（成交量低于MA5的50%）
+                    if (ma5Vol && vol < ma5Vol * 0.5 && vol > 0) {
+                        if (!markerMap.has(date)) {
+                            markerMap.set(date, {
+                                time: date,
+                                position: 'belowBar',
+                                color: '#fbbf24',
+                                shape: 'circle',
+                                size: 0.8,
+                                text: ''
+                            });
+                        }
+                    }
+                }
+
+                // 转换为数组
+                const mainChartMarkersArray = Array.from(markerMap.values());
+
+                if (mainChartMarkersArray.length > 0) {
+                    candleSeries.setMarkers(mainChartMarkersArray);
                 }
 
                 // 同步时间轴
@@ -1904,25 +2271,719 @@
 
                 addLog('图表渲染', true, '主图和成交量图渲染完成');
 
-                // 显示成功信息（3秒后自动消失）
-                const successMsg = document.createElement('div');
-                successMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(16, 185, 129, 0.95); color:white; padding:20px 30px; border-radius:12px; font-size:16px; text-align:center; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-                successMsg.innerHTML = `
-                    <div style="font-size:24px; margin-bottom:8px;">✅</div>
-                    <div style="font-weight:bold; margin-bottom:4px;">图表渲染完成</div>
-                    <div style="font-size:12px; opacity:0.9;">K线数据: ${candlestickData.length}条</div>
-                `;
-                document.body.appendChild(successMsg);
+                // 更新第一行三个区块的内容
+                if (currentQuotesData.length > 0) {
+                    const latestQuote = currentQuotesData[currentQuotesData.length - 1];
+                    const close = Number(latestQuote.close);
+                    const ma5 = Number(latestQuote.ma5);
+                    const ma10 = Number(latestQuote.ma10);
+                    const ma20 = Number(latestQuote.ma20);
+                    const phase = currentAnalysisSummary?.wyckoff_phase || '';
 
-                setTimeout(() => {
-                    successMsg.style.transition = 'opacity 0.5s';
-                    successMsg.style.opacity = '0';
-                    setTimeout(() => successMsg.remove(), 500);
-                }, 3000);
+                    // ========== 更新威科夫阶段区块（左）==========
+                    let phaseDisplay = '';
+                    let phaseColor = '';
+                    let phaseIcon = '';
+                    let phaseDesc = '';
+
+                    if (phase.includes('U') || phase.includes('上升') || phase.includes('上涨')) {
+                        phaseDisplay = 'U 上升阶段';
+                        phaseColor = '#10b981';
+                        phaseIcon = '▲';
+                        phaseDesc = '上升趋势，多头力量强';
+                    } else if (phase.includes('D') || phase.includes('下降') || phase.includes('下跌')) {
+                        phaseDisplay = 'D 下降阶段';
+                        phaseColor = '#ef4444';
+                        phaseIcon = '▼';
+                        phaseDesc = '下降趋势，空头力量强';
+                    } else if (phase.includes('A') || phase.includes('吸筹')) {
+                        phaseDisplay = 'A 吸筹阶段';
+                        phaseColor = '#f59e0b';
+                        phaseIcon = '●';
+                        phaseDesc = '资金吸筹，等待突破';
+                    } else if (phase.includes('DS') || phase.includes('下跌吸筹')) {
+                        phaseDisplay = 'DS 下跌吸筹';
+                        phaseColor = '#8b5cf6';
+                        phaseIcon = '◆';
+                        phaseDesc = '下跌中吸筹，关注底部';
+                    } else {
+                        phaseDisplay = phase || '震荡阶段';
+                        phaseColor = '#9ca3af';
+                        phaseIcon = '●';
+                        phaseDesc = '方向不明，等待确认';
+                    }
+
+                    const phaseContentDiv = document.getElementById('wyckoff-phase-content');
+                    if (phaseContentDiv) {
+                        phaseContentDiv.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+                                <span style="font-size: 14px; color: ${phaseColor};">${phaseIcon}</span>
+                                <div style="font-size: 12px; font-weight: 700; color: ${phaseColor};">
+                                    ${phaseDisplay}
+                                </div>
+                            </div>
+                            <div style="color: #d1d5db; font-size: 9px; line-height: 1.2;">
+                                ${phaseDesc}
+                            </div>
+                        `;
+                    }
+
+                    // ========== 更新操作区域区块（中）==========
+                    let zone = '';
+                    let zoneColor = '';
+                    let advice = '';
+
+                    if (close > ma5 && close > ma20 && ma5 > ma20) {
+                        zone = '做多区域';
+                        zoneColor = '#10b981';
+                        advice = '均线多头排列，可逢低参与';
+                    } else if (close < ma5 && close < ma20 && ma5 < ma20) {
+                        zone = '观望区域';
+                        zoneColor = '#ef4444';
+                        advice = '均线空头排列，建议空仓';
+                    } else if (phase.includes('U') || phase.includes('上升')) {
+                        zone = '偏多区域';
+                        zoneColor = '#34d399';
+                        advice = '上升趋势中，谨慎参与';
+                    } else if (phase.includes('D') || phase.includes('下降')) {
+                        zone = '偏空区域';
+                        zoneColor = '#f87171';
+                        advice = '下降趋势中，控制仓位';
+                    } else {
+                        zone = '震荡区域';
+                        zoneColor = '#fbbf24';
+                        advice = '方向不明，等待突破';
+                    }
+
+                    const zoneContentDiv = document.getElementById('operation-zone-content');
+                    if (zoneContentDiv) {
+                        zoneContentDiv.innerHTML = `
+                            <div style="font-size: 12px; font-weight: 700; color: ${zoneColor}; margin-bottom: 2px;">
+                                ${zone}
+                            </div>
+                            <div style="color: #d1d5db; font-size: 9px; line-height: 1.2; margin-bottom: 3px;">
+                                ${advice}
+                            </div>
+                            <div style="padding-top: 3px; border-top: 1px solid #374151; font-size: 8px; color: #6b7280;">
+                                <div>价格: ${close.toFixed(2)}</div>
+                                <div>MA5/20: ${ma5?.toFixed(2) || 'N/A'} / ${ma20?.toFixed(2) || 'N/A'}</div>
+                            </div>
+                        `;
+                    }
+                }
             } catch (error) {
                 console.error('图表渲染失败:', error);
                 addLog('图表渲染', false, error.message);
             }
+        }
+
+        // ========== 综合建议面板生成 ==========
+        function generateComprehensiveAdvicePanel(quotes, summary) {
+            if (!quotes || quotes.length < 5) {
+                return `
+                    <div class="card" style="margin-top: 10px;">
+                        <div class="card-header" style="background: rgba(156, 163, 175, 0.2);">
+                            <h3 class="card-title">📊 综合分析建议</h3>
+                        </div>
+                        <div style="padding: 16px; color: #9ca3af; text-align: center;">
+                            数据不足，无法生成综合建议（需要至少5根K线）
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 计算均线建议
+            const maAdvice = calculateMAAdvice(quotes);
+
+            // 计算量化建议
+            const quantAdvice = calculateQuantAdvice(summary, quotes);
+
+            // 计算威科夫建议
+            const wyckoffAdvice = calculateWyckoffAdvice(summary, quotes);
+
+            // 计算综合评分
+            const overallScore = (maAdvice.score + quantAdvice.score + wyckoffAdvice.score) / 3;
+
+            // 生成综合建议文本
+            const overallSuggestion = generateOverallSuggestion(maAdvice, quantAdvice, wyckoffAdvice, overallScore);
+
+            return `
+                <div class="card" style="margin-top: 16px;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+                        <h3 class="card-title">📊 综合分析建议</h3>
+                    </div>
+                    <div style="padding: 16px;">
+                        <!-- 三栏布局 -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+                            <!-- 均线分析 -->
+                            <div style="background: ${maAdvice.color}20; border: 1px solid ${maAdvice.color}; border-radius: 8px; padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                    <span style="font-size: 20px;">${maAdvice.icon}</span>
+                                    <span style="color: ${maAdvice.color}; font-weight: 600; font-size: 13px;">均线分析</span>
+                                </div>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 700; margin-bottom: 4px;">
+                                    ${maAdvice.text}
+                                </div>
+                                <div style="color: #9ca3af; font-size: 11px;">
+                                    ${maAdvice.detail}
+                                </div>
+                            </div>
+
+                            <!-- 量化评分 -->
+                            <div style="background: ${quantAdvice.color}20; border: 1px solid ${quantAdvice.color}; border-radius: 8px; padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                    <span style="font-size: 20px;">💯</span>
+                                    <span style="color: ${quantAdvice.color}; font-weight: 600; font-size: 13px;">量化评分</span>
+                                </div>
+                                <div style="color: #f9fafb; font-size: 24px; font-weight: 700; margin-bottom: 4px;">
+                                    ${quantAdvice.score}/10
+                                </div>
+                                <div style="color: #9ca3af; font-size: 11px;">
+                                    ${quantAdvice.detail}
+                                </div>
+                            </div>
+
+                            <!-- 威科夫阶段 -->
+                            <div style="background: ${wyckoffAdvice.color}20; border: 1px solid ${wyckoffAdvice.color}; border-radius: 8px; padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                    <span style="font-size: 20px;">${wyckoffAdvice.icon}</span>
+                                    <span style="color: ${wyckoffAdvice.color}; font-weight: 600; font-size: 13px;">威科夫阶段</span>
+                                </div>
+                                <div style="color: #f9fafb; font-size: 16px; font-weight: 700; margin-bottom: 4px;">
+                                    ${wyckoffAdvice.text}
+                                </div>
+                                <div style="color: #9ca3af; font-size: 11px;">
+                                    ${wyckoffAdvice.detail}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 综合建议 -->
+                        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span style="font-size: 20px;">💡</span>
+                                <span style="color: #fbbf24; font-weight: 600; font-size: 13px;">综合建议</span>
+                                <span style="margin-left: auto; color: #f9fafb; font-weight: 700; font-size: 16px;">${overallScore.toFixed(1)}/10</span>
+                            </div>
+                            <div style="color: #f9fafb; font-size: 14px; line-height: 1.5;">
+                                ${overallSuggestion}
+                            </div>
+                        </div>
+
+                        <!-- 趋势预测说明 -->
+                        <div style="background: rgba(251, 191, 36, 0.05); border-radius: 6px; padding: 10px; border: 1px solid rgba(251, 191, 36, 0.2);">
+                            <div style="color: #fbbf24; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+                                ⚠️ 重要提示
+                            </div>
+                            <div style="color: #9ca3af; font-size: 10px; line-height: 1.4;">
+                                • 下方的K线图中，虚线框表示未来5个时间单位的趋势预测<br>
+                                • 预测基于技术指标外推，仅供参考，不构成投资建议<br>
+                                • 预测准确率会随时间递减，请注意风险控制
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 计算均线建议
+        function calculateMAAdvice(quotes) {
+            if (!quotes || quotes.length < 5) {
+                return { text: '数据不足', color: '#9ca3af', icon: '➖', detail: '需要至少5根K线', score: 0 };
+            }
+
+            const latest = quotes[quotes.length - 1];
+            const { ma5, ma10, ma20, ma60 } = latest;
+
+            // 判断均线排列
+            let maStatus = '';
+            let maScore = 0;
+            let icon = '➖';
+            let color = '#9ca3af';
+
+            if (ma5 > ma10 && ma10 > ma20 && ma20 > ma60) {
+                maStatus = '多头排列';
+                maScore = 9;
+                icon = '📈';
+                color = '#10b981';
+            } else if (ma5 < ma10 && ma10 < ma20 && ma20 < ma60) {
+                maStatus = '空头排列';
+                maScore = 1;
+                icon = '📉';
+                color = '#ef4444';
+            } else if (ma5 > ma10 && ma10 > ma20) {
+                maStatus = '短期多头';
+                maScore = 7;
+                icon = '📊';
+                color = '#34d399';
+            } else if (ma5 < ma10 && ma10 < ma20) {
+                maStatus = '短期空头';
+                maScore = 3;
+                icon = '📉';
+                color = '#f87171';
+            } else {
+                maStatus = '均线纠缠';
+                maScore = 5;
+                icon = '🔄';
+                color = '#fbbf24';
+            }
+
+            return {
+                text: maStatus,
+                color: color,
+                icon: icon,
+                detail: `MA5: ${ma5?.toFixed(2) || 'N/A'} | MA10: ${ma10?.toFixed(2) || 'N/A'} | MA20: ${ma20?.toFixed(2) || 'N/A'}`,
+                score: maScore
+            };
+        }
+
+        // 计算量化建议
+        function calculateQuantAdvice(summary, quotes) {
+            const score = summary.score || 0;
+            const confidence = summary.confidence || 0;
+
+            let text = '';
+            let detail = '';
+            let color = '#9ca3af';
+            let finalScore = score * 2; // 转换为10分制
+
+            if (score >= 4) {
+                text = '强烈信号';
+                detail = `评分: ${score}/5 | 置信度: ${(confidence * 100).toFixed(0)}% | 做多动能强`;
+                color = '#10b981';
+            } else if (score >= 3) {
+                text = '看涨';
+                detail = `评分: ${score}/5 | 置信度: ${(confidence * 100).toFixed(0)}% | 趋势向好`;
+                color = '#34d399';
+            } else if (score >= 2) {
+                text = '中性偏多';
+                detail = `评分: ${score}/5 | 置信度: ${(confidence * 100).toFixed(0)}% | 观望为主`;
+                color = '#fbbf24';
+            } else if (score >= 1) {
+                text = '中性偏空';
+                detail = `评分: ${score}/5 | 置信度: ${(confidence * 100).toFixed(0)}% | 谨慎参与`;
+                color = '#f97316';
+            } else {
+                text = '看跌';
+                detail = `评分: ${score}/5 | 置信度: ${(confidence * 100).toFixed(0)}% | 风险较高`;
+                color = '#ef4444';
+            }
+
+            return {
+                text: text,
+                color: color,
+                score: Math.min(finalScore, 10),
+                detail: detail
+            };
+        }
+
+        // 计算威科夫建议
+        function calculateWyckoffAdvice(summary, quotes) {
+            const phase = summary.wyckoff_phase || '';
+            const direction = summary.direction || 'NEUTRAL';
+
+            let text = '';
+            let detail = '';
+            let icon = '➖';
+            let color = '#9ca3af';
+            let score = 5;
+
+            if (phase.includes('U') || phase.includes('上升')) {
+                text = 'U 上升阶段';
+                detail = '均线多头排列，可积极关注';
+                icon = '📈';
+                color = '#10b981';
+                score = direction === 'LONG' ? 9 : 7;
+            } else if (phase.includes('D') || phase.includes('下降')) {
+                text = 'D 下降阶段';
+                detail = '均线空头排列，建议观望';
+                icon = '📉';
+                color = '#ef4444';
+                score = direction === 'SHORT' ? 9 : 3;
+            } else if (phase.includes('A') || phase.includes('吸筹')) {
+                text = 'A 吸筹阶段';
+                detail = '主力吸筹，耐心等待突破';
+                icon = '🔄';
+                color = '#fbbf24';
+                score = 7;
+            } else if (phase.includes('DS') || phase.includes('下跌吸筹')) {
+                text = 'DS 下跌吸筹';
+                detail = '可能形成底部，关注量能';
+                icon = '📥';
+                color = '#8b5cf6';
+                score = 6;
+            } else {
+                text = '震荡整理';
+                detail = '方向不明，等待突破';
+                icon = '⚡';
+                color = '#9ca3af';
+                score = 5;
+            }
+
+            return {
+                text: text,
+                color: color,
+                icon: icon,
+                detail: detail,
+                score: score
+            };
+        }
+
+        // 生成综合建议文本
+        function generateOverallSuggestion(maAdvice, quantAdvice, wyckoffAdvice, overallScore) {
+            if (overallScore >= 8) {
+                return `多方占优，${maAdvice.text}且${wyckoffAdvice.text}，${quantAdvice.text}。建议积极关注，注意风险控制。`;
+            } else if (overallScore >= 6) {
+                return `趋势向好，${maAdvice.text}，${wyckoffAdvice.text}。建议逢低参与，严格止损。`;
+            } else if (overallScore >= 4) {
+                return `震荡整理，${maAdvice.text}，${wyckoffAdvice.text}。建议观望为主，等待明确信号。`;
+            } else if (overallScore >= 2) {
+                return `趋势偏弱，${maAdvice.text}，${wyckoffAdvice.text}。建议控制仓位，谨慎参与。`;
+            } else {
+                return `风险较高，${maAdvice.text}，${wyckoffAdvice.text}。建议空仓观望，等待机会。`;
+            }
+        }
+
+        // ========== 趋势预测算法 ==========
+
+        // 主预测函数：预测未来5根K线
+        function predictFutureCandles(quotes, summary) {
+            if (!quotes || quotes.length < 20) {
+                return [];
+            }
+
+            const predictions = [];
+            const lastQuote = quotes[quotes.length - 1];
+            const lastDate = new Date(lastQuote.date);
+
+            // 计算各因子
+            const maTrend = calculateMATrendFactor(quotes);
+            const volumeTrend = calculateVolumeTrendFactor(quotes);
+            const momentum = calculateMomentumFactor(quotes);
+            const supportResistance = calculateSupportResistanceFactor(quotes);
+            const wyckoffPhase = calculateWyckoffPhaseFactor(summary, quotes);
+
+            for (let i = 1; i <= 5; i++) {
+                // 计算预测方向
+                const direction = calculatePredictionDirection(maTrend, volumeTrend, momentum, supportResistance, wyckoffPhase);
+
+                // 预测OHLC
+                const prediction = predictOHLC(lastQuote, direction, i, maTrend, volumeTrend, momentum);
+
+                // 计算置信度
+                const confidence = calculatePredictionConfidence(maTrend, volumeTrend, momentum, supportResistance, wyckoffPhase, i);
+
+                // 计算下一根K线的日期
+                const nextDate = new Date(lastDate);
+                nextDate.setDate(nextDate.getDate() + i);
+
+                predictions.push({
+                    time: nextDate.getTime() / 1000,
+                    open: prediction.open,
+                    high: prediction.high,
+                    low: prediction.low,
+                    close: prediction.close,
+                    volume: prediction.volume,
+                    isPredicted: true,
+                    confidence: confidence
+                });
+            }
+
+            return predictions;
+        }
+
+        // 计算均线趋势因子
+        function calculateMATrendFactor(quotes) {
+            const recent = quotes.slice(-20);
+            const ma5Values = recent.map(q => q.ma5).filter(v => v !== null && v !== undefined);
+            const ma10Values = recent.map(q => q.ma10).filter(v => v !== null && v !== undefined);
+            const ma20Values = recent.map(q => q.ma20).filter(v => v !== null && v !== undefined);
+
+            if (ma5Values.length < 5 || ma10Values.length < 5 || ma20Values.length < 5) {
+                return { slope: 0, direction: 'NEUTRAL', strength: 0 };
+            }
+
+            // 计算MA斜率（简单线性回归）
+            const ma5Slope = (ma5Values[ma5Values.length - 1] - ma5Values[0]) / ma5Values.length;
+            const ma10Slope = (ma10Values[ma10Values.length - 1] - ma10Values[0]) / ma10Values.length;
+            const ma20Slope = (ma20Values[ma20Values.length - 1] - ma20Values[0]) / ma20Values.length;
+
+            // 综合斜率
+            const avgSlope = (ma5Slope + ma10Slope + ma20Slope) / 3;
+
+            // 判断方向
+            let direction = 'NEUTRAL';
+            let strength = Math.abs(avgSlope) / quotes[quotes.length - 1].close * 100; // 标准化为百分比
+
+            if (avgSlope > 0.01) {
+                direction = 'UP';
+            } else if (avgSlope < -0.01) {
+                direction = 'DOWN';
+            }
+
+            return {
+                slope: avgSlope,
+                direction: direction,
+                strength: Math.min(strength * 10, 1), // 放大并限制在0-1之间
+                ma5Slope: ma5Slope,
+                ma10Slope: ma10Slope,
+                ma20Slope: ma20Slope
+            };
+        }
+
+        // 计算成交量趋势因子
+        function calculateVolumeTrendFactor(quotes) {
+            const recent = quotes.slice(-10);
+            const volumes = recent.map(q => q.volume).filter(v => v !== null && v !== undefined);
+            const obvs = recent.map(q => q.obv).filter(v => v !== null && v !== undefined);
+
+            if (volumes.length < 5 || obvs.length < 5) {
+                return { trend: 'NEUTRAL', strength: 0 };
+            }
+
+            // 计算量能趋势
+            const avgVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+            const recentVolume = volumes[volumes.length - 1];
+            const volumeRatio = recentVolume / avgVolume;
+
+            // 计算OBV趋势
+            const obvChange = (obvs[obvs.length - 1] - obvs[0]) / Math.abs(obvs[0]);
+            const obvTrend = obvChange > 0.05 ? 'UP' : obvChange < -0.05 ? 'DOWN' : 'NEUTRAL';
+
+            let trend = 'NEUTRAL';
+            let strength = 0;
+
+            if (volumeRatio > 1.2 && obvTrend === 'UP') {
+                trend = 'UP';
+                strength = 0.8;
+            } else if (volumeRatio > 1.2 && obvTrend === 'DOWN') {
+                trend = 'DOWN';
+                strength = 0.6;
+            } else if (volumeRatio < 0.8) {
+                trend = 'WEAK';
+                strength = 0.3;
+            }
+
+            return {
+                trend: trend,
+                strength: strength,
+                volumeRatio: volumeRatio,
+                obvTrend: obvTrend,
+                obvChange: obvChange
+            };
+        }
+
+        // 计算动量因子
+        function calculateMomentumFactor(quotes) {
+            const recent = quotes.slice(-14);
+
+            if (recent.length < 5) {
+                return { rsi: 50, changeRate: 0, strength: 0 };
+            }
+
+            // 计算价格变化率
+            const prices = recent.map(q => q.close);
+            const changeRate = (prices[prices.length - 1] - prices[0]) / prices[0];
+
+            // 简化RSI计算（14日）
+            let gains = 0;
+            let losses = 0;
+            for (let i = 1; i < prices.length; i++) {
+                const change = prices[i] - prices[i - 1];
+                if (change > 0) gains += change;
+                else losses -= change;
+            }
+
+            const rs = gains / (losses + 0.0001); // 避免除零
+            const rsi = 100 - (100 / (1 + rs));
+
+            // 计算波动率
+            const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+            const variance = prices.reduce((sum, price) => sum + Math.pow(price - avgPrice, 2), 0) / prices.length;
+            const volatility = Math.sqrt(variance) / avgPrice;
+
+            // 综合强度
+            const strength = Math.abs(changeRate) * (1 - volatility) * 10;
+            const normalizedStrength = Math.min(strength, 1);
+
+            return {
+                rsi: rsi,
+                changeRate: changeRate,
+                volatility: volatility,
+                strength: normalizedStrength,
+                isOverbought: rsi > 70,
+                isOversold: rsi < 30
+            };
+        }
+
+        // 计算支撑阻力因子
+        function calculateSupportResistanceFactor(quotes) {
+            const recent = quotes.slice(-60);
+
+            if (recent.length < 20) {
+                return { support: 0, resistance: 0, distance: 0, strength: 0 };
+            }
+
+            const highs = recent.map(q => q.high);
+            const lows = recent.map(q => q.low);
+            const currentPrice = quotes[quotes.length - 1].close;
+
+            // 找最近的高点和低点
+            const highest = Math.max(...highs);
+            const lowest = Math.min(...lows);
+
+            const resistance = highest;
+            const support = lowest;
+
+            // 计算当前价格距离支撑阻力的距离
+            const resistanceDistance = (resistance - currentPrice) / currentPrice;
+            const supportDistance = (currentPrice - support) / currentPrice;
+
+            // 判断强度
+            let strength = 0;
+            if (supportDistance < 0.05 && resistanceDistance > 0.05) {
+                strength = 0.7; // 接近支撑，远离阻力
+            } else if (supportDistance > 0.05 && resistanceDistance < 0.05) {
+                strength = 0.3; // 远离支撑，接近阻力
+            } else {
+                strength = 0.5; // 中性位置
+            }
+
+            return {
+                support: support,
+                resistance: resistance,
+                supportDistance: supportDistance,
+                resistanceDistance: resistanceDistance,
+                strength: strength
+            };
+        }
+
+        // 计算威科夫阶段因子
+        function calculateWyckoffPhaseFactor(summary, quotes) {
+            const phase = summary.wyckoff_phase || '';
+            const direction = summary.direction || 'NEUTRAL';
+            const score = summary.score || 0;
+
+            let phaseStrength = 0.5;
+            let phaseType = 'NEUTRAL';
+
+            if (phase.includes('U') || phase.includes('上升')) {
+                phaseStrength = 0.8;
+                phaseType = 'UP';
+            } else if (phase.includes('D') || phase.includes('下降')) {
+                phaseStrength = 0.2;
+                phaseType = 'DOWN';
+            } else if (phase.includes('A') || phase.includes('吸筹')) {
+                phaseStrength = 0.6;
+                phaseType = 'ACCUMULATION';
+            } else if (phase.includes('DS') || phase.includes('下跌吸筹')) {
+                phaseStrength = 0.4;
+                phaseType = 'DISTRIBUTION';
+            }
+
+            return {
+                phase: phaseType,
+                strength: phaseStrength,
+                confidence: score / 5, // 转换为0-1
+                direction: direction
+            };
+        }
+
+        // 计算预测方向
+        function calculatePredictionDirection(maTrend, volumeTrend, momentum, supportResistance, wyckoffPhase) {
+            let upScore = 0;
+            let downScore = 0;
+
+            // 均线趋势权重30%
+            if (maTrend.direction === 'UP') upScore += 0.3 * maTrend.strength;
+            if (maTrend.direction === 'DOWN') downScore += 0.3 * maTrend.strength;
+
+            // 威科夫阶段权重25%
+            if (wyckoffPhase.phase === 'UP') upScore += 0.25 * wyckoffPhase.strength;
+            if (wyckoffPhase.phase === 'DOWN') downScore += 0.25 * wyckoffPhase.strength;
+
+            // 成交量权重20%
+            if (volumeTrend.trend === 'UP') upScore += 0.2 * volumeTrend.strength;
+            if (volumeTrend.trend === 'DOWN') downScore += 0.2 * volumeTrend.strength;
+
+            // 动量权重15%
+            if (!momentum.isOverbought) upScore += 0.15 * momentum.strength;
+            if (!momentum.isOversold) downScore += 0.15 * momentum.strength;
+
+            // 支撑阻力权重10%
+            if (supportResistance.supportDistance < 0.05) upScore += 0.1 * supportResistance.strength;
+            if (supportResistance.resistanceDistance < 0.05) downScore += 0.1 * supportResistance.strength;
+
+            if (upScore > downScore + 0.1) return 'UP';
+            if (downScore > upScore + 0.1) return 'DOWN';
+            return 'SIDEWAYS';
+        }
+
+        // 预测单根K线的OHLC
+        function predictOHLC(lastQuote, direction, dayIndex, maTrend, volumeTrend, momentum) {
+            const lastClose = lastQuote.close || 0;
+            const lastVolume = lastQuote.volume || 0;
+
+            // 基础波动率（基于历史波动率）
+            const baseVolatility = 0.02; // 2%的日波动率
+
+            // 随天数增加，波动率递增（预测的不确定性增加）
+            const dayFactor = 1 + (dayIndex - 1) * 0.1;
+            const adjustedVolatility = baseVolatility * dayFactor;
+
+            // 计算价格变动
+            let priceChange = 0;
+            if (direction === 'UP') {
+                priceChange = adjustedVolatility * 0.7; // 向上趋势
+            } else if (direction === 'DOWN') {
+                priceChange = -adjustedVolatility * 0.7; // 向下趋势
+            } else {
+                priceChange = (Math.random() - 0.5) * adjustedVolatility * 0.5; // 震荡
+            }
+
+            // 添加随机扰动
+            const randomChange = (Math.random() - 0.5) * adjustedVolatility * 0.3;
+            priceChange += randomChange;
+
+            // 预测收盘价
+            const predictedClose = lastClose * (1 + priceChange);
+
+            // 预测开盘价（接近前一根的收盘价）
+            const predictedOpen = lastClose * (1 + (Math.random() - 0.5) * adjustedVolatility * 0.2);
+
+            // 预测最高价和最低价
+            const predictedHigh = Math.max(predictedOpen, predictedClose) * (1 + Math.random() * adjustedVolatility);
+            const predictedLow = Math.min(predictedOpen, predictedClose) * (1 - Math.random() * adjustedVolatility);
+
+            // 预测成交量（基于近期平均成交量）
+            const avgVolume = lastVolume * (0.8 + Math.random() * 0.4); // 80%-120%之间
+
+            return {
+                open: predictedOpen,
+                high: predictedHigh,
+                low: predictedLow,
+                close: predictedClose,
+                volume: avgVolume
+            };
+        }
+
+        // 计算预测置信度
+        function calculatePredictionConfidence(maTrend, volumeTrend, momentum, supportResistance, wyckoffPhase, dayIndex) {
+            // 基础置信度
+            let baseConfidence = (
+                maTrend.strength * 0.3 +
+                volumeTrend.strength * 0.2 +
+                momentum.strength * 0.15 +
+                supportResistance.strength * 0.1 +
+                wyckoffPhase.strength * 0.25
+            );
+
+            // 随天数递减（越远越不准确）
+            const dayDecay = 1 - (dayIndex - 1) * 0.15; // 每天递减15%
+
+            const confidence = Math.max(0, Math.min(1, baseConfidence * dayDecay));
+
+            return confidence;
         }
 
         // ========== 股票历史记录管理 ==========
@@ -2039,7 +3100,9 @@
 
                 // 根据时间周期去重数据
                 const rawQuotes = quotesData.quotes;
+                console.log(`📊 接收到K线数据: ${rawQuotes.length}条`);
                 const uniqueQuotes = deduplicateQuotes(rawQuotes, timeframe);
+                console.log(`✅ 去重后K线数据: ${uniqueQuotes.length}条`);
 
                 currentQuotesData = uniqueQuotes;
 
@@ -2050,13 +3113,16 @@
 
                 const summary = analysisData.analysis_summary;
 
+                // 保存分析摘要供图表渲染使用
+                currentAnalysisSummary = summary;
+
                 // 保存后端分析的威科夫阶段和详细理由，用于在表格中标注最新一天
                 window.backendWyckoffPhase = summary.wyckoff_phase;
                 window.backendAnalysisReason = summary.reason || '';
 
                 // 分析结果 HTML
                 const analysisHtml = `
-                    <div class="card" style="margin-top: 16px;">
+                    <div class="card" style="margin-top: 10px;">
                         <div class="card-header">
                             <h3 class="card-title">📊 分析结果</h3>
                         </div>
@@ -2096,7 +3162,6 @@
                     <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                         <button class="btn" onclick="showMode('table')" id="btnTable">表格</button>
                         <button class="btn btn-secondary" onclick="showMode('chart')" id="btnChart">图表</button>
-                        <button class="btn btn-secondary" onclick="testChartLibrary()" style="font-size:11px; padding:6px 12px;">测试图表库</button>
                     </div>
 
                     <div class="kline-table-container" id="tableMode" style="display: ${useTableMode ? 'block' : 'none'};">
@@ -2108,34 +3173,81 @@
                         </table>
                     </div>
                     <div id="chartMode" style="display: ${!useTableMode ? 'block' : 'none'};">
-                        <!-- 威科夫阶段图例 -->
-                        <div style="margin-bottom: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; font-size: 11px; display: flex; gap: 15px; flex-wrap: wrap; border: 1px solid #374151;">
-                            <span style="color: #10b981;">▲ U阶段(上升)</span>
-                            <span style="color: #ef4444;">▼ D阶段(下降)</span>
-                            <span style="color: #f59e0b;">● A阶段(吸筹)</span>
-                            <span style="color: #8b5cf6;">● DS阶段(下跌吸筹)</span>
-                            <span style="color: #3b82f6;">─ MA5</span>
-                            <span style="color: #8b5cf6;">─ MA10</span>
-                            <span style="color: #10b981;">─ MA20</span>
-                            <span style="color: #f59e0b;">─ 成交量MA5</span>
-                            <span style="color: #ef4444;">● 异常放量</span>
-                        </div>
-                        <div id="mainChart" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 500px; width: 100%; border: 1px solid #374151; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box;">
-                            <div>
-                                <div style="font-size:18px; margin-bottom:8px;">📊 K线图</div>
-                                <div style="font-size:12px;">点击"分析"按钮后，再切换到此模式查看</div>
+                        <!-- 第一行：图例说明 -->
+                        <div style="margin-bottom: 10px; padding: 5px 7px; background: #1f2937; border-radius: 3px; border: 1px solid #374151;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <!-- 1. 威科夫阶段 -->
+                                <div>
+                                    <div style="color: #fbbf24; font-size: 9px; font-weight: 600; margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid #374151;">1. 威科夫阶段</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 8px;">
+                                        <span style="color: #10b981;">▲ U阶段(上升)</span>
+                                        <span style="color: #ef4444;">▼ D阶段(下降)</span>
+                                        <span style="color: #f59e0b;">● A阶段(吸筹)</span>
+                                        <span style="color: #8b5cf6;">● DS阶段(下跌吸筹)</span>
+                                    </div>
+                                </div>
+
+                                <!-- 2. 均线指标 -->
+                                <div>
+                                    <div style="color: #fbbf24; font-size: 9px; font-weight: 600; margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid #374151;">2. 均线指标</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 8px;">
+                                        <span style="color: #3b82f6;">─ MA5</span>
+                                        <span style="color: #8b5cf6;">─ MA10</span>
+                                        <span style="color: #10b981;">─ MA20</span>
+                                        <span style="color: #f59e0b;">─ MA60</span>
+                                        <span style="color: #ef4444;">─ MA120</span>
+                                        <span style="color: #eab308; font-weight: 700;">━ MA250</span>
+                                        <span style="color: #f59e0b;">─ 成交量MA5</span>
+                                    </div>
+                                </div>
+
+                                <!-- 3. 异常标识 -->
+                                <div>
+                                    <div style="color: #fbbf24; font-size: 9px; font-weight: 600; margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid #374151;">3. 异常标识</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; font-size: 8px;">
+                                        <span style="color: #10b981; cursor: help;" title="暴涨：单日涨幅≥8%（绿色箭头）">↑ 暴涨</span>
+                                        <span style="color: #ef4444; cursor: help;" title="暴跌：单日跌幅≥8%（红色箭头）">↓ 暴跌</span>
+                                        <span style="color: #3b82f6; cursor: help;" title="突破MA20：向上突破20日均线（蓝色圆圈）">● 突破</span>
+                                        <span style="color: #f97316; cursor: help;" title="跌破MA20：向下突破20日均线（橙色方块）">■ 跌破</span>
+                                        <span style="color: #fbbf24; cursor: help;" title="缩量：成交量低于MA5的50%（黄色小圆）">● 缩量</span>
+                                        <span style="color: #ef4444; cursor: help;" title="异常放量：成交量超过MA5的2倍（红色圆点）">🔥 放量</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div id="volumeChart" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 200px; width: 100%; border: 1px solid #374151; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box;">
-                            <div>
-                                <div style="font-size:14px; margin-bottom:6px;">📈 成交量图</div>
-                                <div style="font-size:11px;">等待数据...</div>
+
+                        <!-- 第二行：K线图 -->
+                        <div id="mainChart" title="K线图 - 点击"分析"按钮查看" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 328px; width: 100%; border: 1px solid #374151; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box; cursor: help;">
+                        </div>
+
+                        <!-- 第三行：成交量图 -->
+                        <div id="volumeChart" title="成交量图 - 等待数据" style="background: #1f2937; border-radius: 10px; padding: 12px; height: 84px; width: 100%; border: 1px solid #374151; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; color:#9ca3af; text-align:center; box-sizing:border-box; cursor: help;">
+                        </div>
+
+                        <!-- 第四行：威科夫阶段 + 操作区域 + 预测K线（三列布局） -->
+                        <div id="chart-info-panel" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <!-- 左：威科夫阶段 -->
+                            <div id="wyckoff-phase-panel" style="padding: 5px 7px; background: #1f2937; border-radius: 3px; border: 1px solid #374151;">
+                                <div style="font-size: 8px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">威科夫阶段</div>
+                                <div id="wyckoff-phase-content" style="color: #6b7280; font-size: 9px;">等待分析...</div>
+                            </div>
+
+                            <!-- 中：操作区域 -->
+                            <div id="operation-zone-panel" style="padding: 5px 7px; background: #1f2937; border-radius: 3px; border: 1px solid #374151;">
+                                <div style="font-size: 8px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">操作区域</div>
+                                <div id="operation-zone-content" style="color: #6b7280; font-size: 9px;">等待分析...</div>
+                            </div>
+
+                            <!-- 右：预测K线 -->
+                            <div style="padding: 5px 7px; background: #1f2937; border-radius: 3px; border: 1px solid #374151;">
+                                <div style="font-size: 8px; color: #9ca3af; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">预测K线</div>
+                                <div id="prediction-confidence" style="color: #6b7280; font-size: 9px;">等待分析...</div>
                             </div>
                         </div>
                     </div>
                 `;
 
-                resultDiv.innerHTML = tableHtml + analysisHtml;
+                resultDiv.innerHTML = tableHtml;
 
                 // 防御性检查：确保 uniqueQuotes 存在且是数组
                 if (!uniqueQuotes || !Array.isArray(uniqueQuotes)) {
@@ -2155,22 +3267,46 @@
 
                 // 渲染图表
                 if (!useTableMode) {
-                    renderCharts();
+                    renderCharts(timeframe);
                 }
 
             } catch (error) {
                 console.error('分析失败:', error);
                 const errorMsg = error.message || '未知错误';
+
+                // 检查是否是不支持分钟线数据的错误
+                const isMinuteNotSupported = errorMsg.includes('不支持分钟线') ||
+                                              errorMsg.includes('暂无数据');
+
+                // 根据错误类型显示不同的提示
+                let hintMessage = '';
+                if (isMinuteNotSupported) {
+                    hintMessage = `
+                        <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px;">
+                            <div style="color: #fbbf24; font-size: 13px; font-weight: 600; margin-bottom: 6px;">💡 温馨提示</div>
+                            <div style="color: #d1d5db; font-size: 12px; line-height: 1.6;">
+                                • <strong>基金/ETF</strong>和<strong>港股</strong>仅支持日线查询<br>
+                                • A股股票支持日线和分钟线（1/5/15/30/60分钟）<br>
+                                • 请切换到"日线"周期后重新查询
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    hintMessage = `
+                        <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
+                            提示：如果是首次查询分钟线数据，可能需要较长时间，请耐心等待。
+                        </p>
+                    `;
+                }
+
                 document.getElementById('analyzeResult').innerHTML = `
-                    <div class="card" style="margin-top: 16px;">
+                    <div class="card" style="margin-top: 10px;">
                         <div class="card-header" style="background: #7f1d1d;">
                             <h3 class="card-title" style="color: #fca5a5;">❌ 分析失败</h3>
                         </div>
                         <div style="padding: 16px;">
                             <p style="color: #fca5a5;">${errorMsg}</p>
-                            <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
-                                提示：如果是首次查询分钟线数据，可能需要较长时间，请耐心等待。
-                            </p>
+                            ${hintMessage}
                         </div>
                     </div>
                 `;
@@ -2206,7 +3342,8 @@
                 // 添加延迟确保DOM更新后再渲染图表（移动端需要更长延迟）
                 setTimeout(() => {
                     console.log('[showMode] 切换到图表模式，准备渲染');
-                    renderCharts();
+                    const currentTimeframe = document.getElementById('timeframe')?.value || 'daily';
+                    renderCharts(currentTimeframe);
                 }, 300);
             }
         }
@@ -2214,67 +3351,6 @@
         function clearResult() {
             document.getElementById('analyzeResult').innerHTML = '';
             addLog('清空结果', '已清空分析结果');
-        }
-
-        // 测试图表库
-        function testChartLibrary() {
-            const mainContainer = document.getElementById('mainChart');
-            if (!mainContainer) {
-                alert('图表容器不存在，请先点击"分析"按钮');
-                return;
-            }
-
-            // 检查图表库
-            if (typeof window.LightweightCharts === 'undefined') {
-                mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#ef4444; text-align:center; padding:20px;"><div style="font-size:24px; margin-bottom:10px;">❌</div><div style="font-size:16px; margin-bottom:8px;">图表库未加载</div><div style="font-size:12px; color:#9ca3af;">请刷新页面重试</div></div>';
-                alert('图表库未加载，请刷新页面');
-                return;
-            }
-
-            // 清空容器
-            mainContainer.innerHTML = '';
-            mainContainer.style.background = '#1f2937';
-
-            // 尝试创建一个简单的测试图表
-            try {
-                const testChart = window.LightweightCharts.createChart(mainContainer, {
-                    width: mainContainer.clientWidth,
-                    height: mainContainer.clientHeight,
-                    layout: {
-                        background: { color: '#1f2937' },
-                        textColor: '#d1d5db',
-                    },
-                    grid: {
-                        vertLines: { color: '#374151', style: 1, visible: true },
-                        horzLines: { color: '#374151', style: 1, visible: true },
-                    },
-                });
-
-                // 添加测试数据
-                const testData = [];
-                for (let i = 0; i < 50; i++) {
-                    const time = new Date();
-                    time.setDate(time.getDate() - (50 - i));
-                    testData.push({
-                        time: time.toISOString().split('T')[0],
-                        value: 100 + Math.random() * 50
-                    });
-                }
-
-                const lineSeries = testChart.addLineSeries({
-                    color: '#10b981',
-                    lineWidth: 2,
-                });
-
-                lineSeries.setData(testData);
-                testChart.timeScale().fitContent();
-
-                alert('✅ 测试图表已创建！\n\n如果您看到一条绿色曲线，说明图表库工作正常。\n如果看不到，说明是渲染问题。');
-
-            } catch (e) {
-                mainContainer.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:#ef4444; text-align:center; padding:20px;"><div style="font-size:16px;">创建测试图表失败</div><div style="font-size:12px; margin-top:8px;">' + e.message + '</div></div>';
-                alert('❌ 创建测试图表失败: ' + e.message);
-            }
         }
 
         // ========== 多周期分析 ==========

@@ -57,8 +57,70 @@ class DataFetcher:
             股票信息字典，包含标准化的 name 和 industry 字段
         """
         try:
-            # 判断市场
-            if code.startswith("0") or code.startswith("3") or code.startswith("6"):
+            # 判断市场类型
+            # 优先判断：港股（4位或5位纯数字）
+            if len(code) in [4, 5] and code.isdigit():
+                # 港股 (支持 02157 或 2157 格式)
+                # 格式化为5位
+                hk_code = code.zfill(5) if len(code) == 4 else code
+
+                try:
+                    stock_name = ak.stock_hk_spot_em()
+                    stock_info = stock_name[stock_name["代码"] == hk_code]
+                    if not stock_info.empty:
+                        return {
+                            "code": code,
+                            "name": stock_info.iloc[0]["名称"],
+                            "market": "港股",
+                            "industry": ""
+                        }
+                except:
+                    pass
+                return {"code": code, "market": "港股", "name": "", "industry": ""}
+
+            # 科创板A股：688开头（必须在基金判断之前）
+            elif code.startswith("688") and len(code) == 6:
+                # 科创板A股，使用A股接口
+                df = ak.stock_individual_info_em(symbol=code)
+                info = {"code": code, "market": "A股", "industry": ""}
+
+                # 先设置默认值
+                info["name"] = ""
+
+                # 将 item-value 映射到 info 字典
+                for _, row in df.iterrows():
+                    info[row["item"]] = row["value"]
+
+                # 标准化字段名
+                if "股票简称" in info:
+                    info["name"] = info["股票简称"]
+                if "行业" in info:
+                    info["industry"] = info["行业"]
+
+                logger.info(f"获取股票{code}信息成功: {info.get('name', 'N/A')}")
+                return info
+
+            # 基金/ETF：5开头且长度为6（排除688的科创板）
+            elif code.startswith("5") and len(code) == 6:
+                # 基金/ETF
+                try:
+                    df = ak.fund_etf_spot_em()
+                    fund_info = df[df["代码"] == code]
+                    if not fund_info.empty:
+                        return {
+                            "code": code,
+                            "name": fund_info.iloc[0]["名称"],
+                            "market": "基金",
+                            "industry": "ETF"
+                        }
+                except:
+                    pass
+                # 如果获取失败，返回默认信息
+                return {"code": code, "market": "基金", "name": "", "industry": "ETF"}
+
+            # 普通A股：0/3开头，或6开头但不是688（科创板已单独处理）
+            elif code.startswith("0") or code.startswith("3") or \
+                 (code.startswith("6") and not code.startswith("688")):
                 # A股
                 df = ak.stock_individual_info_em(symbol=code)
                 info = {"code": code, "market": "A股"}
@@ -77,19 +139,24 @@ class DataFetcher:
                 if "行业" in info:
                     info["industry"] = info["行业"]
 
-            elif "." in code or code.startswith("0") and len(code) == 5:
-                # 港股
-                stock_name = ak.stock_hk_spot_em()
-                stock_info = stock_name[stock_name["代码"] == code]
-                if not stock_info.empty:
-                    info = {
-                        "code": code,
-                        "name": stock_info.iloc[0]["名称"],
-                        "market": "港股",
-                        "industry": ""
-                    }
-                else:
-                    info = {"code": code, "market": "港股", "name": "", "industry": ""}
+            elif code.startswith("HK"):
+                # 港股带HK前缀的格式（如HK2157）
+                hk_code = code[2:]  # 去掉HK前缀
+                hk_code = hk_code.zfill(5)  # 格式化为5位
+
+                try:
+                    stock_name = ak.stock_hk_spot_em()
+                    stock_info = stock_name[stock_name["代码"] == hk_code]
+                    if not stock_info.empty:
+                        return {
+                            "code": code,
+                            "name": stock_info.iloc[0]["名称"],
+                            "market": "港股",
+                            "industry": ""
+                        }
+                except:
+                    pass
+                return {"code": code, "market": "港股", "name": "", "industry": ""}
             else:
                 raise ValueError(f"无法识别股票代码: {code}")
 
@@ -134,7 +201,45 @@ class DataFetcher:
                 start_date = (datetime.now() - timedelta(days=365*3)).strftime("%Y%m%d")
 
             # 判断市场和获取数据
-            if code.startswith("0") or code.startswith("3") or code.startswith("6"):
+            # 优先判断：港股（4位或5位纯数字）
+            if len(code) in [4, 5] and code.isdigit():
+                # 港股 (支持 02157 或 2157 格式)
+                # 格式化为5位
+                hk_code = code.zfill(5) if len(code) == 4 else code
+
+                df = ak.stock_hk_hist(
+                    symbol=hk_code,
+                    period=period,
+                    start_date=start_date,
+                    end_date=end_date,
+                    adjust=""
+                )
+
+            # 科创板A股：688开头（必须在基金判断之前）
+            elif code.startswith("688") and len(code) == 6:
+                # 科创板A股，使用A股接口
+                df = ak.stock_zh_a_hist(
+                    symbol=code,
+                    period=period,
+                    start_date=start_date,
+                    end_date=end_date,
+                    adjust="qfq"  # 前复权
+                )
+
+            # 基金/ETF：5开头且长度为6（排除科创板）
+            elif code.startswith("5") and len(code) == 6:
+                # 基金/ETF
+                df = ak.fund_etf_hist_em(
+                    symbol=code,
+                    period=period,
+                    start_date=start_date,
+                    end_date=end_date,
+                    adjust=""
+                )
+
+            # 普通A股：0/3开头，或6开头但不是688（科创板已单独处理）
+            elif code.startswith("0") or code.startswith("3") or \
+                 (code.startswith("6") and not code.startswith("688")):
                 # A股 - 使用前复权数据
                 df = ak.stock_zh_a_hist(
                     symbol=code,
@@ -143,10 +248,13 @@ class DataFetcher:
                     end_date=end_date,
                     adjust="qfq"  # 前复权
                 )
-            elif "." in code or len(code) == 5:
-                # 港股
+            elif code.startswith("HK"):
+                # 港股带HK前缀的格式（如HK2157）
+                hk_code = code[2:]  # 去掉HK前缀
+                hk_code = hk_code.zfill(5)  # 格式化为5位
+
                 df = ak.stock_hk_hist(
-                    symbol=code,
+                    symbol=hk_code,
                     period=period,
                     start_date=start_date,
                     end_date=end_date,
@@ -170,6 +278,33 @@ class DataFetcher:
                 "换手率": "turnover"
             })
 
+            # 确保日期格式
+            if "date" in df.columns:
+                df["date"] = pd.to_datetime(df["date"])
+
+            # 过滤未来日期的数据（避免显示尚未完成的交易日数据）
+            current_time = datetime.now()
+            current_date = current_time.date()
+
+            # A股交易时间：9:30-15:00
+            # 如果当前时间在15:00之前，排除当天的数据（当天交易未完成）
+            trading_hour_end = current_time.replace(hour=15, minute=0, second=0, microsecond=0)
+
+            before_filter = len(df)
+
+            # 如果当前时间在15:00之前，排除今天的数据
+            if current_time < trading_hour_end:
+                df = df[df["date"].dt.date < current_date]
+                if before_filter > len(df):
+                    logger.info(f"当前时间{current_time.strftime('%H:%M')}未到收盘，排除今日数据")
+
+            # 二次确认：过滤掉任何严格大于当前日期的数据
+            df = df[df["date"].dt.date <= current_date]
+
+            after_filter = len(df)
+            if before_filter > after_filter:
+                logger.info(f"过滤掉 {before_filter - after_filter} 条未来/未完成日期的数据")
+
             logger.info(f"获取股票{code} K线数据成功，共{len(df)}条")
             return df
 
@@ -189,7 +324,20 @@ class DataFetcher:
             K线数据DataFrame
         """
         try:
+            # 检查是否支持分钟线数据
+            # 港股：4-5位数字或带HK前缀
+            is_hk_stock = (len(code) in [4, 5] and code.isdigit()) or code.startswith("HK")
+            if is_hk_stock:
+                logger.warning(f"港股 {code} 不支持分钟线数据，仅支持日线数据")
+                raise ValueError(f"港股不支持分钟线数据，请使用日线周期查询")
+
+            # 基金/ETF：5开头且长度为6（排除科创板688）
+            if code.startswith("5") and len(code) == 6:
+                logger.warning(f"基金/ETF {code} 不支持分钟线数据，仅支持日线数据")
+                raise ValueError(f"基金/ETF不支持分钟线数据，请使用日线周期查询")
+
             # 转换代码格式（A股需要加上 sh/sz 前缀）
+            # 科创板（688）和普通A股（600/601/603等）都支持分钟线
             if code.startswith("6"):
                 symbol = f"sh{code}"
             elif code.startswith("0") or code.startswith("3"):
@@ -224,9 +372,21 @@ class DataFetcher:
             if "date" in df.columns:
                 df["date"] = pd.to_datetime(df["date"])
 
+            # 过滤未来时间的数据（避免显示尚未发生的K线）
+            current_time = datetime.now()
+            before_filter = len(df)
+            df = df[df["date"] <= current_time]
+            after_filter = len(df)
+
+            if before_filter > after_filter:
+                logger.info(f"过滤掉 {before_filter - after_filter} 条未来时间的数据")
+
             logger.info(f"获取股票{code} {period}分钟线数据成功，共{len(df)}条")
             return df
 
+        except ValueError as e:
+            # 重新抛出ValueError，让上层处理
+            raise e
         except Exception as e:
             error_msg = str(e)
             if "不存在" in error_msg or "退市" in error_msg:

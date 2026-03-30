@@ -145,6 +145,30 @@ class DataStorage:
 
             self.db.commit()
 
+            # 确保只保留最新500条数据（删除超过500条的旧数据）
+            total_count = self.db.query(StockQuote).filter(
+                StockQuote.stock_id == stock.id,
+                StockQuote.timeframe == timeframe
+            ).count()
+
+            if total_count > 500:
+                # 查询需要删除的旧数据（按日期升序，删除最旧的）
+                quotes_to_delete = self.db.query(StockQuote).filter(
+                    StockQuote.stock_id == stock.id,
+                    StockQuote.timeframe == timeframe
+                ).order_by(StockQuote.date.asc()).limit(total_count - 500).all()
+
+                # 记录要删除的ID
+                delete_ids = [q.id for q in quotes_to_delete]
+
+                # 批量删除
+                if delete_ids:
+                    self.db.query(StockQuote).filter(
+                        StockQuote.id.in_(delete_ids)
+                    ).delete()
+                    self.db.commit()
+                    logger.info(f"✅ {code} {timeframe}: 删除了{len(delete_ids)}条旧数据，保留最新500条")
+
             logger.info(f"保存股票{code} K线数据成功，新增{saved_count}条，已重新计算均线")
             return saved_count
 
