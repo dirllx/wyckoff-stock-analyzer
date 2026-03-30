@@ -5,6 +5,10 @@ import pytest
 import sys
 import os
 from pathlib import Path
+from datetime import datetime, timedelta
+from app.models.database import Stock, StockQuote
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # 添加项目根目录到Python路径
 backend_root = Path(__file__).parent.parent
@@ -61,3 +65,40 @@ def sample_quotes_with_ma():
             "ma250": 98.5
         }
     ]
+
+
+@pytest.fixture
+def sample_stock():
+    """示例股票对象"""
+    stock = Stock()
+    stock.id = 1
+    stock.code = "TEST001"
+    stock.name = "测试股票"
+    stock.market = "A股"
+    return stock
+
+
+@pytest.fixture
+def sample_quotes_list():
+    """创建示例StockQuote对象列表（100条）"""
+    quotes = []
+    for i in range(100):
+        quote = StockQuote()
+        quote.stock_id = 1
+        quote.timeframe = "daily"
+        quote.date = datetime(2024, 1, 1) + timedelta(days=i)
+        quote.open = 100.0 + i * 0.5
+        quote.high = 105.0 + i * 0.5
+        quote.low = 98.0 + i * 0.5
+        quote.close = 103.0 + i * 0.5
+        quote.volume = 1000000 + i * 5000
+        quote.ma5 = 101.0 + i * 0.5
+        quote.ma10 = 100.5 + i * 0.5
+        quote.ma20 = 100.0 + i * 0.5
+        quote.ma60 = 99.5 + i * 0.5
+        quote.ma120 = 99.0 + i * 0.5
+        quote.ma250 = 98.5 + i * 0.5
+        quote.volume_ma5 = 1100000 + i * 5000
+        quote.obv = 1000000 + i * 10000  # 添加OBV值
+        quotes.append(quote)
+    return quotes
