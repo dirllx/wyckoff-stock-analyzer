@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # API配置
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("DEBUG", "False") == "True"
 
     # Tushare配置
     TUSHARE_TOKEN: str = ""
