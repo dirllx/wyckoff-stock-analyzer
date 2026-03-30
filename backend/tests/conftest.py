@@ -16,6 +16,22 @@ sys.path.insert(0, str(backend_root))
 
 
 @pytest.fixture
+def db_session():
+    """创建测试数据库会话"""
+    # 使用内存数据库
+    engine = create_engine("sqlite:///:memory:")
+    from app.models.database import Base
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    yield session
+
+    session.close()
+
+
+@pytest.fixture
 def sample_stock_data():
     """示例K线数据"""
     return [
