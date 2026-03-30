@@ -10,6 +10,7 @@ from loguru import logger
 
 from app.models.database import Stock, StockQuote
 from app.services.data.data_fetcher import DataFetcher
+from app.repositories.stock_repository import StockRepository
 
 
 class DataStorage:
@@ -18,6 +19,7 @@ class DataStorage:
     def __init__(self, db: Session):
         self.db = db
         self.fetcher = DataFetcher()
+        self.repo = StockRepository(db)  # 使用Repository
 
     def get_or_create_stock(self, code: str) -> Stock:
         """
@@ -29,23 +31,20 @@ class DataStorage:
         Returns:
             Stock对象
         """
-        stock = self.db.query(Stock).filter(Stock.code == code).first()
+        # 使用Repository的find_or_create方法
+        stock = self.repo.find_or_create(code)
 
-        if not stock:
-            # 获取股票信息
-            stock_info = self.fetcher.get_stock_info(code)
-
-            # 创建股票
-            stock = Stock(
-                code=code,
-                name=stock_info.get("name", ""),
-                market=stock_info.get("market", "未知"),
-                industry=stock_info.get("industry", "")
-            )
-            self.db.add(stock)
-            self.db.commit()
-            self.db.refresh(stock)
-            logger.info(f"创建新股票记录: {code}")
+        # 如果是新创建的股票，获取详细信息
+        if not stock.name or stock.name == code:
+            try:
+                stock_info = self.fetcher.get_stock_info(code)
+                stock.name = stock_info.get("name", "")
+                stock.market = stock_info.get("market", "未知")
+                stock.industry = stock_info.get("industry", "")
+                self.db.commit()
+                logger.info(f"更新股票信息: {code} - {stock.name}")
+            except Exception as e:
+                logger.warning(f"获取股票信息失败: {e}")
 
         return stock
 
@@ -238,16 +237,16 @@ class DataStorage:
         Returns:
             StockQuote列表
         """
-        stock = self.db.query(Stock).filter(Stock.code == code).first()
+        # 使用Repository查找股票
+        stock = self.repo.find_by_code(code)
 
         if not stock:
             return []
 
-        quotes = self.db.query(StockQuote).filter(
-            StockQuote.stock_id == stock.id,
-            StockQuote.timeframe == timeframe
-        ).order_by(StockQuote.date.desc()).limit(limit).all()
+        # 使用Repository获取K线
+        quotes = self.repo.get_quotes(stock.id, timeframe, limit)
 
+        # Repository返回的是desc顺序，需要反转
         return list(reversed(quotes))
 
     def get_quotes_by_timeframe(
@@ -267,11 +266,10 @@ class DataStorage:
         Returns:
             StockQuote列表
         """
-        quotes = self.db.query(StockQuote).filter(
-            StockQuote.stock_id == stock_id,
-            StockQuote.timeframe == timeframe
-        ).order_by(StockQuote.date.desc()).limit(limit).all()
+        # 使用Repository获取K线
+        quotes = self.repo.get_quotes(stock_id, timeframe, limit)
 
+        # Repository返回的是desc顺序，需要反转
         return list(reversed(quotes))
 
     def update_stock_quotes(self, code: str, timeframe: str = "daily") -> bool:
