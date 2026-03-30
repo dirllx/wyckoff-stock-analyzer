@@ -16,6 +16,7 @@ from app.services.redis_service import (
     cache_stock_data
 )
 from app.utils.converters import dict_to_stock_quotes
+from app.repositories.stock_repository import StockRepository
 
 
 class MultiTimeframeService:
@@ -26,6 +27,7 @@ class MultiTimeframeService:
         self.config_service = ConfigService(db)
         self.storage = DataStorage(db)
         self.wyckoff_analyzer = WyckoffAnalyzer()
+        self.repo = StockRepository(db)  # 使用Repository
 
     def analyze_all_timeframes(self, code: str) -> Dict:
         """
@@ -37,8 +39,8 @@ class MultiTimeframeService:
         Returns:
             多周期分析结果
         """
-        # 获取股票
-        stock = self.db.query(Stock).filter(Stock.code == code).first()
+        # 使用Repository获取股票
+        stock = self.repo.find_by_code(code)
         if not stock:
             raise ValueError(f"股票 {code} 不存在")
 
