@@ -338,9 +338,6 @@ class DataFetcher:
         Note:
             使用网络重试机制，最大重试3次
         """
-        Returns:
-            K线数据DataFrame
-        """
         try:
             # 检查是否支持分钟线数据
             # 港股：4-5位数字或带HK前缀
