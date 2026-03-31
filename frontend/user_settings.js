@@ -55,7 +55,8 @@ async function loadAllSettings() {
         addLog('配置加载', '✅ 配置已加载');
 
     } catch (error) {
-        console.error('加载配置失败:', error);
+        // 错误日志保留，使用更简洁的格式
+        console.error('[Settings] Load failed:', error.message);
         addLog('配置加载失败', error.message);
         alert(`❌ 加载配置失败: ${error.message}`);
     }
@@ -114,7 +115,7 @@ async function saveAllSettings() {
         alert('✅ 配置保存成功！部分配置需要刷新页面后生效。');
 
     } catch (error) {
-        console.error('保存配置失败:', error);
+        console.error('[Settings] Save failed:', error.message);
         addLog('配置保存失败', error.message);
         alert(`❌ 保存配置失败: ${error.message}`);
     }
@@ -135,7 +136,7 @@ async function resetAllSettings() {
         addLog('配置重置', '✅ 配置已重置为默认值');
 
     } catch (error) {
-        console.error('重置配置失败:', error);
+        console.error('[Settings] Reset failed:', error.message);
         addLog('配置重置失败', error.message);
         alert(`❌ 重置配置失败: ${error.message}`);
     }
@@ -147,6 +148,6 @@ function applySettings() {
     const watchlistColumns = localStorage.getItem('setting_watchlist_columns');
     if (watchlistColumns) {
         // 可以动态调整关注列表布局
-        console.log('应用显示配置:', watchlistColumns);
+        // console.log已移除 - 调试信息在生产环境禁用
     }
 }
