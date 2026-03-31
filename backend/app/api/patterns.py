@@ -9,6 +9,7 @@ from app.services.pattern_service import PatternRecognitionService
 from app.services.data.data_fetcher import DataFetcher
 from app.services.data.data_storage import DataStorage
 from app.models.database import Stock
+from app.repositories.stock_repository import StockRepository
 import pandas as pd
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["形态识别"])
@@ -28,7 +29,8 @@ def recognize_patterns(
         timeframe: 时间周期 (daily/weekly)
     """
     # 获取或创建股票
-    stock = db.query(Stock).filter(Stock.code == code).first()
+    repo = StockRepository(db)
+    stock = repo.find_by_code(code)
     if not stock:
         raise HTTPException(status_code=404, detail=f"股票 {code} 不存在")
 

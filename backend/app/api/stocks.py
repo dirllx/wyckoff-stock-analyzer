@@ -26,6 +26,7 @@ from app.services.redis_service import (
     get_analysis_with_fallback
 )
 from app.utils.converters import dict_to_stock_quotes
+from app.repositories.stock_repository import StockRepository
 
 router = APIRouter()
 limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
@@ -51,7 +52,8 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
             logger.info(f"✅ 从缓存获取分析结果: {request.code} {request.timeframe}")
 
             # 从缓存返回时，仍然需要查询最近的信号
-            stock = db.query(Stock).filter(Stock.code == request.code).first()
+            repo = StockRepository(db)
+            stock = repo.find_by_code(request.code)
             if not stock:
                 # 如果股票不存在，创建它
                 storage = DataStorage(db)
@@ -315,7 +317,8 @@ async def get_stock_signals(code: str, db: Session = Depends(get_db)):
     Returns:
         信号列表
     """
-    stock = db.query(Stock).filter(Stock.code == code).first()
+    repo = StockRepository(db)
+    stock = repo.find_by_code(code)
     if not stock:
         raise HTTPException(status_code=404, detail=f"股票代码{code}不存在")
 

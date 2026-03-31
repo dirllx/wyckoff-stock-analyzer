@@ -10,6 +10,7 @@ from loguru import logger
 from app.models.database import Stock
 from app.models.watchlist import UserStockWatch
 from app.services.data.data_storage import DataStorage
+from app.repositories.stock_repository import StockRepository
 
 
 class WatchlistService:
@@ -18,6 +19,7 @@ class WatchlistService:
     def __init__(self, db: Session):
         self.db = db
         self.storage = DataStorage(db)
+        self.repo = StockRepository(db)  # 使用Repository
 
     def add_to_watchlist(self, code: str, priority: int = 0, watch_type: str = "browse") -> UserStockWatch:
         """
@@ -79,7 +81,7 @@ class WatchlistService:
             是否删除成功
         """
         try:
-            stock = self.db.query(Stock).filter(Stock.code == code).first()
+            stock = self.repo.find_by_code(code)
             if not stock:
                 logger.warning(f"股票{code}不存在")
                 return False
