@@ -1,11 +1,14 @@
 """
 数据获取服务 - 使用akshare获取A股和港股数据
+支持网络重试机制，提高数据获取成功率
 """
 import akshare as ak
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Optional, List
 from loguru import logger
+
+from app.utils.retry import retry_on_network_error
 
 
 class DataFetcher:
@@ -14,15 +17,19 @@ class DataFetcher:
     def __init__(self):
         self.supported_markets = ["A股", "港股"]
 
+    @retry_on_network_error(max_retries=2, initial_delay=1.0)
     def get_stock_list(self, market: str = "A股") -> pd.DataFrame:
         """
-        获取股票列表
+        获取股票列表（带网络重试）
 
         Args:
             market: 市场类型 (A股/港股)
 
         Returns:
             股票列表DataFrame
+
+        Note:
+            使用网络重试机制，最大重试2次
         """
         try:
             if market == "A股":
@@ -167,6 +174,7 @@ class DataFetcher:
             logger.error(f"获取股票{code}信息失败: {e}")
             return {"code": code, "market": "未知", "name": "", "industry": ""}
 
+    @retry_on_network_error(max_retries=3, initial_delay=2.0)
     def get_stock_quotes(
         self,
         code: str,
@@ -176,7 +184,7 @@ class DataFetcher:
         min_quotes: int = 500
     ) -> pd.DataFrame:
         """
-        获取股票K线数据
+        获取股票K线数据（带网络重试）
 
         Args:
             code: 股票代码
@@ -187,6 +195,9 @@ class DataFetcher:
 
         Returns:
             K线数据DataFrame
+
+        Note:
+            使用网络重试机制，最大重试3次，使用指数退避策略
         """
         try:
             # 处理分钟线数据
@@ -312,14 +323,21 @@ class DataFetcher:
             logger.error(f"获取股票{code} K线数据失败: {e}")
             return pd.DataFrame()
 
+    @retry_on_network_error(max_retries=3, initial_delay=1.0)
     def _get_minute_quotes(self, code: str, period: str) -> pd.DataFrame:
         """
-        获取分钟线K线数据
+        获取分钟线K线数据（带网络重试）
 
         Args:
             code: 股票代码
             period: 周期 (1, 5, 15, 30, 60)
 
+        Returns:
+            分钟线K线DataFrame
+
+        Note:
+            使用网络重试机制，最大重试3次
+        """
         Returns:
             K线数据DataFrame
         """
@@ -395,15 +413,19 @@ class DataFetcher:
                 logger.error(f"获取股票{code} {period}分钟线数据失败: {e}")
             return pd.DataFrame()
 
+    @retry_on_network_error(max_retries=2, initial_delay=1.0)
     def get_realtime_quote(self, code: str) -> dict:
         """
-        获取实时行情
+        获取实时行情（带网络重试）
 
         Args:
             code: 股票代码
 
         Returns:
             实时行情字典
+
+        Note:
+            使用网络重试机制，最大重试2次（实时数据要求快速响应）
         """
         try:
             if code.startswith("0") or code.startswith("3") or code.startswith("6"):
