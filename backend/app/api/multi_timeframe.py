@@ -17,20 +17,66 @@ from app.services.redis_service import (
 router = APIRouter(prefix="/api/v1", tags=["多周期分析"])
 
 
-@router.post("/stocks/{code}/analyze-multi")
+@router.post(
+    "/stocks/{code}/analyze-multi",
+    summary="多周期综合分析",
+    description="""
+    对指定股票进行多时间周期的综合分析。
+
+    ## 分析逻辑
+
+    1. 同时分析多个时间周期（日线、周线、月线等）
+    2. 统计各周期的信号方向
+    3. 计算综合信号和一致性
+
+    ## 返回内容
+
+    - **各周期分析结果**: 每个周期的威科夫分析
+    - **综合信号**: 多周期一致的方向判断
+    - **一致性**: HIGH/MEDIUM/LOW
+    - **缓存统计**: 命中率、命中数量
+
+    ## 示例请求
+
+    ```
+    POST /api/v1/stocks/688234/analyze-multi
+    ```
+
+    ## 示例响应
+
+    ```json
+    {
+      "stock_code": "688234",
+      "timeframes": {
+        "daily": {...},
+        "weekly": {...}
+      },
+      "summary": {
+        "direction": "LONG",
+        "suggestion": "BUY",
+        "consistency": "HIGH",
+        "confidence": 75.5
+      },
+      "cache_stats": {
+        "cache_hit_count": 2,
+        "total_timeframes": 3,
+        "cache_hit_rate": 66.7
+      },
+      "from_cache": false
+    }
+    ```
+
+    ## 缓存机制
+
+    - 使用Redis缓存分析结果
+    - 提高响应速度
+    - 减少重复计算
+    """
+)
 def analyze_multi_timeframes(
     code: str,
     db: Session = Depends(get_db)
 ):
-    """
-    多周期综合分析
-
-    Args:
-        code: 股票代码
-
-    Returns:
-        多周期分析结果，包含from_cache字段表示是否来自缓存
-    """
     try:
         # 获取配置的所有周期
         config_service = ConfigService(db)
@@ -69,9 +115,43 @@ def analyze_multi_timeframes(
         raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
 
 
-@router.get("/timeframes/available")
+@router.get(
+    "/timeframes/available",
+    summary="获取可用的时间周期",
+    description="""
+    获取系统配置的所有时间周期及其状态。
+
+    ## 返回内容
+
+    - 周期代码（daily, weekly, monthly等）
+    - 周期名称
+    - 是否启用
+    - 优先级
+
+    ## 示例响应
+
+    ```json
+    {
+      "total": 4,
+      "items": [
+        {
+          "timeframe": "daily",
+          "name": "日线",
+          "enabled": true,
+          "priority": 1
+        },
+        {
+          "timeframe": "weekly",
+          "name": "周线",
+          "enabled": true,
+          "priority": 2
+        }
+      ]
+    }
+    ```
+    """
+)
 def get_available_timeframes(db: Session = Depends(get_db)):
-    """获取可用的时间周期配置"""
     config_service = ConfigService(db)
     timeframes = config_service.get_all_timeframes()
 

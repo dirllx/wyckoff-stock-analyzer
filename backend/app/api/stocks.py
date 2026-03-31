@@ -32,19 +32,50 @@ router = APIRouter()
 limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
 
 
-@router.post("/stocks/analyze", response_model=StockAnalysisResponse)
+@router.post(
+    "/stocks/analyze",
+    response_model=StockAnalysisResponse,
+    summary="威科夫股票分析",
+    description="""
+    执行威科夫方法分析，识别市场阶段和交易信号。
+
+    ## 分析内容
+
+    1. **市场阶段识别**: 吸筹(A)、上涨(B)、派发(C)、下跌(D)
+    2. **信号方向**: LONG(做多)/SHORT(做空)/NEUTRAL(中性)
+    3. **置信度评分**: 0-100分，分数越高信号越强
+    4. **建议操作**: BUY/SELL/HOLD
+
+    ## 时间周期支持
+
+    - **日线**: daily - 推荐用于中长期分析
+    - **周线**: weekly - 趋势判断
+    - **月线**: monthly - 长期趋势
+    - **分钟线**: 30/60 - 短线交易
+
+    ## 信号保存规则
+
+    - 仅保存score >= 3的信号
+    - 仅在交易日保存
+    - 分钟线仅在交易时段保存
+
+    ## 示例
+
+    ```json
+    {
+      "code": "688234",
+      "timeframe": "daily"
+    }
+    ```
+
+    ## 速率限制
+
+    - 每分钟最多10次请求
+    ```
+    """
+)
 @limiter.limit("10/minute")  # 每分钟最多10次分析请求
 async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get_db)):
-    """
-    分析股票威科夫信号
-
-    Args:
-        request: 分析请求 (股票代码、时间周期)
-        db: 数据库会话
-
-    Returns:
-        分析结果
-    """
     try:
         # ========== Redis缓存：先检查缓存 ==========
         cached_analysis = get_cached_analysis(request.code, request.timeframe)
@@ -305,18 +336,41 @@ async def analyze_stock(request: StockAnalysisRequest, db: Session = Depends(get
         raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
 
 
-@router.get("/stocks/{code}/signals", response_model=list[WyckoffSignalResponse])
+@router.get(
+    "/stocks/{code}/signals",
+    response_model=list[WyckoffSignalResponse],
+    summary="获取威科夫信号历史",
+    description="""
+    获取股票的历史威科夫信号记录。
+
+    ## 信号类型
+
+    - **SPRING**: 弹簧形态（吸筹阶段）
+    - **BREAKOUT**: 突破形态
+    - **TEST**: 测试形态
+    - **LPS**: 最后支撑点
+
+    ## 信号字段
+
+    - **direction**: LONG/SHORT/NEUTRAL
+    - **score**: 信号强度(1-5)
+    - **confidence**: 置信度(0-100)
+    - **suggestion**: BUY/SELL/HOLD
+    - **verified**: 信号验证状态
+
+    ## 返回数量
+
+    - 最多返回20条最新信号
+    - 按日期降序排列
+
+    ## 示例请求
+
+    ```
+    GET /api/v1/stocks/688234/signals
+    ```
+    """
+)
 async def get_stock_signals(code: str, db: Session = Depends(get_db)):
-    """
-    获取股票的历史威科夫信号
-
-    Args:
-        code: 股票代码
-        db: 数据库会话
-
-    Returns:
-        信号列表
-    """
     repo = StockRepository(db)
     stock = repo.find_by_code(code)
     if not stock:
@@ -332,23 +386,42 @@ async def get_stock_signals(code: str, db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/stocks/{code}/update")
+@router.post(
+    "/stocks/{code}/update",
+    summary="更新股票数据",
+    description="""
+    手动触发股票数据更新，从数据源获取最新K线数据。
+
+    ## 使用场景
+
+    - 数据过期需要刷新
+    - 首次添加股票
+    - 补充历史数据
+
+    ## 更新逻辑
+
+    - **分钟线**: 每次强制更新，确保实时性
+    - **日线/周线/月线**: 增量更新，只获取新数据
+    - 更新完成后自动清除Redis缓存
+
+    ## 示例请求
+
+    ```
+    POST /api/v1/stocks/688234/update?timeframe=daily
+    ```
+
+    ## 注意事项
+
+    - 更新操作可能需要几秒钟
+    - 频繁更新可能被数据源限流
+    - 建议使用缓存接口提高性能
+    """
+)
 async def update_stock_data(
     code: str,
     timeframe: str = "daily",
     db: Session = Depends(get_db)
 ):
-    """
-    手动更新股票数据
-
-    Args:
-        code: 股票代码
-        timeframe: 时间周期 (daily/weekly/monthly/30/60)
-        db: 数据库会话
-
-    Returns:
-        更新结果
-    """
     try:
         storage = DataStorage(db)
         # 先创建股票（如果不存在）
@@ -375,25 +448,55 @@ async def update_stock_data(
         raise HTTPException(status_code=500, detail=f"更新失败: {str(e)}")
 
 
-@router.get("/stocks/{code}/quotes")
+@router.get(
+    "/stocks/{code}/quotes",
+    summary="获取股票K线数据",
+    description="""
+    获取股票K线数据，包含价格、成交量、技术指标等。
+
+    ## 支持的时间周期
+
+    - **daily**: 日线数据
+    - **weekly**: 周线数据
+    - **monthly**: 月线数据
+    - **30/60**: 分钟线数据
+
+    ## 返回字段
+
+    - **OHLCV**: 开高低收量
+    - **均线**: MA5/MA10/MA15/MA20/MA30/MA60/MA90/MA120/MA250
+    - **成交量指标**: volume_ma5, obv
+
+    ## 缓存机制
+
+    - 日线/周线/月线使用Redis缓存
+    - 数据未缓存时自动更新
+
+    ## 示例请求
+
+    ```
+    GET /api/v1/stocks/688234/quotes?timeframe=daily&limit=100
+    ```
+
+    ## 示例响应
+
+    ```json
+    {
+      "code": "688234",
+      "timeframe": "daily",
+      "total": 500,
+      "from_cache": true,
+      "quotes": [...]
+    }
+    ```
+    """
+)
 async def get_stock_quotes(
     code: str,
     timeframe: str = "daily",
     limit: int = 500,
     db: Session = Depends(get_db)
 ):
-    """
-    获取股票K线数据（用于图表展示）
-    只查询数据，不更新数据（由analyze接口负责更新）
-
-    Args:
-        code: 股票代码
-        timeframe: 时间周期
-        limit: 返回数量
-
-    Returns:
-        K线数据列表
-    """
     try:
         storage = DataStorage(db)
 

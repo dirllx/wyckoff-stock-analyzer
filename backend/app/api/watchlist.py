@@ -19,23 +19,40 @@ from app.services.watchlist_service import WatchlistService
 router = APIRouter(prefix="/api/v1/watchlist", tags=["关注列表"])
 
 
-@router.get("", response_model=WatchlistResponse)
+@router.get(
+    "",
+    response_model=WatchlistResponse,
+    summary="获取关注列表",
+    description="""
+    获取用户的股票关注列表。
+
+    ## 关注类型
+
+    - **favorite**: 自选股 - 用户关注的重点股票
+    - **browse**: 浏览股 - 用户浏览过的股票
+    - **None**: 全部类型
+
+    ## 参数说明
+
+    - **limit**: 返回数量限制（默认100）
+    - **watch_type**: 过滤特定类型
+
+    ## 排序规则
+
+    按优先级和创建时间降序排列
+
+    ## 示例请求
+
+    ```
+    GET /api/v1/watchlist?limit=50&watch_type=favorite
+    ```
+    """
+)
 def get_watchlist(
     db: Session = Depends(get_db),
     limit: int = 100,
     watch_type: str = None
 ):
-    """
-    获取关注列表
-
-    Args:
-        db: 数据库会话
-        limit: 返回数量限制（默认100）
-        watch_type: 关注类型 (favorite=自选股, browse=浏览股, None=全部)
-
-    Returns:
-        关注列表
-    """
     try:
         service = WatchlistService(db)
         watchlist = service.get_watchlist(limit, watch_type)
@@ -60,20 +77,42 @@ def get_watchlist(
         raise HTTPException(status_code=500, detail=f"获取失败: {str(e)}")
 
 
-@router.post("", response_model=MessageResponse)
+@router.post(
+    "",
+    response_model=MessageResponse,
+    summary="添加股票到关注列表",
+    description="""
+    将股票添加到用户的关注列表。
+
+    ## 请求参数
+
+    ```json
+    {
+      "code": "688234",
+      "watch_type": "favorite"
+    }
+    ```
+
+    ## watch_type说明
+
+    - **favorite**: 自选股
+    - **browse**: 浏览股（默认）
+
+    ## 示例请求
+
+    ```
+    POST /api/v1/watchlist
+    {
+      "code": "688234",
+      "watch_type": "favorite"
+    }
+    ```
+    """
+)
 def add_to_watchlist(
     request: WatchlistAddRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    添加股票到关注列表
-
-    Args:
-        request: 添加请求（股票代码）
-
-    Returns:
-        消息响应
-    """
     try:
         service = WatchlistService(db)
         watch_type = request.watch_type or "browse"
@@ -90,14 +129,29 @@ def add_to_watchlist(
         raise HTTPException(status_code=500, detail=f"添加失败: {str(e)}")
 
 
-@router.delete("/{code}", response_model=MessageResponse)
-def remove_from_watchlist(code: str, db: Session = Depends(get_db)):
-    """
-    从关注列表删除股票
+@router.delete(
+    "/{code}",
+    response_model=MessageResponse,
+    summary="从关注列表删除股票",
+    description="""
+    从用户的关注列表中删除指定股票。
 
-    Args:
-        code: 股票代码
-        db: 数据库会话
+    ## 参数说明
+
+    - **code**: 股票代码（路径参数）
+
+    ## 示例请求
+
+    ```
+    DELETE /api/v1/watchlist/688234
+    ```
+
+    ## 返回结果
+
+    成功删除返回200，股票不存在也返回200
+    """
+)
+def remove_from_watchlist(code: str, db: Session = Depends(get_db)):
 
     Returns:
         消息响应
