@@ -77,6 +77,7 @@ def test_calculate_short_term_score(enhanced_scorer):
         'open': [100 + i for i in range(50)],
         'ma5': [102 + i for i in range(50)],
         'ma10': [101 + i for i in range(50)],
+        'ma20': [100 + i for i in range(50)],
     })
 
     score = enhanced_scorer._calculate_short_term_score(df)
