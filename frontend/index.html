@@ -3122,6 +3122,9 @@
         }
 
         // ========== 分析功能 ==========
+        // 当前正在分析的股票名称（用于添加到关注列表时使用）
+        let currentAnalyzingStockName = null;
+
         async function analyzeStock() {
             try {
                 const code = document.getElementById('stockCode').value;
@@ -3164,9 +3167,12 @@
 
                 const analysisData = await analysisRes.json();
 
-                // 保存到历史记录（包含股票名字）
+                // 保存股票名称（用于添加到关注列表）
                 if (analysisData.stock && analysisData.stock.name) {
+                    currentAnalyzingStockName = analysisData.stock.name;
                     saveStockHistory(code, analysisData.stock.name);
+                } else {
+                    currentAnalyzingStockName = null;
                 }
 
                 addLog('数据更新', '数据更新完成，正在获取K线数据...');
@@ -5252,10 +5258,15 @@
                                 <button onclick="multiAnalyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')" style="flex: 1; background: linear-gradient(135deg, #8b5cf6, #a78bfa); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="多周期分析">
                                     📈
                                 </button>
-                                ${!isFavorite ?
+                                ${isFavorite ?
+                                    // 自选股显示"取消关注"按钮（转浏览股）
+                                    `<button onclick="unfavoriteStock('${item.stock_code}')" style="flex: 1; background: linear-gradient(135deg, #6b7280, #4b5563); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="取消关注，转为浏览股">
+                                        💔
+                                    </button>` :
+                                    // 浏览股显示"添加到自选股"按钮
                                     `<button onclick="favoriteStock('${item.stock_code}')" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="添加到自选股">
                                         ⭐
-                                    </button>` : ''
+                                    </button>`
                                 }
                                 <button onclick="deleteFromWatchlist('${item.stock_code}')" style="flex: 1; background: #dc2626; padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;" title="删除">
                                     🗑️
@@ -5886,7 +5897,7 @@
             analyzeStock();
         }
 
-        async function addToWatchlist(silent = false, code = null, watchType = null) {
+        async function addToWatchlist(silent = false, code = null, watchType = null, stockName = null) {
             // 如果没有指定code，从输入框获取
             const stockCode = code || document.getElementById('watchlistCode').value;
 
@@ -5898,13 +5909,20 @@
             // 如果没有指定类型，使用当前标签页类型
             const targetType = watchType || currentWatchlistTab;
 
-            console.log(`[addToWatchlist] 添加股票: ${stockCode}, 类型: ${targetType}, 静默: ${silent}`);
+            // 如果没有指定名称，尝试从当前分析的股票获取
+            const name = stockName || currentAnalyzingStockName;
+
+            console.log(`[addToWatchlist] 添加股票: ${stockCode}, 名称: ${name}, 类型: ${targetType}, 静默: ${silent}`);
 
             try {
                 const response = await fetch(`${API_BASE}/api/v1/watchlist`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: stockCode, watch_type: targetType })
+                    body: JSON.stringify({
+                        code: stockCode,
+                        watch_type: targetType,
+                        stock_name: name
+                    })
                 });
 
                 if (!response.ok) {
@@ -5948,6 +5966,30 @@
             } catch (error) {
                 console.error('删除失败:', error);
                 addLog('删除失败', `错误: ${error.message}`);
+            }
+        }
+
+        // 取消关注（自选股转浏览股）
+        async function unfavoriteStock(code) {
+            addLog('取消关注', `股票代码: ${code}，转为浏览股`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ watch_type: 'browse' })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                addLog('操作成功', data.message || '已转为浏览股');
+                refreshWatchlist();
+            } catch (error) {
+                console.error('取消关注失败:', error);
+                addLog('操作失败', `错误: ${error.message}`);
             }
         }
 
@@ -7766,26 +7808,35 @@
                         border-bottom: 1px solid #374151;
                         padding-bottom: ${isMobile ? '8px' : '10px'};
                         flex-shrink: 0;
+                        position: relative;
+                        z-index: 10;
                     ">
                         <h2 style="
                             font-size: ${isMobile ? '18px' : '16px'};
                             font-weight: 600;
                             color: #f9fafb;
                             margin: 0;
+                            position: relative;
+                            z-index: 10;
                         ">K线详情</h2>
                         <button onclick="document.getElementById('quoteModal').remove()" style="
-                            background: none;
-                            border: none;
-                            color: #9ca3af;
+                            background: rgba(156, 163, 175, 0.2);
+                            border: 1px solid #9ca3af;
+                            color: #f9fafb;
                             font-size: ${isMobile ? '28px' : '20px'};
+                            font-weight: bold;
                             cursor: pointer;
                             padding: 0;
-                            width: ${isMobile ? '36px' : '28px'};
-                            height: ${isMobile ? '36px' : '28px'};
+                            width: ${isMobile ? '40px' : '32px'};
+                            height: ${isMobile ? '40px' : '32px'};
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                        ">&times;</button>
+                            border-radius: 6px;
+                            position: relative;
+                            z-index: 10;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.borderColor='#ef4444';" onmouseout="this.style.background='rgba(156, 163, 175, 0.2)'; this.style.borderColor='#9ca3af';">&times;</button>
                     </div>
 
                     <div style="margin-bottom: 10px; overflow-y: auto; flex: 1;">
