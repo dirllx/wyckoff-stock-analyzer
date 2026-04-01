@@ -5572,30 +5572,56 @@
         function renderSingleAnalysisResult(code, data) {
             const summary = data.analysis_summary || {};
             const quote = data.current_quote;
+            const details = summary.details || {};
 
             // 检测是否为移动端
             const isMobile = window.innerWidth < 768;
 
             let html = '<div style="text-align: left;">';
 
-            // 价格信息
+            // 1. 日期和涨跌幅区域（紧凑显示）
             if (quote) {
+                // 计算涨跌幅（相对于前一日）
+                const change = quote.open && quote.close ? ((quote.close - quote.open) / quote.open * 100) : 0;
+                const changeColor = change >= 0 ? '#10b981' : '#ef4444';
+                const changeText = change >= 0 ? `+${change.toFixed(2)}%` : `${change.toFixed(2)}%`;
+
                 html += `
-                    <div style="background: #111827; padding: ${isMobile ? '12px' : '16px'}; border-radius: 8px; margin-bottom: ${isMobile ? '12px' : '16px'};">
-                        <div style="font-size: ${isMobile ? '28px' : '32px'}; font-weight: 700; color: #f9fafb; margin-bottom: ${isMobile ? '6px' : '8px'};">
-                            ${quote.close?.toFixed(2) || '-'}
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #111827; padding: ${isMobile ? '10px' : '12px'}; border-radius: 8px; margin-bottom: ${isMobile ? '10px' : '16px'};">
+                        <div style="flex: 1;">
+                            <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: 2px;">
+                                📅 ${quote.date ? quote.date.split(' ')[0] : '-'}
+                            </div>
+                            <div style="font-size: ${isMobile ? '24px' : '28px'}; font-weight: 700; color: #f9fafb;">
+                                ${quote.close?.toFixed(2) || '-'}
+                            </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: ${isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; font-size: ${isMobile ? '11px' : '12px'};">
-                            <div><span style="color: #9ca3af;">开:</span> ${quote.open?.toFixed(2) || '-'}</div>
-                            <div><span style="color: #9ca3af;">高:</span> ${quote.high?.toFixed(2) || '-'}</div>
-                            <div><span style="color: #9ca3af;">低:</span> ${quote.low?.toFixed(2) || '-'}</div>
-                            <div><span style="color: #9ca3af;">量:</span> ${quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}</div>
+                        <div style="text-align: right;">
+                            <div style="color: ${changeColor}; font-size: ${isMobile ? '14px' : '16px'}; font-weight: 600;">
+                                ${changeText}
+                            </div>
                         </div>
                     </div>
                 `;
             }
 
-            // 评分和方向
+            // 2. OHLC和成交量（紧凑横向排列）
+            if (quote) {
+                html += `
+                    <div style="background: #111827; padding: ${isMobile ? '8px' : '10px'}; border-radius: 8px; margin-bottom: ${isMobile ? '10px' : '12px'};">
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'}; font-size: ${isMobile ? '10px' : '11px'};">
+                            <div><span style="color: #9ca3af;">开:</span> ${quote.open?.toFixed(2) || '-'}</div>
+                            <div><span style="color: #9ca3af;">高:</span> ${quote.high?.toFixed(2) || '-'}</div>
+                            <div><span style="color: #9ca3af;">低:</span> ${quote.low?.toFixed(2) || '-'}</div>
+                            <div><span style="color: #9ca3af;">收:</span> ${quote.close?.toFixed(2) || '-'}</div>
+                            <div><span style="color: #9ca3af;">量:</span> ${quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}</div>
+                            ${quote.amount ? `<div><span style="color: #9ca3af;">额:</span> ${(quote.amount / 100000000).toFixed(2) + '亿'}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. 评分和方向
             const score = summary.score || 0;
             const direction = summary.direction || 'NEUTRAL';
             let directionColor = '#9ca3af';
@@ -5609,25 +5635,72 @@
             }
 
             html += `
-                <div style="display: flex; gap: ${isMobile ? '12px' : '16px'}; margin-bottom: ${isMobile ? '12px' : '16px'};">
-                    <div style="flex: 1; background: ${directionColor}20; padding: ${isMobile ? '12px' : '16px'}; border-radius: 8px; border: 1px solid ${directionColor};">
-                        <div style="color: ${directionColor}; font-size: ${isMobile ? '13px' : '14px'}; margin-bottom: ${isMobile ? '6px' : '8px'};">${directionText}</div>
-                        <div style="font-size: ${isMobile ? '32px' : '36px'}; font-weight: 700; color: ${directionColor};">${score}分</div>
+                <div style="display: flex; gap: ${isMobile ? '10px' : '16px'}; margin-bottom: ${isMobile ? '10px' : '16px'};">
+                    <div style="flex: 1; background: ${directionColor}20; padding: ${isMobile ? '10px' : '16px'}; border-radius: 8px; border: 1px solid ${directionColor};">
+                        <div style="color: ${directionColor}; font-size: ${isMobile ? '12px' : '14px'}; margin-bottom: ${isMobile ? '4px' : '8px'};">${directionText}</div>
+                        <div style="font-size: ${isMobile ? '28px' : '32px'}; font-weight: 700; color: ${directionColor};">${score}分</div>
                     </div>
                 </div>
             `;
 
-            // 威科夫阶段
-            if (summary.wyckoff_phase) {
+            // 4. 均线分析
+            if (quote && (quote.ma5 || quote.ma10 || quote.ma20 || quote.ma60)) {
+                const maData = [];
+                if (quote.ma5) maData.push(`MA5: ${quote.ma5.toFixed(2)}`);
+                if (quote.ma10) maData.push(`MA10: ${quote.ma10.toFixed(2)}`);
+                if (quote.ma20) maData.push(`MA20: ${quote.ma20.toFixed(2)}`);
+                if (quote.ma60) maData.push(`MA60: ${quote.ma60.toFixed(2)}`);
+                if (quote.ma120) maData.push(`MA120: ${quote.ma120.toFixed(2)}`);
+                if (quote.ma250) maData.push(`MA250: ${quote.ma250.toFixed(2)}`);
+
                 html += `
-                    <div style="background: #1f2937; padding: ${isMobile ? '10px' : '12px'}; border-radius: 8px; margin-bottom: ${isMobile ? '10px' : '12px'};">
-                        <div style="color: #9ca3af; font-size: ${isMobile ? '11px' : '12px'}; margin-bottom: ${isMobile ? '3px' : '4px'};">威科夫阶段</div>
-                        <div style="color: #f9fafb; font-size: ${isMobile ? '13px' : '14px'}; line-height: 1.4;">${summary.wyckoff_phase}</div>
+                    <div style="background: #1f2937; padding: ${isMobile ? '8px' : '10px'}; border-radius: 8px; margin-bottom: ${isMobile ? '8px' : '10px'};">
+                        <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '3px' : '4px'};">📈 均线分析</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '6px' : '8px'}; font-size: ${isMobile ? '10px' : '11px'};">
+                            ${maData.map(ma => `<span style="color: #f9faff;">${ma}</span>`).join(' · ')}
+                        </div>
                     </div>
                 `;
             }
 
-            // 操作建议
+            // 5. 量能分析
+            if (details.volume) {
+                const volumeInfo = details.volume;
+                let volumeText = '正常';
+                let volumeColor = '#9ca3af';
+                if (volumeInfo.anomaly) {
+                    volumeText = '异常';
+                    volumeColor = '#f59e0b';
+                }
+                if (volumeInfo.direction === 'HIGH') {
+                    volumeText = '放量';
+                    volumeColor = '#10b981';
+                } else if (volumeInfo.direction === 'LOW') {
+                    volumeText = '缩量';
+                    volumeColor = '#ef4444';
+                }
+
+                html += `
+                    <div style="background: #1f2937; padding: ${isMobile ? '8px' : '10px'}; border-radius: 8px; margin-bottom: ${isMobile ? '8px' : '10px'};">
+                        <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '3px' : '4px'};">📊 量能分析</div>
+                        <div style="color: ${volumeColor}; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 500;">
+                            ${volumeText} ${volumeInfo.reason || ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 6. 威科夫分析
+            if (summary.wyckoff_phase) {
+                html += `
+                    <div style="background: #1f2937; padding: ${isMobile ? '8px' : '10px'}; border-radius: 8px; margin-bottom: ${isMobile ? '8px' : '10px'};">
+                        <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '3px' : '4px'}">🎯 威科夫分析</div>
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '12px' : '13px'}; line-height: 1.4;">${summary.wyckoff_phase}</div>
+                    </div>
+                `;
+            }
+
+            // 7. 操作建议
             if (summary.suggestion) {
                 html += `
                     <div style="background: #0a0e27; padding: ${isMobile ? '10px' : '12px'}; border-radius: 8px; border: 1px solid #374151;">
