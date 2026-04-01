@@ -7789,120 +7789,54 @@
                     </div>
 
                     <div style="margin-bottom: 10px; overflow-y: auto; flex: 1;">
-                        <!-- 第1行：移动端垂直排列，桌面端左右结构 -->
-                        ${isMobile ? `
-                        <!-- 移动端：日期和涨跌幅（上下结构） -->
-                        <div style="background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                            <div style="color: #9ca3af; font-size: 10px; margin-bottom: 4px;">📅 ${formatDateString(q.date, currentTimeframe)}</div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="font-size: 24px; font-weight: 700; color: #f9fafb;">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
-                                <div style="font-size: 18px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">${changeSign}${change}%</div>
-                            </div>
-                        </div>
-
-                        <!-- OHLC（横向排列） -->
-                        <div style="display: flex; justify-content: space-between; background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px; gap: 8px;">
-                            <div style="flex: 1; text-align: center;">
-                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">开</div>
-                                <div style="font-size: 16px; font-weight: 600;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
-                            </div>
-                            <div style="flex: 1; text-align: center;">
-                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">高</div>
-                                <div style="font-size: 16px; font-weight: 600; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
-                            </div>
-                            <div style="flex: 1; text-align: center;">
-                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">低</div>
-                                <div style="font-size: 16px; font-weight: 600; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
-                            </div>
-                            <div style="flex: 1; text-align: center;">
-                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">收</div>
-                                <div style="font-size: 16px; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
-                            </div>
-                        </div>
-
-                        <!-- 成交量和成交额（上下结构） -->
-                        <div style="display: flex; flex-direction: column; gap: 8px; background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #9ca3af; font-size: 10px;">成交量</span>
-                                <span style="font-size: 14px; font-weight: 600;">${q.volume ? (q.volume / 10000).toFixed(0) + '万' : 'N/A'}</span>
-                            </div>
-                            ${q.volume_ma5 ? `<div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #9ca3af; font-size: 10px;">均量</span>
-                                <span style="font-size: 12px; color: #d1d5db;">${(q.volume_ma5 / 10000).toFixed(0)}万</span>
-                            </div>` : ''}
-                            ${q.amount ? `<div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #9ca3af; font-size: 10px;">成交额</span>
-                                <span style="font-size: 14px; font-weight: 600;">${(q.amount / 100000000).toFixed(2) + '亿'}</span>
-                            </div>` : ''}
-                            ${q.obv ? `<div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="color: #9ca3af; font-size: 10px;">OBV</span>
-                                <span style="font-size: 12px; color: #d1d5db; cursor: help;" title="${(() => {
-                                    let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M\n\n指标说明：\n上涨日累加成交量\n下跌日累减成交量\n用于验证价格趋势`;
-                                    if (prevQ && prevQ.obv != null) {
-                                        const change = q.obv - prevQ.obv;
-                                        const changeM = (change / 1000000).toFixed(2);
-                                        const changePercent = (change / Math.abs(prevQ.obv) * 100).toFixed(2);
-                                        if (change > 0) {
-                                            tooltip += `\n\n较上期：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
-                                        } else if (change < 0) {
-                                            tooltip += `\n\n较上期：${changeM}M (${changePercent}%)\n📉 资金流出`;
-                                        } else {
-                                            tooltip += `\n\n较上期：持平\n➡️ 资金平衡`;
-                                        }
-                                    }
-                                    return tooltip;
-                                })()}">${(q.obv / 1000000).toFixed(1)}M</span>
-                            </div>` : ''}
-                        </div>
-                        ` : `
-                        <!-- 桌面端：左右结构 - 日期/涨跌幅 + OHLC + 成交量/OBV -->
-                        <div style="display: grid; grid-template-columns: 150px 1fr 140px; gap: 8px; margin-bottom: 8px;">
+                        <!-- 第1行：3列布局 - 日期涨跌幅(左) + OHLC(中) + 成交量成交额(右) -->
+                        <div style="display: grid; grid-template-columns: ${isMobile ? '100px 1fr 110px' : '150px 1fr 140px'}; gap: ${isMobile ? '6px' : '8px'}; margin-bottom: ${isMobile ? '10px' : '8px'};">
                             <!-- 左侧：日期/涨跌幅 -->
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
-                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 2px;">日期</div>
-                                    <div style="font-size: 14px; font-weight: 600;">${formatDateString(q.date, currentTimeframe)}</div>
+                            <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
+                                <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '9px' : '11px'}; margin-bottom: 2px;">日期</div>
+                                    <div style="font-size: ${isMobile ? '11px' : '14px'}; font-weight: 600;">${formatDateString(q.date, currentTimeframe)}</div>
                                 </div>
-                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
-                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 2px;">涨跌幅</div>
-                                    <div style="font-size: 14px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">
+                                <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '9px' : '11px'}; margin-bottom: 2px;">涨跌幅</div>
+                                    <div style="font-size: ${isMobile ? '12px' : '14px'}; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">
                                         ${changeSign}${change}%
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 中间：OHLC -->
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
-                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">开</div>
-                                    <div style="font-size: 24px; font-weight: 600;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: ${isMobile ? '4px' : '6px'};">
+                                <div style="background: #111827; padding: ${isMobile ? '4px' : '6px'}; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '8px' : '10px'}; margin-bottom: 1px;">开</div>
+                                    <div style="font-size: ${isMobile ? '16px' : '24px'}; font-weight: 600;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
                                 </div>
-                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
-                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">高</div>
-                                    <div style="font-size: 24px; font-weight: 600; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
+                                <div style="background: #111827; padding: ${isMobile ? '4px' : '6px'}; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '8px' : '10px'}; margin-bottom: 1px;">高</div>
+                                    <div style="font-size: ${isMobile ? '16px' : '24px'}; font-weight: 600; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
                                 </div>
-                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
-                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">低</div>
-                                    <div style="font-size: 24px; font-weight: 600; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
+                                <div style="background: #111827; padding: ${isMobile ? '4px' : '6px'}; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '8px' : '10px'}; margin-bottom: 1px;">低</div>
+                                    <div style="font-size: ${isMobile ? '16px' : '24px'}; font-weight: 600; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
                                 </div>
-                                <div style="background: #111827; padding: 6px; border-radius: 4px;">
-                                    <div style="color: #9ca3af; font-size: 10px; margin-bottom: 1px;">收</div>
-                                    <div style="font-size: 24px; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                                <div style="background: #111827; padding: ${isMobile ? '4px' : '6px'}; border-radius: 4px;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '8px' : '10px'}; margin-bottom: 1px;">收</div>
+                                    <div style="font-size: ${isMobile ? '16px' : '24px'}; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
                                     ${getSignalStrength(q)}
                                 </div>
                             </div>
 
-                            <!-- 右侧：成交量/OBV -->
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
-                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 4px;">成交量</div>
-                                    <div style="font-size: 13px; font-weight: 500;">${q.volume ? (q.volume / 10000).toFixed(0) + '万' : 'N/A'}</div>
-                                    ${q.volume_ma5 ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">均量${(q.volume_ma5 / 10000).toFixed(0)}万</div>` : ''}
+                            <!-- 右侧：成交量/成交额/OBV -->
+                            <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
+                                <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '9px' : '11px'}; margin-bottom: ${isMobile ? '2px' : '4px'};">成交量</div>
+                                    <div style="font-size: ${isMobile ? '11px' : '13px'}; font-weight: 500;">${q.volume ? (q.volume / 10000).toFixed(0) + '万' : 'N/A'}</div>
+                                    ${q.volume_ma5 ? `<div style="font-size: ${isMobile ? '9px' : '11px'}; color: #9ca3af; margin-top: 2px;">均量${(q.volume_ma5 / 10000).toFixed(0)}万</div>` : ''}
                                 </div>
-                                <div style="background: #111827; padding: 8px; border-radius: 4px; flex: 1;">
-                                    <div style="color: #9ca3af; font-size: 11px; margin-bottom: 4px;">成交额</div>
-                                    <div style="font-size: 13px; font-weight: 500;">${q.amount ? (q.amount / 100000000).toFixed(2) + '亿' : 'N/A'}</div>
-                                    ${q.obv ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px; cursor: help;" title="${(() => {
+                                <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px; flex: 1;">
+                                    <div style="color: #9ca3af; font-size: ${isMobile ? '9px' : '11px'}; margin-bottom: ${isMobile ? '2px' : '4px'};">成交额</div>
+                                    <div style="font-size: ${isMobile ? '11px' : '13px'}; font-weight: 500;">${q.amount ? (q.amount / 100000000).toFixed(2) + '亿' : 'N/A'}</div>
+                                    ${q.obv ? `<div style="font-size: ${isMobile ? '9px' : '11px'}; color: #9ca3af; margin-top: 2px; cursor: help;" title="${(() => {
                                         let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M\n\n指标说明：\n上涨日累加成交量\n下跌日累减成交量\n用于验证价格趋势`;
                                         if (prevQ && prevQ.obv != null) {
                                             const change = q.obv - prevQ.obv;
@@ -7921,7 +7855,6 @@
                                 </div>
                             </div>
                         </div>
-                        `}
 
                         <!-- 综合操作建议 -->
                         <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
