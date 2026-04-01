@@ -5272,19 +5272,39 @@
             }
         }
 
-        // 从关注列表快速分析股票
+        // 从关注列表快速分析股票（日线分析）
         async function analyzeFromWatchlist(code, name) {
-            addLog('快速分析', `开始分析 ${code}`);
+            addLog('日线分析', `开始日线分析 ${code}`);
 
-            // 显示弹窗
-            showAnalysisModal(code, name, 'single');
+            // 切换到主界面的分析Tab
+            document.getElementById('stockCode').value = code;
+            showTab('analyze');
+
+            // 自动开始分析
+            await analyzeStock();
         }
 
         // 从关注列表多周期分析
         async function multiAnalyzeFromWatchlist(code, name) {
             addLog('多周期分析', `开始多周期分析 ${code}`);
 
-            // 显示弹窗
+            // 切换到主界面的多周期Tab
+            document.getElementById('multiStockCode').value = code;
+            showTab('multi');
+
+            // 自动开始分析
+            await analyzeMultiTimeframe();
+        }
+
+        // 在弹窗中分析（保留供其他地方使用）
+        async function analyzeStockInModal(code, name) {
+            addLog('弹窗分析', `开始弹窗分析 ${code}`);
+            showAnalysisModal(code, name, 'single');
+        }
+
+        // 在弹窗中多周期分析（保留供其他地方使用）
+        async function analyzeMultiInModal(code, name) {
+            addLog('弹窗多周期', `开始弹窗多周期分析 ${code}`);
             showAnalysisModal(code, name, 'multi');
         }
 
