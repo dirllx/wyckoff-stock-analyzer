@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20260401-2600">
+    <meta name="version" content="20260402-0004">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -5681,12 +5681,11 @@
             console.log('[switchWatchlistViewMode] 切换到:', mode, '当前偏移:', currentWatchlistQuoteOffset);
             currentWatchlistViewMode = mode;
 
-            // 切换到列表视图时，重置偏移量
-            if (mode === 'list') {
-                if (currentWatchlistQuoteOffset !== 0) {
-                    console.log('[switchWatchlistViewMode] 切换到列表视图，重置偏移量从', currentWatchlistQuoteOffset, '到0');
-                    currentWatchlistQuoteOffset = 0;
-                }
+            // 切换视图时，重置偏移量到最新数据
+            // （用户点击"上一期/下一期"时不会切换视图，所以不会影响导航功能）
+            if (currentWatchlistQuoteOffset !== 0) {
+                console.log('[switchWatchlistViewMode] 切换视图，重置偏移量从', currentWatchlistQuoteOffset, '到0');
+                currentWatchlistQuoteOffset = 0;
             }
 
             // 更新按钮样式
@@ -5761,7 +5760,8 @@
                     await Promise.all(batch.map(async (item) => {
                         try {
                             // 获取K线数据（当前周期）
-                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=500`);
+                            // 只需要获取最近10条数据，足够查看前5天历史
+                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=10`);
 
                             // 获取分析数据（当前周期）
                             const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
@@ -5855,17 +5855,17 @@
                 let html = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoBack ? 'disabled' : ''}
+                            <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoBack ? 'disabled' : ''}
                                 style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                ◀ 上一期
+                                ◀ 前一天
                             </button>
-                            <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoForward ? 'disabled' : ''}
+                            <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoForward ? 'disabled' : ''}
                                 style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                下一期 ▶
+                                后一天 ▶
                             </button>
                             <button onclick="window.navigateWatchlistPeriod(0)"
                                 style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                ↺ 返回最新
+                                ↺ 最新
                             </button>
                         </div>
                         <div style="color: #9ca3af; font-size: 11px;">
@@ -6131,23 +6131,28 @@
                 addLog('时间导航', '返回最新数据');
             } else {
                 // 上一期或下一期
+                // direction=1 表示查看历史（offset增加）
+                // direction=-1 表示返回最新（offset减少）
                 currentWatchlistQuoteOffset += direction;
                 if (currentWatchlistQuoteOffset < 0) {
                     currentWatchlistQuoteOffset = 0; // 不允许负偏移
                 }
-                const periodText = direction > 0 ? '下一期' : '上一期';
-                addLog('时间导航', `${periodText}（当前偏移: ${currentWatchlistQuoteOffset}）`);
-
-                // 如果偏移量过大（超过100），发出警告
-                if (currentWatchlistQuoteOffset > 100) {
-                    console.warn(`[navigateWatchlistPeriod] ⚠️ 偏移量过大: ${currentWatchlistQuoteOffset}，可能显示很旧的数据！`);
-                    addLog('警告', `偏移量已达${currentWatchlistQuoteOffset}，建议点击"返回最新"`);
+                // 限制最多查看前5天历史
+                if (currentWatchlistQuoteOffset > 5) {
+                    currentWatchlistQuoteOffset = 5;
+                    addLog('提示', '最多只能查看前5天历史数据');
                 }
+
+                const periodText = direction > 0 ? '查看历史' : '返回最新';
+                addLog('时间导航', `${periodText}（当前: ${currentWatchlistQuoteOffset === 0 ? '最新' : '前第' + currentWatchlistQuoteOffset + '期'}）`);
             }
 
             console.log('[navigateWatchlistPeriod] 更新后偏移:', currentWatchlistQuoteOffset);
             refreshWatchlistListView();
         }
+
+        // 将函数挂载到window对象，使HTML中的onclick可以调用
+        window.navigateWatchlistPeriod = navigateWatchlistPeriod;
 
 
 
