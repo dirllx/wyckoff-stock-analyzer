@@ -6,6 +6,7 @@ import json
 from typing import Optional, Any, List
 from datetime import timedelta
 from app.database import get_redis
+from app.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,8 +31,10 @@ class RedisService:
 
     @classmethod
     def _make_key(cls, *parts: str) -> str:
-        """生成缓存键"""
-        return f"{cls.KEY_PREFIX}{':'.join(parts)}"
+        """生成缓存键（包含版本号）"""
+        # 在缓存键中加入版本号，确保数据结构变更时旧缓存自动失效
+        version = getattr(settings, 'CACHE_VERSION', 'v1')
+        return f"{cls.KEY_PREFIX}{version}:{':'.join(parts)}"
 
     @classmethod
     def get(cls, key: str) -> Optional[Any]:
@@ -250,6 +253,41 @@ class RedisService:
             return True
         except Exception as e:
             logger.warning(f"清除所有缓存失败: {e}")
+            return False
+
+    @classmethod
+    def clear_old_version_cache(cls) -> bool:
+        """
+        清除旧版本的缓存（版本号不匹配的缓存）
+
+        当CACHE_VERSION更新时，自动清除旧版本的缓存数据
+        确保数据结构变更后不会读取到旧格式的缓存
+        """
+        try:
+            client = get_redis()
+            if not client:
+                return False
+
+            current_version = getattr(settings, 'CACHE_VERSION', 'v1')
+            pattern = f"{cls.KEY_PREFIX}*"
+            keys = client.keys(pattern)
+
+            if not keys:
+                return True
+
+            # 找出所有非当前版本的缓存键
+            old_keys = [key for key in keys if not key.startswith(f"{cls.KEY_PREFIX}{current_version}:")]
+
+            if old_keys:
+                logger.info(f"🧹 清除旧版本缓存: {len(old_keys)} 个键 (当前版本: {current_version})")
+                client.delete(*old_keys)
+                logger.info(f"✅ 旧版本缓存已清除")
+            else:
+                logger.info(f"✅ 无旧版本缓存需要清除 (当前版本: {current_version})")
+
+            return True
+        except Exception as e:
+            logger.warning(f"清除旧版本缓存失败: {e}")
             return False
 
 

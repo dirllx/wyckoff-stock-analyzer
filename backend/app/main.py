@@ -137,7 +137,7 @@ app.add_middleware(
 async def startup_event():
     """
     应用启动时执行
-    初始化数据库
+    初始化数据库、清除旧版本缓存
     """
     logger.info("正在初始化数据库...")
     try:
@@ -145,6 +145,13 @@ async def startup_event():
         logger.info("数据库初始化成功")
     except Exception as e:
         logger.error(f"数据库初始化失败: {e}")
+
+    # 清除旧版本缓存
+    try:
+        from app.services.redis_service import RedisService
+        RedisService.clear_old_version_cache()
+    except Exception as e:
+        logger.warning(f"清除旧版本缓存失败: {e}")
 
 
 @app.on_event("shutdown")
