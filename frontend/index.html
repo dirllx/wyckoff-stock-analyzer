@@ -7752,10 +7752,11 @@
                     border-radius: 12px;
                     max-width: 800px;
                     width: 95%;
-                    max-height: 72.6vh;
+                    max-height: ${isMobile ? '90vh' : '72.6vh'};
                     padding: 16px;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                    overflow-y: hidden;
+                    display: flex;
+                    flex-direction: column;
                 ">
                     <div style="
                         display: flex;
@@ -7764,6 +7765,7 @@
                         margin-bottom: 12px;
                         border-bottom: 1px solid #374151;
                         padding-bottom: 10px;
+                        flex-shrink: 0;
                     ">
                         <h2 style="
                             font-size: 16px;
@@ -7786,7 +7788,7 @@
                         ">&times;</button>
                     </div>
 
-                    <div style="margin-bottom: 10px;">
+                    <div style="margin-bottom: 10px; overflow-y: auto; flex: 1;">
                         <!-- 第1行：移动端垂直排列，桌面端左右结构 -->
                         ${isMobile ? `
                         <!-- 移动端：日期和涨跌幅（上下结构） -->
