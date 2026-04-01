@@ -7571,7 +7571,7 @@
                     volumeTrend.push({ type: `⚠️ 地量`, color: '#f59e0b' });
                 }
 
-                // 与昨天成交量对比
+                // 与上期成交量对比
                 if (prevQ && prevQ.volume) {
                     const volChange = ((q.volume - prevQ.volume) / prevQ.volume * 100).toFixed(0);
                     if (q.volume > prevQ.volume * 1.5) {
@@ -7631,7 +7631,7 @@
                 phaseTooltip = '前端规则：无明显特征，市场横盘整理';
             }
 
-            // 计算昨天的威科夫阶段
+            // 计算上期的威科夫阶段
             let prevPhase = '震荡';
             if (prevQ) {
                 if (prevQ.ma20 && prevQ.ma5 && prevQ.ma10 && prevQ.close > prevQ.ma20 && prevQ.ma5 > prevQ.ma10 && prevQ.ma10 > prevQ.ma20) {
@@ -7837,17 +7837,17 @@
                             ${q.obv ? `<div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="color: #9ca3af; font-size: 10px;">OBV</span>
                                 <span style="font-size: 12px; color: #d1d5db; cursor: help;" title="${(() => {
-                                    let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M`;
+                                    let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M\n\n指标说明：\n上涨日累加成交量\n下跌日累减成交量\n用于验证价格趋势`;
                                     if (prevQ && prevQ.obv != null) {
                                         const change = q.obv - prevQ.obv;
                                         const changeM = (change / 1000000).toFixed(2);
                                         const changePercent = (change / Math.abs(prevQ.obv) * 100).toFixed(2);
                                         if (change > 0) {
-                                            tooltip += `\n\n较昨日：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
+                                            tooltip += `\n\n较上期：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
                                         } else if (change < 0) {
-                                            tooltip += `\n\n较昨日：${changeM}M (${changePercent}%)\n📉 资金流出`;
+                                            tooltip += `\n\n较上期：${changeM}M (${changePercent}%)\n📉 资金流出`;
                                         } else {
-                                            tooltip += `\n\n较昨日：持平\n➡️ 资金平衡`;
+                                            tooltip += `\n\n较上期：持平\n➡️ 资金平衡`;
                                         }
                                     }
                                     return tooltip;
@@ -7909,11 +7909,11 @@
                                             const changeM = (change / 1000000).toFixed(2);
                                             const changePercent = (change / Math.abs(prevQ.obv) * 100).toFixed(2);
                                             if (change > 0) {
-                                                tooltip += `\n\n较昨日：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
+                                                tooltip += `\n\n较上期：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
                                             } else if (change < 0) {
-                                                tooltip += `\n\n较昨日：${changeM}M (${changePercent}%)\n📉 资金流出`;
+                                                tooltip += `\n\n较上期：${changeM}M (${changePercent}%)\n📉 资金流出`;
                                             } else {
-                                                tooltip += `\n\n较昨日：持平\n➡️ 资金平衡`;
+                                                tooltip += `\n\n较上期：持平\n➡️ 资金平衡`;
                                             }
                                         }
                                         return tooltip;
@@ -8181,7 +8181,7 @@
                                 <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 6px; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
                                     <div style="display: flex; align-items: center; justify-content: space-between;">
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">昨天</div>
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">上期</div>
                                             <div style="font-size: 12px; font-weight: 600; color: #d1d5db;">
                                                 ${(() => {
                                                     const score = (prevQ.ma5 > prevQ.ma10 ? 1 : -1) + (prevQ.ma10 > prevQ.ma20 ? 1 : -1) + (prevQ.close > prevQ.ma20 ? 1 : -1);
@@ -8193,7 +8193,7 @@
                                         </div>
                                         <div style="font-size: 14px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">今天</div>
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">本期</div>
                                             <div style="font-size: 12px; font-weight: 600; color: #d1d5db;">
                                                 ${(() => {
                                                     const score = (q.ma5 > q.ma10 ? 1 : -1) + (q.ma10 > q.ma20 ? 1 : -1) + (q.close > q.ma20 ? 1 : -1);
@@ -8239,14 +8239,14 @@
                                 <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); padding: 6px; border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
                                     <div style="display: flex; align-items: center; justify-content: space-between;">
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">昨天</div>
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">上期</div>
                                             <div style="font-size: 11px; font-weight: 600; color: #d1d5db;">${(prevQ.volume / 10000).toFixed(0)}万</div>
                                         </div>
                                         <div style="font-size: 14px; color: ${q.volume > prevQ.volume ? '#10b981' : q.volume < prevQ.volume ? '#ef4444' : '#9ca3af'};">
                                             ${q.volume > prevQ.volume ? '↗' : q.volume < prevQ.volume ? '↘' : '→'}
                                         </div>
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">今天</div>
+                                            <div style="font-size: 8px; color: #9ca3af; margin-bottom: 1px;">本期</div>
                                             <div style="font-size: 11px; font-weight: 600; color: #d1d5db;">${(q.volume / 10000).toFixed(0)}万</div>
                                         </div>
                                     </div>
@@ -8275,12 +8275,12 @@
                                     <!-- 阶段变化 -->
                                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af;">昨天</div>
+                                            <div style="font-size: 8px; color: #9ca3af;">上期</div>
                                             <div style="font-size: 14px;">${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}</div>
                                         </div>
                                         <div style="font-size: 14px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
                                         <div style="text-align: center;">
-                                            <div style="font-size: 8px; color: #9ca3af;">今天</div>
+                                            <div style="font-size: 8px; color: #9ca3af;">本期</div>
                                             <div style="font-size: 14px;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
                                         </div>
                                     </div>
