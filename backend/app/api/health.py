@@ -28,25 +28,26 @@ def get_service_status():
         },
         "redis": {
             "status": "connected" if test_redis_connection() else "disconnected",
-            "url": "redis://localhost:6379/0",
+            "url": settings.REDIS_URL,
             "cache_enabled": test_redis_connection()
         }
     }
 
     # 检查前端服务（通过检查端口）
+    frontend_port = int(os.getenv("FRONTEND_PORT", "3000"))
     try:
         import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        frontend_status = "running" if sock.connect_ex(('0.0.0.0', 3000)) == 0 else "stopped"
+        frontend_status = "running" if sock.connect_ex(('0.0.0.0', frontend_port)) == 0 else "stopped"
         sock.close()
         services["frontend"] = {
             "status": frontend_status,
-            "port": 3000
+            "port": frontend_port
         }
     except Exception:
         services["frontend"] = {
             "status": "unknown",
-            "port": 3000
+            "port": frontend_port
         }
 
     return services
