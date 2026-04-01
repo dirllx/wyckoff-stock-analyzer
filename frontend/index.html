@@ -798,6 +798,17 @@
                 </div>
             </div>
 
+            <!-- 手动添加区域 -->
+            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" class="form-input" id="watchlistCode" placeholder="输入股票代码（如：603520）" style="width: 200px;">
+                    <button class="btn btn-primary" onclick="addToWatchlist()" style="padding: 10px 20px;">➕ 添加</button>
+                </div>
+                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">
+                    💡 提示：输入股票代码添加到关注列表
+                </div>
+            </div>
+
             <!-- 批量导入区域（可折叠） -->
             <div id="batchImportArea" style="display: none; padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -823,17 +834,6 @@
                     <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">识别到以下股票代码：</div>
                     <div id="batchPreviewList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
                     <button class="btn btn-primary" onclick="confirmBatchImport()" style="width: 100%;">✅ 确认导入</button>
-                </div>
-            </div>
-
-            <!-- 手动添加区域 -->
-            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" class="form-input" id="watchlistCode" placeholder="输入股票代码（如：603520）" style="flex: 1;">
-                    <button class="btn btn-primary" onclick="addToWatchlist()" style="padding: 10px 20px;">➕ 添加</button>
-                </div>
-                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">
-                    💡 提示：分析股票后会自动添加到关注列表 | 支持批量导入文本中的股票代码
                 </div>
             </div>
 
