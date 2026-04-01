@@ -105,45 +105,7 @@ class DataStorage:
 
             self.db.commit()
 
-            # 保存完成后，获取所有K线数据并重新计算均线
-            all_quotes = self.db.query(StockQuote).filter(
-                StockQuote.stock_id == stock.id,
-                StockQuote.timeframe == timeframe
-            ).order_by(StockQuote.date.asc()).all()
-
-            # 转换为DataFrame
-            data = []
-            for q in all_quotes:
-                data.append({
-                    "date": q.date,
-                    "open": q.open,
-                    "high": q.high,
-                    "low": q.low,
-                    "close": q.close,
-                    "volume": q.volume,
-                    "amount": q.amount
-                })
-            df = pd.DataFrame(data)
-
-            # 按时间顺序计算所有技术指标
-            df = self._calculate_indicators(df)
-
-            # 更新所有记录的均线值
-            for i, q in enumerate(all_quotes):
-                q.ma5 = df.iloc[i]["ma5"]
-                q.ma10 = df.iloc[i]["ma10"]
-                q.ma15 = df.iloc[i]["ma15"]
-                q.ma20 = df.iloc[i]["ma20"]
-                q.ma30 = df.iloc[i]["ma30"]
-                q.ma60 = df.iloc[i]["ma60"]
-                q.ma90 = df.iloc[i]["ma90"]
-                q.ma120 = df.iloc[i]["ma120"]
-                q.ma250 = df.iloc[i]["ma250"]
-                q.volume_ma5 = df.iloc[i]["volume_ma5"]
-                q.obv = df.iloc[i]["obv"]
-
-            self.db.commit()
-
+            # 【重要】先删除旧数据，再计算MA，确保MA值基于最终保留的数据计算
             # 确保只保留最新500条数据（删除超过500条的旧数据）
             total_count = self.db.query(StockQuote).filter(
                 StockQuote.stock_id == stock.id,
@@ -167,6 +129,45 @@ class DataStorage:
                     ).delete()
                     self.db.commit()
                     logger.info(f"✅ {code} {timeframe}: 删除了{len(delete_ids)}条旧数据，保留最新500条")
+
+            # 删除完成后，获取剩余的所有K线数据并重新计算均线
+            all_quotes = self.db.query(StockQuote).filter(
+                StockQuote.stock_id == stock.id,
+                StockQuote.timeframe == timeframe
+            ).order_by(StockQuote.date.asc()).all()
+
+            # 转换为DataFrame
+            data = []
+            for q in all_quotes:
+                data.append({
+                    "date": q.date,
+                    "open": q.open,
+                    "high": q.high,
+                    "low": q.low,
+                    "close": q.close,
+                    "volume": q.volume,
+                    "amount": q.amount
+                })
+            df = pd.DataFrame(data)
+
+            # 按时间顺序计算所有技术指标（基于最终保留的500条数据）
+            df = self._calculate_indicators(df)
+
+            # 更新所有记录的均线值
+            for i, q in enumerate(all_quotes):
+                q.ma5 = df.iloc[i]["ma5"]
+                q.ma10 = df.iloc[i]["ma10"]
+                q.ma15 = df.iloc[i]["ma15"]
+                q.ma20 = df.iloc[i]["ma20"]
+                q.ma30 = df.iloc[i]["ma30"]
+                q.ma60 = df.iloc[i]["ma60"]
+                q.ma90 = df.iloc[i]["ma90"]
+                q.ma120 = df.iloc[i]["ma120"]
+                q.ma250 = df.iloc[i]["ma250"]
+                q.volume_ma5 = df.iloc[i]["volume_ma5"]
+                q.obv = df.iloc[i]["obv"]
+
+            self.db.commit()
 
             logger.info(f"保存股票{code} K线数据成功，新增{saved_count}条，已重新计算均线")
             return saved_count
@@ -287,6 +288,13 @@ class DataStorage:
             # 获取股票
             stock = self.get_or_create_stock(code)
 
+            # 使用调度器获取数据
+            from app.services.data.source_scheduler import get_scheduler
+            from app.utils.converters import dict_to_stock_quotes
+            from datetime import datetime, timedelta
+
+            scheduler = get_scheduler()
+
             # 分钟线数据特殊处理：实时获取，每次都更新最近的数据
             if timeframe in ["1", "5", "15", "30", "60"]:
                 logger.info(f"分钟线数据实时更新: {code} {timeframe}分钟")
@@ -297,19 +305,70 @@ class DataStorage:
                     StockQuote.timeframe == timeframe
                 ).delete()
 
-                # 获取最新的分钟线数据（akshare会返回最近的数据）
-                quotes_df = self.fetcher.get_stock_quotes(
+                # 获取最新的分钟线数据（获取足够的数据用于计算均线）
+                end_date = datetime.now().strftime("%Y-%m-%d")
+                start_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")  # 最近60天
+
+                quotes_dict = scheduler.fetch_with_fallback(
                     code=code,
-                    period=timeframe
+                    timeframe=timeframe,
+                    start_date=start_date,
+                    end_date=end_date
                 )
 
-                if quotes_df.empty:
+                if not quotes_dict:
                     logger.warning(f"股票{code} {timeframe}分钟线无数据")
                     return False
 
-                # 保存数据
-                self.save_quotes(code, quotes_df, timeframe)
-                logger.info(f"✅ {code} {timeframe}分钟线实时更新成功，共{len(quotes_df)}条")
+                # 只保留最新500条
+                quotes_dict = quotes_dict[-500:] if len(quotes_dict) > 500 else quotes_dict
+
+                # 转换并保存
+                quotes = dict_to_stock_quotes(quotes_dict, stock.id, timeframe)
+                for quote in quotes:
+                    self.db.add(quote)
+                self.db.commit()
+
+                # 计算均线（分钟线也需要计算均线）
+                import pandas as pd
+                all_quotes = self.db.query(StockQuote).filter(
+                    StockQuote.stock_id == stock.id,
+                    StockQuote.timeframe == timeframe
+                ).order_by(StockQuote.date.asc()).all()
+
+                if all_quotes:
+                    # 转换为DataFrame计算指标
+                    data = []
+                    for q in all_quotes:
+                        data.append({
+                            "date": q.date,
+                            "open": q.open,
+                            "high": q.high,
+                            "low": q.low,
+                            "close": q.close,
+                            "volume": q.volume
+                        })
+                    df = pd.DataFrame(data)
+                    df = self._calculate_indicators(df)
+
+                    # 更新均线值
+                    for i, q in enumerate(all_quotes):
+                        q.ma5 = df.iloc[i]["ma5"]
+                        q.ma10 = df.iloc[i]["ma10"]
+                        q.ma15 = df.iloc[i]["ma15"]
+                        q.ma20 = df.iloc[i]["ma20"]
+                        q.ma30 = df.iloc[i]["ma30"]
+                        q.ma60 = df.iloc[i]["ma60"]
+                        q.ma90 = df.iloc[i]["ma90"]
+                        q.ma120 = df.iloc[i]["ma120"]
+                        q.ma250 = df.iloc[i]["ma250"]
+                        q.volume_ma5 = df.iloc[i]["volume_ma5"]
+                        q.obv = df.iloc[i]["obv"]
+
+                    self.db.commit()
+                    logger.info(f"✅ {code} {timeframe}分钟线均线计算完成")
+
+                logger.info(f"✅ {code} {timeframe}分钟线实时更新成功，共{len(quotes)}条")
                 return True
 
             # 日线/周线/月线数据的增量更新逻辑
@@ -322,8 +381,7 @@ class DataStorage:
             # 如果现有数据少于500条，重新获取全部数据
             if existing_count < 500:
                 logger.info(f"股票{code}现有数据{existing_count}条不足500条，重新获取全部数据")
-                # 获取至少3年的数据
-                start_date = None  # 使用默认的3年范围
+                start_date = (datetime.now() - timedelta(days=365*3)).strftime("%Y-%m-%d")  # 获取3年数据
             else:
                 # 获取最后一条数据日期
                 last_quote = self.db.query(StockQuote).filter(
@@ -334,22 +392,36 @@ class DataStorage:
                 # 确定起始日期 - 只获取新数据
                 start_date = None
                 if last_quote:
-                    start_date = (last_quote.date + timedelta(days=1)).strftime("%Y%m%d")
+                    next_date = last_quote.date + timedelta(days=1)
+                    start_date = next_date.strftime("%Y-%m-%d")
 
-            # 获取新数据
-            quotes_df = self.fetcher.get_stock_quotes(
+                    # 如果start_date已经大于今天，说明数据已经是最新的
+                    if next_date.date() > datetime.now().date():
+                        logger.info(f"股票{code}数据已是最新的（最新日期: {last_quote.date.date()}）")
+                        return True
+
+            end_date = datetime.now().strftime("%Y-%m-%d")
+
+            # 使用调度器获取数据
+            quotes_dict = scheduler.fetch_with_fallback(
                 code=code,
+                timeframe=timeframe,
                 start_date=start_date,
-                period=timeframe
+                end_date=end_date
             )
 
-            if quotes_df.empty:
+            if not quotes_dict:
                 logger.info(f"股票{code}没有新数据")
                 return True
 
-            # 保存数据
-            self.save_quotes(code, quotes_df, timeframe)
-            return True
+            # 转换为DataFrame（不需要在这里计算MA，save_quotes会重新计算）
+            df = pd.DataFrame(quotes_dict)
+
+            # 保存数据（save_quotes方法会重新计算所有MA，确保数据正确）
+            saved_count = self.save_quotes(code, df, timeframe)
+
+            logger.info(f"✅ 股票{code} {timeframe}数据更新成功，新增{saved_count}条")
+            return saved_count > 0
 
         except Exception as e:
             logger.error(f"更新股票{code}数据失败: {e}")
