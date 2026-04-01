@@ -1075,6 +1075,58 @@
                 </div>
             </div>
 
+            <!-- 缓存管理 -->
+            <div class="card" style="margin-bottom: 10px;">
+                <div class="card-header">
+                    <h3 class="card-title">🗄️ 缓存管理</h3>
+                    <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="loadCacheStats()">🔄 刷新统计</button>
+                </div>
+                <div style="padding: 20px;">
+                    <!-- 缓存统计信息 -->
+                    <div id="cacheStatsContainer" style="margin-bottom: 16px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div>
+                                <span style="color: #9ca3af; font-size: 11px;">缓存版本</span>
+                                <div id="cacheVersion" style="color: #f9fafb; font-size: 16px; font-weight: 600;">-</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 11px;">总缓存键</span>
+                                <div id="cacheTotalKeys" style="color: #f9fafb; font-size: 16px; font-weight: 600;">-</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 11px;">当前版本</span>
+                                <div id="cacheCurrentKeys" style="color: #10b981; font-size: 16px; font-weight: 600;">-</div>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; font-size: 11px;">旧版本</span>
+                                <div id="cacheOldKeys" style="color: #ef4444; font-size: 16px; font-weight: 600;">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 缓存类型分布 -->
+                    <div style="margin-bottom: 16px;">
+                        <span style="color: #9ca3af; font-size: 12px; display: block; margin-bottom: 6px;">缓存类型分布</span>
+                        <div id="cacheTypeStats" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span style="color: #6b7280; font-size: 11px;">加载中...</span>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="clearOldCache()">
+                            🧹 清除旧版本缓存
+                        </button>
+                        <button class="btn" style="background: linear-gradient(135deg, #ef4444, #dc2626);" onclick="clearAllCache()">
+                            ⚠️ 清除所有缓存
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(107, 114, 128, 0.1); border-left: 3px solid #6b7280; border-radius: 4px;">
+                        <span style="color: #9ca3af; font-size: 11px;">💡 提示：清除缓存后，首次访问会重新计算数据，响应时间会变长。建议仅在数据异常或版本升级时清除。</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 交易建议配置 -->
             <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
@@ -1305,6 +1357,9 @@
                 }
                 if (typeof loadDataSourcesConfig === 'function') {
                     loadDataSourcesConfig();
+                }
+                if (typeof loadCacheStats === 'function') {
+                    loadCacheStats();
                 }
             }
         }
@@ -6806,6 +6861,136 @@
             // 重新渲染关注列表
             if (watchlistData && watchlistData.items.length > 0) {
                 renderWatchlistCards();
+            }
+        }
+
+        // ========== 缓存管理 ==========
+
+        // 加载缓存统计信息
+        async function loadCacheStats() {
+            try {
+                addLog('缓存管理', '正在获取缓存统计...');
+                const response = await fetch(`${API_BASE}/api/v1/cache/stats`);
+
+                if (!response.ok) {
+                    throw new Error('获取缓存统计失败');
+                }
+
+                const stats = await response.json();
+
+                // 更新显示
+                document.getElementById('cacheVersion').textContent = stats.cache_version || '未知';
+                document.getElementById('cacheTotalKeys').textContent = stats.total_keys || 0;
+                document.getElementById('cacheCurrentKeys').textContent = stats.current_version_keys || 0;
+                document.getElementById('cacheOldKeys').textContent = stats.old_version_keys || 0;
+
+                // 显示缓存类型分布
+                const typeStats = stats.type_stats || {};
+                const typeStatsHtml = Object.entries(typeStats)
+                    .filter(([type, count]) => count > 0)
+                    .map(([type, count]) => {
+                        const typeNames = {
+                            'stock': '股票数据',
+                            'analysis': '分析结果',
+                            'multi': '多周期',
+                            'quote': '实时行情',
+                            'batch': '批量分析',
+                            'other': '其他'
+                        };
+                        const colors = {
+                            'stock': '#3b82f6',
+                            'analysis': '#10b981',
+                            'multi': '#8b5cf6',
+                            'quote': '#f59e0b',
+                            'batch': '#ef4444',
+                            'other': '#6b7280'
+                        };
+                        return `<span style="padding: 4px 8px; background: ${colors[type]}20; color: ${colors[type]}; border-radius: 4px; font-size: 11px;">${typeNames[type]}: ${count}</span>`;
+                    })
+                    .join('');
+
+                document.getElementById('cacheTypeStats').innerHTML = typeStatsHtml || '<span style="color: #6b7280; font-size: 11px;">暂无缓存</span>';
+
+                addLog('缓存管理', `✅ 缓存统计已更新 (版本${stats.cache_version}, 总计${stats.total_keys}个键)`);
+
+            } catch (error) {
+                console.error('获取缓存统计失败:', error);
+                addLog('缓存管理', '❌ 获取缓存统计失败: ' + error.message);
+                document.getElementById('cacheStatsContainer').innerHTML =
+                    `<div style="text-align: center; color: #ef4444; padding: 20px;">❌ 无法获取缓存统计: ${error.message}</div>`;
+            }
+        }
+
+        // 清除旧版本缓存
+        async function clearOldCache() {
+            if (!confirm('确定要清除所有旧版本的缓存吗？\n\n此操作会删除非当前版本的所有缓存键，但保留当前版本的缓存。')) {
+                return;
+            }
+
+            try {
+                addLog('缓存管理', '正在清除旧版本缓存...');
+                const response = await fetch(`${API_BASE}/api/v1/cache/clear-old`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('清除失败');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog('缓存管理', `✅ ${result.message}`);
+                    alert(`✅ ${result.message}`);
+                    // 重新加载统计
+                    await loadCacheStats();
+                } else {
+                    throw new Error(result.message || '清除失败');
+                }
+
+            } catch (error) {
+                console.error('清除旧版本缓存失败:', error);
+                addLog('缓存管理', '❌ 清除失败: ' + error.message);
+                alert('❌ 清除失败: ' + error.message);
+            }
+        }
+
+        // 清除所有缓存
+        async function clearAllCache() {
+            if (!confirm('⚠️ 警告：此操作会清除所有缓存，包括当前版本的缓存！\n\n清除后首次访问会重新计算数据，响应时间会变长。\n\n确定要继续吗？')) {
+                return;
+            }
+
+            // 二次确认
+            if (!confirm('再次确认：真的要清除所有缓存吗？')) {
+                return;
+            }
+
+            try {
+                addLog('缓存管理', '正在清除所有缓存...');
+                const response = await fetch(`${API_BASE}/api/v1/cache/clear-all`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('清除失败');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog('缓存管理', `✅ ${result.message}`);
+                    alert(`✅ ${result.message}`);
+                    // 重新加载统计
+                    await loadCacheStats();
+                } else {
+                    throw new Error(result.message || '清除失败');
+                }
+
+            } catch (error) {
+                console.error('清除所有缓存失败:', error);
+                addLog('缓存管理', '❌ 清除失败: ' + error.message);
+                alert('❌ 清除失败: ' + error.message);
             }
         }
 

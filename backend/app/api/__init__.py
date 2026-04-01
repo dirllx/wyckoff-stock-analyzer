@@ -12,6 +12,7 @@ from .realtime import router as realtime_router
 from .watchlist import router as watchlist_router
 from .user_settings import router as user_settings_router
 from .data_sources import data_sources_router
+from .cache import router as cache_router
 
 __all__ = [
     "health_router",
@@ -24,5 +25,6 @@ __all__ = [
     "realtime_router",
     "watchlist_router",
     "user_settings_router",
-    "data_sources_router"
+    "data_sources_router",
+    "cache_router"
 ]
