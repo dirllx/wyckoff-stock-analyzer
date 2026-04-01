@@ -5605,17 +5605,20 @@
                 `;
             }
 
-            // 2. OHLC和成交量（紧凑横向排列）
+            // 2. OHLC（横向排列）
             if (quote) {
                 html += `
                     <div style="background: #111827; padding: ${isMobile ? '8px' : '10px'}; border-radius: 8px; margin-bottom: ${isMobile ? '10px' : '12px'};">
-                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'}; font-size: ${isMobile ? '10px' : '11px'};">
+                        <div style="display: flex; justify-content: space-between; gap: ${isMobile ? '4px' : '6px'}; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '6px' : '8px'};">
                             <div><span style="color: #9ca3af;">开:</span> ${quote.open?.toFixed(2) || '-'}</div>
                             <div><span style="color: #9ca3af;">高:</span> ${quote.high?.toFixed(2) || '-'}</div>
                             <div><span style="color: #9ca3af;">低:</span> ${quote.low?.toFixed(2) || '-'}</div>
                             <div><span style="color: #9ca3af;">收:</span> ${quote.close?.toFixed(2) || '-'}</div>
-                            <div><span style="color: #9ca3af;">量:</span> ${quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}</div>
-                            ${quote.amount ? `<div><span style="color: #9ca3af;">额:</span> ${(quote.amount / 100000000).toFixed(2) + '亿'}</div>` : ''}
+                        </div>
+                        <!-- 成交量和成交额（上下结构） -->
+                        <div style="display: flex; flex-direction: column; gap: ${isMobile ? '4px' : '6px'}; font-size: ${isMobile ? '10px' : '11px'};">
+                            <div><span style="color: #9ca3af;">成交量:</span> ${quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}</div>
+                            ${quote.amount ? `<div><span style="color: #9ca3af;">成交额:</span> ${(quote.amount / 100000000).toFixed(2) + '亿'}</div>` : ''}
                         </div>
                     </div>
                 `;
