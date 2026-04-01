@@ -7727,6 +7727,9 @@
                 }
             }
 
+            // 检测是否为移动端
+            const isMobile = window.innerWidth < 768;
+
             // 创建弹窗
             const modal = document.createElement('div');
             modal.id = 'quoteModal';
@@ -7784,7 +7787,73 @@
                     </div>
 
                     <div style="margin-bottom: 10px;">
-                        <!-- 第1行：左右结构 - 日期/涨跌幅 + OHLC + 成交量/OBV -->
+                        <!-- 第1行：移动端垂直排列，桌面端左右结构 -->
+                        ${isMobile ? `
+                        <!-- 移动端：日期和涨跌幅（上下结构） -->
+                        <div style="background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="color: #9ca3af; font-size: 10px; margin-bottom: 4px;">📅 ${formatDateString(q.date, currentTimeframe)}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #f9fafb;">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                                <div style="font-size: 18px; font-weight: 600; color: ${change >= 0 ? '#10b981' : '#ef4444'};">${changeSign}${change}%</div>
+                            </div>
+                        </div>
+
+                        <!-- OHLC（横向排列） -->
+                        <div style="display: flex; justify-content: space-between; background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px; gap: 8px;">
+                            <div style="flex: 1; text-align: center;">
+                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">开</div>
+                                <div style="font-size: 16px; font-weight: 600;">${q.open != null ? q.open.toFixed(2) : 'N/A'}</div>
+                            </div>
+                            <div style="flex: 1; text-align: center;">
+                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">高</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #10b981;">${q.high != null ? q.high.toFixed(2) : 'N/A'}</div>
+                            </div>
+                            <div style="flex: 1; text-align: center;">
+                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">低</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #ef4444;">${q.low != null ? q.low.toFixed(2) : 'N/A'}</div>
+                            </div>
+                            <div style="flex: 1; text-align: center;">
+                                <div style="color: #9ca3af; font-size: 9px; margin-bottom: 2px;">收</div>
+                                <div style="font-size: 16px; font-weight: 600; color: ${isRed ? '#ef4444' : '#10b981'};">${q.close != null ? q.close.toFixed(2) : 'N/A'}</div>
+                            </div>
+                        </div>
+
+                        <!-- 成交量和成交额（上下结构） -->
+                        <div style="display: flex; flex-direction: column; gap: 8px; background: #111827; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #9ca3af; font-size: 10px;">成交量</span>
+                                <span style="font-size: 14px; font-weight: 600;">${q.volume ? (q.volume / 10000).toFixed(0) + '万' : 'N/A'}</span>
+                            </div>
+                            ${q.volume_ma5 ? `<div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #9ca3af; font-size: 10px;">均量</span>
+                                <span style="font-size: 12px; color: #d1d5db;">${(q.volume_ma5 / 10000).toFixed(0)}万</span>
+                            </div>` : ''}
+                            ${q.amount ? `<div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #9ca3af; font-size: 10px;">成交额</span>
+                                <span style="font-size: 14px; font-weight: 600;">${(q.amount / 100000000).toFixed(2) + '亿'}</span>
+                            </div>` : ''}
+                            ${q.obv ? `<div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #9ca3af; font-size: 10px;">OBV</span>
+                                <span style="font-size: 12px; color: #d1d5db; cursor: help;" title="${(() => {
+                                    let tooltip = `OBV能量潮：${(q.obv / 1000000).toFixed(1)}M`;
+                                    if (prevQ && prevQ.obv != null) {
+                                        const change = q.obv - prevQ.obv;
+                                        const changeM = (change / 1000000).toFixed(2);
+                                        const changePercent = (change / Math.abs(prevQ.obv) * 100).toFixed(2);
+                                        if (change > 0) {
+                                            tooltip += `\n\n较昨日：+${changeM}M (+${changePercent}%)\n📈 资金流入`;
+                                        } else if (change < 0) {
+                                            tooltip += `\n\n较昨日：${changeM}M (${changePercent}%)\n📉 资金流出`;
+                                        } else {
+                                            tooltip += `\n\n较昨日：持平\n➡️ 资金平衡`;
+                                        }
+                                    }
+                                    return tooltip;
+                                })()}">${(q.obv / 1000000).toFixed(1)}M</span>
+                            </div>` : ''}
+                        </div>
+                        ` : `
+                        <!-- 桌面端：左右结构 - 日期/涨跌幅 + OHLC + 成交量/OBV -->
                         <div style="display: grid; grid-template-columns: 150px 1fr 140px; gap: 8px; margin-bottom: 8px;">
                             <!-- 左侧：日期/涨跌幅 -->
                             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -7850,6 +7919,7 @@
                                 </div>
                             </div>
                         </div>
+                        `}
 
                         <!-- 综合操作建议 -->
                         <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
@@ -8045,9 +8115,9 @@
                             </div>
                         </div>
 
-                        <!-- 三列布局：均线(左)、量能(中)、威科夫(右) -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-                            <!-- 1. 均线分析（左） -->
+                        <!-- 三列布局：移动端垂直排列，桌面端三列 -->
+                        <div style="display: ${isMobile ? 'flex' : 'grid'}; ${isMobile ? 'flex-direction: column; gap: 10px;' : 'grid-template-columns: 1fr 1fr 1fr; gap: 10px;'} margin-bottom: 8px;">
+                            <!-- 1. 均线分析（独立行） -->
                             <div style="background: #111827; padding: 8px; border-radius: 4px;">
                                 <div style="color: #9ca3af; font-size: 11px; margin-bottom: 6px; font-weight: 600;">均线指标 (MA5-MA250)</div>
                                 <!-- 上：当天情况 - 3行结构 -->
