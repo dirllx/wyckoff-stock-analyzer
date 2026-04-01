@@ -3,7 +3,42 @@
 """
 from typing import List
 from datetime import datetime
+import pandas as pd
 from app.models.database import StockQuote
+
+
+def dataframe_to_dict(df: pd.DataFrame) -> List[dict]:
+    """
+    将DataFrame转换为字典列表
+
+    Args:
+        df: pandas DataFrame
+
+    Returns:
+        字典列表
+    """
+    if df is None or df.empty:
+        return []
+
+    # 转换为字典并确保数值类型正确
+    records = []
+    for _, row in df.iterrows():
+        record = {}
+        for col in df.columns:
+            value = row[col]
+            # 处理NaN值
+            if pd.isna(value):
+                record[col] = None
+            # 确保数值字段为float类型
+            elif col in ['open', 'high', 'low', 'close', 'volume', 'amount',
+                        'ma5', 'ma10', 'ma15', 'ma20', 'ma30', 'ma60', 'ma90', 'ma120', 'ma250',
+                        'volume_ma5', 'obv']:
+                record[col] = float(value) if value is not None else None
+            else:
+                record[col] = value
+        records.append(record)
+
+    return records
 
 
 def dict_to_stock_quotes(

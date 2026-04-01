@@ -5,10 +5,11 @@ from typing import Dict, List
 from sqlalchemy.orm import Session
 import pandas as pd
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.services.config_service import ConfigService
 from app.services.data.data_storage import DataStorage
+from app.services.data.source_scheduler import get_scheduler
 from app.services.analysis.wyckoff_analyzer import WyckoffAnalyzer
 from app.models.database import Stock, StockQuote
 from app.services.redis_service import (
@@ -67,13 +68,42 @@ class MultiTimeframeService:
                 if quotes and isinstance(quotes[0], dict):
                     quotes = dict_to_stock_quotes(quotes, stock.id, timeframe)
             else:
-                # 缓存未命中，从数据库获取
-                logger.info(f"缓存未命中，从数据库获取: {code} {timeframe}")
-                quotes = self.storage.get_quotes_by_timeframe(
-                    stock_id=stock.id,
-                    timeframe=timeframe,
-                    limit=100
-                )
+                # 缓存未命中，使用调度器获取数据
+                logger.info(f"缓存未命中，使用调度器获取: {code} {timeframe}")
+                try:
+                    scheduler = get_scheduler()
+
+                    # 根据周期确定时间范围
+                    if timeframe in ["1", "5", "15", "30", "60"]:
+                        # 分钟线：获取60天数据
+                        start_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+                    else:
+                        # 日线/周线/月线：获取3年数据（确保MA250计算）
+                        start_date = (datetime.now() - timedelta(days=365*3)).strftime("%Y-%m-%d")
+
+                    end_date_str = datetime.now().strftime("%Y-%m-%d")
+
+                    # 使用调度器的fetch_with_fallback方法（支持自动降级）
+                    quotes_dict = scheduler.fetch_with_fallback(
+                        code=code,
+                        timeframe=timeframe,
+                        start_date=start_date,
+                        end_date=end_date_str
+                    )
+
+                    quotes = dict_to_stock_quotes(quotes_dict, stock.id, timeframe)
+
+                    # 缓存数据
+                    cache_stock_data(code, timeframe, quotes_dict)
+
+                except Exception as e:
+                    logger.warning(f"调度器获取失败，降级到数据库: {e}")
+                    # 降级到数据库获取（使用500条，与其他部分保持一致）
+                    quotes = self.storage.get_quotes_by_timeframe(
+                        stock_id=stock.id,
+                        timeframe=timeframe,
+                        limit=500
+                    )
 
                 # 转换为字典格式（与Redis存储格式一致）
                 if quotes:

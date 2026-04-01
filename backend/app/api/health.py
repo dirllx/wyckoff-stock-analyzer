@@ -9,6 +9,7 @@ import psutil
 
 from app.database import get_db, test_db_connection, test_redis_connection
 from app.models.schemas import HealthResponse
+from app.config import settings
 
 router = APIRouter()
 

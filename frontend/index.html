@@ -982,6 +982,33 @@
                 </div>
             </div>
 
+            <!-- 数据源配置 -->
+            <div class="card" style="margin-bottom: 10px;">
+                <div class="card-header">
+                    <h3 class="card-title">🔌 数据源配置</h3>
+                    <div>
+                        <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="testAllDataSources()">🚀 测速</button>
+                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="loadDataSourcesConfig()">🔄 刷新</button>
+                    </div>
+                </div>
+                <div style="padding: 20px;">
+                    <div id="dataSourcesList" style="margin-bottom: 16px;">
+                        <div style="text-align: center; color: #9ca3af; padding: 20px;">加载中...</div>
+                    </div>
+
+                    <!-- 周期优先级配置 -->
+                    <div style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="color: #f9fafb; font-size: 13px;">周期优先级配置</h4>
+                            <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="savePriorityConfig()">💾 保存优先级</button>
+                        </div>
+                        <div id="timeframePriorityConfig" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                            <div style="text-align: center; color: #9ca3af; padding: 20px;">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 显示配置 -->
             <div class="card" style="margin-bottom: 10px;">
                 <div class="card-header">
@@ -1272,8 +1299,13 @@
             }
 
             // 如果切换到配置页面，自动加载配置
-            if (tab === 'config' && typeof loadAllSettings === 'function') {
-                loadAllSettings();
+            if (tab === 'config') {
+                if (typeof loadAllSettings === 'function') {
+                    loadAllSettings();
+                }
+                if (typeof loadDataSourcesConfig === 'function') {
+                    loadDataSourcesConfig();
+                }
             }
         }
 
@@ -6731,6 +6763,368 @@
             // 重新渲染关注列表
             if (watchlistData && watchlistData.items.length > 0) {
                 renderWatchlistCards();
+            }
+        }
+
+        // ========== 数据源配置管理 ==========
+        let dataSourcesConfig = null;
+
+        async function loadDataSourcesConfig() {
+            try {
+                addLog('数据源配置', '正在加载数据源配置...');
+                const [configRes, statsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/data-sources/config`),
+                    fetch(`${API_BASE}/api/v1/data-sources/stats`)
+                ]);
+
+                if (!configRes.ok || !statsRes.ok) throw new Error('加载数据源配置失败');
+
+                const config = await configRes.json();
+                const stats = await statsRes.json();
+
+                // 合并配置和统计
+                dataSourcesConfig = {
+                    sources: [],
+                    timeframe_priority: config.timeframe_priority || {},
+                    global: config.global || {},
+                    scheduling: config.scheduling || {}
+                };
+
+                // 处理数据源列表
+                for (const [name, sourceConfig] of Object.entries(config.sources || {})) {
+                    const sourceStat = stats[name] || {};
+                    dataSourcesConfig.sources.push({
+                        name: name,
+                        enabled: sourceConfig.enabled,
+                        priority: sourceConfig.priority,
+                        timeout: sourceConfig.timeout,
+                        retry_count: sourceConfig.retry_count,
+                        supported_timeframes: sourceConfig.supported_timeframes || [],
+                        realtime_only: sourceConfig.realtime_only || false,
+                        stats: sourceStat
+                    });
+                }
+
+                renderDataSourcesList();
+                renderTimeframePriority();
+
+                addLog('数据源配置', '数据源配置加载成功');
+            } catch (error) {
+                console.error('加载数据源配置失败:', error);
+                document.getElementById('dataSourcesList').innerHTML =
+                    `<div style="text-align: center; color: #ef4444; padding: 20px;">❌ 加载失败: ${error.message}</div>`;
+                addLog('数据源配置', '❌ 加载失败: ' + error.message);
+            }
+        }
+
+        function renderDataSourcesList() {
+            if (!dataSourcesConfig || !dataSourcesConfig.sources) return;
+
+            const container = document.getElementById('dataSourcesList');
+            let html = '';
+
+            dataSourcesConfig.sources.forEach(source => {
+                const stats = source.stats || {};
+                const successRate = stats.success_rate || '0%';
+                const avgTime = stats.avg_response_time_ms || 0;
+                const isAvailable = stats.is_available !== false;
+
+                html += `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 14px; font-weight: 600; color: #f9fafb;">${source.name}</span>
+                                <span style="font-size: 11px; padding: 2px 8px; border-radius: 3px; background: ${source.enabled ? '#10b981' : '#6b7280'}; color: white;">
+                                    ${source.enabled ? '✅ 启用' : '❌ 禁用'}
+                                </span>
+                                ${source.realtime_only ? '<span style="font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #8b5cf6; color: white;">仅实时</span>' : ''}
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn" style="padding: 4px 8px; font-size: 10px;" onclick="testDataSource('${source.name}')">测试</button>
+                                <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 10px;" onclick="toggleDataSource('${source.name}')">
+                                    ${source.enabled ? '禁用' : '启用'}
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 11px; color: #9ca3af;">
+                            <div>优先级: <span style="color: #f9fafb; font-weight: 600;">${source.priority}</span></div>
+                            <div>超时: <span style="color: #f9fafb;">${source.timeout}s</span></div>
+                            <div>成功率: <span style="color: ${isAvailable ? '#10b981' : '#ef4444'}; font-weight: 600;">${successRate}</span></div>
+                            <div>响应: <span style="color: #f9fafb;">${avgTime.toFixed(0)}ms</span></div>
+                        </div>
+                        <div style="margin-top: 6px; font-size: 10px; color: #6b7280;">
+                            支持周期: ${source.supported_timeframes.join(', ') || '无'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderTimeframePriority() {
+            if (!dataSourcesConfig || !dataSourcesConfig.timeframe_priority) return;
+
+            const container = document.getElementById('timeframePriorityConfig');
+            const timeframeNames = {
+                'daily': '日线',
+                'weekly': '周线',
+                'monthly': '月线',
+                '30': '30分钟',
+                '60': '60分钟',
+                'realtime': '实时'
+            };
+
+            // 获取所有可用的数据源
+            const availableSources = dataSourcesConfig.sources
+                .filter(s => s.enabled)
+                .map(s => s.name);
+
+            let html = '';
+            for (const [timeframe, priorityList] of Object.entries(dataSourcesConfig.timeframe_priority)) {
+                const name = timeframeNames[timeframe] || timeframe;
+
+                html += `
+                    <div style="background: #1f2937; border: 1px solid #374151; border-radius: 6px; padding: 10px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #f9fafb; margin-bottom: 8px;">${name}</div>
+                        <div id="priority-${timeframe}" style="display: flex; flex-direction: column; gap: 6px;">
+                            ${priorityList.map((source, idx) => `
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 10px; color: #6b7280; min-width: 20px;">${idx + 1}.</span>
+                                    <select class="form-input priority-select"
+                                            data-timeframe="${timeframe}"
+                                            data-index="${idx}"
+                                            style="flex: 1; padding: 4px 8px; font-size: 11px;">
+                                        ${availableSources.map(s => `
+                                            <option value="${s}" ${s === source ? 'selected' : ''}>${s}</option>
+                                        `).join('')}
+                                    </select>
+                                    <button class="btn btn-secondary"
+                                            style="padding: 2px 6px; font-size: 10px;"
+                                            onclick="removePrioritySource('${timeframe}', ${idx})">✕</button>
+                                </div>
+                            `).join('')}
+                            <button class="btn btn-secondary"
+                                    style="padding: 4px 8px; font-size: 10px; margin-top: 4px;"
+                                    onclick="addPrioritySource('${timeframe}')">+ 添加数据源</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html || '<div style="text-align: center; color: #9ca3af; padding: 20px;">暂无周期优先级配置</div>';
+        }
+
+        function addPrioritySource(timeframe) {
+            const container = document.getElementById(`priority-${timeframe}`);
+            const currentCount = container.querySelectorAll('.priority-select').length;
+
+            if (currentCount >= 3) {
+                alert('最多添加3个数据源');
+                return;
+            }
+
+            const availableSources = dataSourcesConfig.sources
+                .filter(s => s.enabled)
+                .map(s => s.name);
+
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; align-items: center; gap: 6px;';
+            div.innerHTML = `
+                <span style="font-size: 10px; color: #6b7280; min-width: 20px;">${currentCount + 1}.</span>
+                <select class="form-input priority-select"
+                        data-timeframe="${timeframe}"
+                        data-index="${currentCount}"
+                        style="flex: 1; padding: 4px 8px; font-size: 11px;">
+                    ${availableSources.map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+                <button class="btn btn-secondary"
+                        style="padding: 2px 6px; font-size: 10px;"
+                        onclick="removePrioritySource('${timeframe}', ${currentCount})">✕</button>
+            `;
+
+            // 在添加按钮之前插入
+            const addButton = container.querySelector('button[onclick^="addPrioritySource"]');
+            container.insertBefore(div, addButton);
+        }
+
+        function removePrioritySource(timeframe, index) {
+            const container = document.getElementById(`priority-${timeframe}`);
+            const select = container.querySelector(`select[data-timeframe="${timeframe}"][data-index="${index}"]`);
+            if (select && select.parentElement) {
+                select.parentElement.remove();
+
+                // 重新编号
+                const selects = container.querySelectorAll('.priority-select');
+                selects.forEach((sel, idx) => {
+                    sel.setAttribute('data-index', idx);
+                    const numSpan = sel.parentElement.querySelector('span');
+                    if (numSpan) numSpan.textContent = `${idx + 1}.`;
+                });
+            }
+        }
+
+        async function savePriorityConfig() {
+            try {
+                addLog('优先级配置', '正在保存周期优先级配置...');
+
+                const timeframeNames = {
+                    'daily': '日线',
+                    'weekly': '周线',
+                    'monthly': '月线',
+                    '30': '30分钟',
+                    '60': '60分钟',
+                    'realtime': '实时'
+                };
+
+                // 收集所有周期的优先级配置
+                const updates = [];
+                for (const timeframe of Object.keys(dataSourcesConfig.timeframe_priority)) {
+                    const container = document.getElementById(`priority-${timeframe}`);
+                    if (!container) continue;
+
+                    const selects = container.querySelectorAll('.priority-select');
+                    const priorityList = Array.from(selects).map(s => s.value);
+
+                    if (priorityList.length === 0) {
+                        alert(`${timeframeNames[timeframe]} 至少需要一个数据源`);
+                        return;
+                    }
+
+                    // 检查是否有重复
+                    const unique = new Set(priorityList);
+                    if (unique.size !== priorityList.length) {
+                        alert(`${timeframeNames[timeframe]} 存在重复的数据源`);
+                        return;
+                    }
+
+                    updates.push(
+                        fetch(`${API_BASE}/api/v1/data-sources/priority`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                timeframe: timeframe,
+                                priority_list: priorityList
+                            })
+                        })
+                    );
+                }
+
+                // 等待所有更新完成
+                const results = await Promise.all(updates);
+
+                // 检查是否全部成功
+                const allSuccess = results.every(r => r.ok);
+
+                if (allSuccess) {
+                    alert('✅ 周期优先级配置已保存');
+                    addLog('优先级配置', '✅ 配置保存成功');
+                    // 重新加载配置
+                    await loadDataSourcesConfig();
+                } else {
+                    throw new Error('部分配置保存失败');
+                }
+
+            } catch (error) {
+                alert(`❌ 保存失败: ${error.message}`);
+                addLog('优先级配置', `❌ 保存失败: ${error.message}`);
+            }
+        }
+
+        async function testDataSource(sourceName) {
+            try {
+                addLog('数据源测试', `正在测试 ${sourceName}...`);
+                // 使用健康检查API来测试单个数据源
+                const response = await fetch(`${API_BASE}/api/v1/data-sources/health`);
+                const result = await response.json();
+
+                if (result.healthy && result.sources && result.sources[sourceName]) {
+                    const source = result.sources[sourceName];
+                    alert(`✅ ${sourceName} 状态正常\n成功率: ${source.success_rate}\n可用: ${source.is_available ? '是' : '否'}`);
+                    addLog('数据源测试', `✅ ${sourceName} 测试成功`);
+                } else {
+                    alert(`❌ ${sourceName} 测试失败`);
+                    addLog('数据源测试', `❌ ${sourceName} 测试失败`);
+                }
+            } catch (error) {
+                alert(`❌ 测试失败: ${error.message}`);
+                addLog('数据源测试', `❌ ${sourceName} 测试异常: ${error.message}`);
+            }
+        }
+
+        async function toggleDataSource(sourceName) {
+            try {
+                const source = dataSourcesConfig.sources.find(s => s.name === sourceName);
+                if (!source) return;
+
+                const newEnabled = !source.enabled;
+                addLog('数据源配置', `${newEnabled ? '启用' : '禁用'} ${sourceName}...`);
+
+                const response = await fetch(`${API_BASE}/api/v1/data-sources/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_name: sourceName,
+                        enabled: newEnabled
+                    })
+                });
+
+                if (!response.ok) throw new Error('更新失败');
+
+                alert(`✅ ${sourceName} 已${newEnabled ? '启用' : '禁用'}`);
+                addLog('数据源配置', `✅ ${sourceName} 已${newEnabled ? '启用' : '禁用'}`);
+
+                // 重新加载配置
+                await loadDataSourcesConfig();
+            } catch (error) {
+                alert(`❌ 操作失败: ${error.message}`);
+                addLog('数据源配置', `❌ 操作失败: ${error.message}`);
+            }
+        }
+
+        async function testAllDataSources() {
+            if (!confirm('确定要测试所有数据源的速度吗？\n这将测试日线、周线、月线三个周期。')) {
+                return;
+            }
+
+            try {
+                addLog('数据源测速', '正在测试所有数据源...');
+                const response = await fetch(`${API_BASE}/api/v1/data-sources/speed-test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: "000001",
+                        timeframes: ["daily", "weekly", "monthly"]
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.results) {
+                    let report = '📊 数据源测速结果:\n\n';
+
+                    // 按周期分组显示
+                    for (const [tf, sources] of Object.entries(result.results)) {
+                        const timeframeNames = { 'daily': '日线', 'weekly': '周线', 'monthly': '月线' };
+                        const name = timeframeNames[tf] || tf;
+                        report += `${name}:\n`;
+                        const sortedSources = Object.entries(sources).sort((a, b) => a[1] - b[1]);
+                        sortedSources.forEach(([source, time]) => {
+                            const status = time > 0 ? `✅ ${time.toFixed(0)}ms` : '❌ 失败';
+                            report += `  ${source}: ${status}\n`;
+                        });
+                        report += '\n';
+                    }
+
+                    alert(report);
+                    addLog('数据源测速', `✅ 测速完成`);
+                } else {
+                    alert(`❌ 测速失败: ${result.message || '未知错误'}`);
+                    addLog('数据源测速', `❌ 测速失败`);
+                }
+            } catch (error) {
+                alert(`❌ 测速异常: ${error.message}`);
+                addLog('数据源测速', `❌ 测速异常: ${error.message}`);
             }
         }
 

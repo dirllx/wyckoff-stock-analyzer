@@ -16,7 +16,7 @@ from app.models.watchlist_schemas import (
 )
 from app.services.watchlist_service import WatchlistService
 
-router = APIRouter(prefix="/api/v1/watchlist", tags=["关注列表"])
+router = APIRouter(prefix="/watchlist", tags=["关注列表"])
 
 
 @router.get(
@@ -152,10 +152,6 @@ def add_to_watchlist(
     """
 )
 def remove_from_watchlist(code: str, db: Session = Depends(get_db)):
-
-    Returns:
-        消息响应
-    """
     try:
         service = WatchlistService(db)
         success = service.remove_from_watchlist(code)

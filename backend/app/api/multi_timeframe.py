@@ -14,7 +14,7 @@ from app.services.redis_service import (
     RedisService
 )
 
-router = APIRouter(prefix="/api/v1", tags=["多周期分析"])
+router = APIRouter(tags=["多周期分析"])
 
 
 @router.post(

@@ -124,21 +124,28 @@ class EnhancedScorer:
         latest = df.iloc[-1]
 
         # 1. 均线排列评分 (0-30分)
-        ma5, ma10, ma20, ma30, ma60 = latest['ma5'], latest['ma10'], latest['ma20'], latest.get('ma30', 0), latest.get('ma60', 0)
+        ma5, ma10, ma20 = latest['ma5'], latest['ma10'], latest['ma20']
+        ma30 = latest.get('ma30')
+        ma60 = latest.get('ma60')
         close = latest['close']
 
-        if close > ma5 > ma10 > ma20:
-            # 多头排列
-            score += 30
-            if ma30 > 0 and ma20 > ma30:
-                score += 10  # 更多均线多头排列
-        elif close < ma5 < ma10 < ma20:
-            # 空头排列
-            score -= 30
-            if ma30 > 0 and ma20 < ma30:
-                score -= 10
+        # 检查均线值是否有效
+        if all(pd.notna([ma5, ma10, ma20, close])):
+            if close > ma5 > ma10 > ma20:
+                # 多头排列
+                score += 30
+                if pd.notna(ma30) and ma30 > 0 and ma20 > ma30:
+                    score += 10  # 更多均线多头排列
+            elif close < ma5 < ma10 < ma20:
+                # 空头排列
+                score -= 30
+                if pd.notna(ma30) and ma30 > 0 and ma20 < ma30:
+                    score -= 10
+            else:
+                # 均线纠缠
+                score += 0
         else:
-            # 均线纠缠
+            # 均线数据不完整
             score += 0
 
         # 2. 均线金叉死叉评分 (0-20分)
@@ -155,9 +162,9 @@ class EnhancedScorer:
         score -= death_cross * 10   # 每个死叉-10分
 
         # 3. 价格相对均线位置 (0-10分)
-        if close > ma5:
+        if pd.notna(ma5) and close > ma5:
             score += 5
-        if close > ma20:
+        if pd.notna(ma20) and close > ma20:
             score += 5
 
         # 4. 趋势确认 (0-10分)
@@ -202,7 +209,8 @@ class EnhancedScorer:
 
         # 根据量能调整评分
         latest = df.iloc[-1]
-        volume_ratio = latest['volume'] / latest['volume_ma5'] if latest['volume_ma5'] > 0 else 1
+        volume_ma5 = latest['volume_ma5']
+        volume_ratio = latest['volume'] / volume_ma5 if pd.notna(volume_ma5) and volume_ma5 > 0 else 1
 
         # 吸筹阶段放量 = 机构吸筹，加分
         if base_score == 70 and volume_ratio > 1.5:
@@ -232,19 +240,26 @@ class EnhancedScorer:
 
         # 1. OBV趋势 (0-20分)
         if len(df) >= 5:
-            obv_change = (latest['obv'] - df.iloc[-5]['obv']) / abs(df.iloc[-5]['obv']) if df.iloc[-5]['obv'] != 0 else 0
-            if obv_change > 0.05:  # OBV上升5%以上
-                score += 20
-            elif obv_change > 0:
-                score += 10
-            elif obv_change < -0.05:
-                score -= 20
-            elif obv_change < 0:
-                score -= 10
+            latest_obv = latest['obv']
+            prev_obv = df.iloc[-5]['obv']
+            if pd.notna(latest_obv) and pd.notna(prev_obv) and prev_obv != 0:
+                obv_change = (latest_obv - prev_obv) / abs(prev_obv)
+                if obv_change > 0.05:  # OBV上升5%以上
+                    score += 20
+                elif obv_change > 0:
+                    score += 10
+                elif obv_change < -0.05:
+                    score -= 20
+                elif obv_change < 0:
+                    score -= 10
 
         # 2. 量价配合 (0-20分)
-        price_change = (latest['close'] - latest['open']) / latest['open'] if latest['open'] > 0 else 0
-        volume_ratio = latest['volume'] / latest['volume_ma5'] if latest['volume_ma5'] > 0 else 1
+        open_price = latest['open']
+        close_price = latest['close']
+        volume_ma5 = latest['volume_ma5']
+
+        price_change = (close_price - open_price) / open_price if pd.notna(open_price) and open_price > 0 else 0
+        volume_ratio = latest['volume'] / volume_ma5 if pd.notna(volume_ma5) and volume_ma5 > 0 else 1
 
         # 上涨放量 = 量价齐升，好
         if price_change > 0.02 and volume_ratio > 1.3:
@@ -366,11 +381,18 @@ class EnhancedScorer:
 
         # 2. 突破检测 (0-30分)
         # 突破MA20
-        if latest['close'] > latest['ma20'] and df.iloc[-2]['close'] <= df.iloc[-2]['ma20']:
-            score += 20
-            # 放量突破，加分
-            if latest['volume'] > latest['volume_ma5'] * 1.3:
-                score += 10
+        latest_close = latest['close']
+        latest_ma20 = latest['ma20']
+        prev_close = df.iloc[-2]['close']
+        prev_ma20 = df.iloc[-2]['ma20']
+        latest_volume_ma5 = latest['volume_ma5']
+
+        if pd.notna(latest_close) and pd.notna(latest_ma20) and pd.notna(prev_close) and pd.notna(prev_ma20):
+            if latest_close > latest_ma20 and prev_close <= prev_ma20:
+                score += 20
+                # 放量突破，加分
+                if pd.notna(latest_volume_ma5) and latest['volume'] > latest_volume_ma5 * 1.3:
+                    score += 10
 
         # 3. 底背离检测 (0-20分)
         # 价格创新低，但指标未创新低

@@ -134,7 +134,7 @@ class WyckoffAnalyzer:
         latest_volume_ma5 = latest["volume_ma5"]
 
         # 成交量异常检测
-        volume_ratio = latest_volume / latest_volume_ma5 if latest_volume_ma5 > 0 else 1
+        volume_ratio = latest_volume / latest_volume_ma5 if pd.notna(latest_volume_ma5) and latest_volume_ma5 > 0 else 1
 
         volume_signal = {
             "type": "VOLUME",
@@ -166,12 +166,15 @@ class WyckoffAnalyzer:
             volume_signal["reason"] = "成交量正常"
 
         # OBV分析
-        if latest["obv"] > df.iloc[-5]["obv"]:
-            volume_signal["obv_trend"] = "UP"
-            volume_signal["reason"] += "，OBV上升，资金流入"
-        elif latest["obv"] < df.iloc[-5]["obv"]:
-            volume_signal["obv_trend"] = "DOWN"
-            volume_signal["reason"] += "，OBV下降，资金流出"
+        latest_obv = latest["obv"]
+        prev_obv = df.iloc[-5]["obv"]
+        if pd.notna(latest_obv) and pd.notna(prev_obv):
+            if latest_obv > prev_obv:
+                volume_signal["obv_trend"] = "UP"
+                volume_signal["reason"] += "，OBV上升，资金流入"
+            elif latest_obv < prev_obv:
+                volume_signal["obv_trend"] = "DOWN"
+                volume_signal["reason"] += "，OBV下降，资金流出"
 
         return volume_signal
 
@@ -353,22 +356,28 @@ class WyckoffAnalyzer:
         ma20 = latest["ma20"]
         close = latest["close"]
 
-        if close > ma5 > ma10 > ma20:
-            # 多头排列
-            trend_signal["direction"] = "LONG"
-            trend_signal["strength"] = "STRONG"
-            trend_signal["reason"] = "均线多头排列，上涨趋势"
+        # 检查所有均线值是否有效
+        if all(pd.notna([ma5, ma10, ma20, close])):
+            if close > ma5 > ma10 > ma20:
+                # 多头排列
+                trend_signal["direction"] = "LONG"
+                trend_signal["strength"] = "STRONG"
+                trend_signal["reason"] = "均线多头排列，上涨趋势"
 
-        elif close < ma5 < ma10 < ma20:
-            # 空头排列
-            trend_signal["direction"] = "SHORT"
-            trend_signal["strength"] = "STRONG"
-            trend_signal["reason"] = "均线空头排列，下跌趋势"
+            elif close < ma5 < ma10 < ma20:
+                # 空头排列
+                trend_signal["direction"] = "SHORT"
+                trend_signal["strength"] = "STRONG"
+                trend_signal["reason"] = "均线空头排列，下跌趋势"
 
+            else:
+                # 均线纠结，震荡市
+                trend_signal["strength"] = "MODERATE"
+                trend_signal["reason"] = "均线纠结，震荡走势"
         else:
-            # 均线纠结，震荡市
-            trend_signal["strength"] = "MODERATE"
-            trend_signal["reason"] = "均线纠结，震荡走势"
+            # 均线数据不完整
+            trend_signal["strength"] = "WEAK"
+            trend_signal["reason"] = "均线数据不完整"
 
         return trend_signal
 
@@ -387,22 +396,40 @@ class WyckoffAnalyzer:
         prev = df.iloc[-2]
 
         # MA5/MA10 金叉死叉
-        if prev['ma5'] <= prev['ma10'] and latest['ma5'] > latest['ma10']:
-            signals.append({'type': 'MA5/MA10金叉', 'color': '#10b981'})
-        elif prev['ma5'] >= prev['ma10'] and latest['ma5'] < latest['ma10']:
-            signals.append({'type': 'MA5/MA10死叉', 'color': '#ef4444'})
+        prev_ma5 = prev['ma5']
+        prev_ma10 = prev['ma10']
+        latest_ma5 = latest['ma5']
+        latest_ma10 = latest['ma10']
+
+        if all(pd.notna([prev_ma5, prev_ma10, latest_ma5, latest_ma10])):
+            if prev_ma5 <= prev_ma10 and latest_ma5 > latest_ma10:
+                signals.append({'type': 'MA5/MA10金叉', 'color': '#10b981'})
+            elif prev_ma5 >= prev_ma10 and latest_ma5 < latest_ma10:
+                signals.append({'type': 'MA5/MA10死叉', 'color': '#ef4444'})
 
         # MA10/MA20 金叉死叉
-        if prev['ma10'] <= prev['ma20'] and latest['ma10'] > latest['ma20']:
-            signals.append({'type': 'MA10/MA20金叉', 'color': '#10b981'})
-        elif prev['ma10'] >= prev['ma20'] and latest['ma10'] < latest['ma20']:
-            signals.append({'type': 'MA10/MA20死叉', 'color': '#ef4444'})
+        prev_ma10 = prev['ma10']
+        prev_ma20 = prev['ma20']
+        latest_ma10 = latest['ma10']
+        latest_ma20 = latest['ma20']
+
+        if all(pd.notna([prev_ma10, prev_ma20, latest_ma10, latest_ma20])):
+            if prev_ma10 <= prev_ma20 and latest_ma10 > latest_ma20:
+                signals.append({'type': 'MA10/MA20金叉', 'color': '#10b981'})
+            elif prev_ma10 >= prev_ma20 and latest_ma10 < latest_ma20:
+                signals.append({'type': 'MA10/MA20死叉', 'color': '#ef4444'})
 
         # 检查均线排列
-        if latest['close'] > latest['ma5'] > latest['ma10'] > latest['ma20']:
-            signals.append({'type': '多头排列', 'color': '#10b981'})
-        elif latest['close'] < latest['ma5'] < latest['ma10'] < latest['ma20']:
-            signals.append({'type': '空头排列', 'color': '#ef4444'})
+        latest_close = latest['close']
+        latest_ma5 = latest['ma5']
+        latest_ma10 = latest['ma10']
+        latest_ma20 = latest['ma20']
+
+        if all(pd.notna([latest_close, latest_ma5, latest_ma10, latest_ma20])):
+            if latest_close > latest_ma5 > latest_ma10 > latest_ma20:
+                signals.append({'type': '多头排列', 'color': '#10b981'})
+            elif latest_close < latest_ma5 < latest_ma10 < latest_ma20:
+                signals.append({'type': '空头排列', 'color': '#ef4444'})
 
         return signals
 

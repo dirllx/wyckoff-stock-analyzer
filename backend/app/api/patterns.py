@@ -3,13 +3,16 @@
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 
 from app.database import get_db
 from app.services.pattern_service import PatternRecognitionService
 from app.services.data.data_fetcher import DataFetcher
 from app.services.data.data_storage import DataStorage
+from app.services.data.source_scheduler import get_scheduler
 from app.models.database import Stock
 from app.repositories.stock_repository import StockRepository
+from app.utils.converters import dict_to_stock_quotes
 import pandas as pd
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["形态识别"])
@@ -63,7 +66,7 @@ router = APIRouter(prefix="/api/v1/stocks", tags=["形态识别"])
     ```
     """
 )
-def recognize_patterns(
+async def recognize_patterns(
     code: str,
     timeframe: str = "daily",
     db: Session = Depends(get_db)
@@ -74,9 +77,31 @@ def recognize_patterns(
     if not stock:
         raise HTTPException(status_code=404, detail=f"股票 {code} 不存在")
 
-    # 获取K线数据
-    storage = DataStorage(db)
-    quotes = storage.get_quotes_by_timeframe(stock.id, timeframe)
+    # 获取K线数据 - 优先使用调度器
+    quotes = None
+    try:
+        # 使用多数据源调度器获取数据
+        scheduler = get_scheduler()
+        start_date = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
+        end_date_str = datetime.now().strftime("%Y-%m-%d")
+
+        # 调用调度器
+        quotes_dict = scheduler.fetch_with_fallback(
+            code=code,
+            timeframe=timeframe,
+            start_date=start_date,
+            end_date=end_date_str
+        )
+
+        # 转换为StockQuote对象
+        quotes = dict_to_stock_quotes(quotes_dict, stock.id, timeframe)
+
+    except Exception as e:
+        # 降级到数据库查询
+        from loguru import logger
+        logger.warning(f"调度器获取失败，降级到数据库: {e}")
+        storage = DataStorage(db)
+        quotes = storage.get_quotes_by_timeframe(stock.id, timeframe)
 
     if not quotes or len(quotes) < 20:
         raise HTTPException(

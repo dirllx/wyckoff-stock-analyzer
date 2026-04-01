@@ -185,14 +185,21 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                     end_date=end_date_str
                 )
 
-                # 转换为StockQuote对象
-                quotes = dict_to_stock_quotes(quotes_dict, stock.id, body.timeframe)
+                # 转换为DataFrame并保存到数据库
+                import pandas as pd
+                quotes_df = pd.DataFrame(quotes_dict)
 
-                # 保存到数据库（如果数据有更新）
-                if quotes:
-                    logger.info(f"✅ 调度器成功获取 {len(quotes)} 条数据，保存到数据库")
-                    # 这里可以选择性地保存到数据库
-                    # storage._save_quotes_to_db(body.code, body.timeframe, quotes_dict)
+                # 确保日期是datetime类型
+                if 'date' in quotes_df.columns and not pd.api.types.is_datetime64_any_dtype(quotes_df['date']):
+                    quotes_df['date'] = pd.to_datetime(quotes_df['date'])
+
+                # 保存到数据库（会自动计算MA指标）
+                if not quotes_df.empty:
+                    saved_count = storage.save_quotes(body.code, quotes_df, body.timeframe)
+                    logger.info(f"✅ 调度器成功获取 {len(quotes_dict)} 条数据，保存到数据库 {saved_count} 条")
+
+                # 从数据库获取带MA值的K线数据（而不是从原始字典创建）
+                quotes = storage.get_quotes(body.code, body.timeframe, limit=500)
 
             except Exception as e:
                 logger.warning(f"⚠️ 调度器获取失败，降级到传统方式: {e}")

@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     DEBUG: bool = os.getenv("DEBUG", "False") == "True"
 
+    # 前端配置
+    FRONTEND_PORT: int = 3000
+
+    # 日志配置
+    LOG_LEVEL: str = "INFO"
+
     # Tushare配置
     TUSHARE_TOKEN: str = ""
 

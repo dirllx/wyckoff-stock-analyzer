@@ -12,6 +12,7 @@ import sys
 from app.database import init_db
 from app.api import health_router, stocks_router, config_router, patterns_router, multi_timeframe_router, feishu_router, risk_router, realtime_router, watchlist_router
 from app.api import user_settings_router
+from app.api import data_sources_router
 
 # 配置日志
 logger.remove()
@@ -110,11 +111,15 @@ app = FastAPI(
             "name": "配置管理",
             "description": "系统配置参数",
         },
+        {
+            "name": "数据源管理",
+            "description": "多数据源配置、测速、优先级管理",
+        },
     ]
 )
 
 # 配置速率限制器
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=lambda: "127.0.0.1")  # 暂时禁用基于IP的速率限制
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -171,6 +176,7 @@ app.include_router(watchlist_router, prefix="/api/v1", tags=["关注列表"])
 app.include_router(config_router, prefix="/api/v1", tags=["配置管理"])
 app.include_router(user_settings_router, prefix="/api/v1", tags=["用户设置"])
 app.include_router(feishu_router, prefix="/api/v1", tags=["飞书通知"])
+app.include_router(data_sources_router, prefix="/api/v1", tags=["数据源管理"])
 
 if __name__ == "__main__":
     import uvicorn
