@@ -7753,7 +7753,7 @@
                     max-width: 800px;
                     width: 95%;
                     max-height: ${isMobile ? '90vh' : '72.6vh'};
-                    padding: 16px;
+                    padding: ${isMobile ? '12px' : '16px'};
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                     display: flex;
                     flex-direction: column;
@@ -7762,13 +7762,13 @@
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 12px;
+                        margin-bottom: ${isMobile ? '10px' : '12px'};
                         border-bottom: 1px solid #374151;
-                        padding-bottom: 10px;
+                        padding-bottom: ${isMobile ? '8px' : '10px'};
                         flex-shrink: 0;
                     ">
                         <h2 style="
-                            font-size: 16px;
+                            font-size: ${isMobile ? '18px' : '16px'};
                             font-weight: 600;
                             color: #f9fafb;
                             margin: 0;
@@ -7777,11 +7777,11 @@
                             background: none;
                             border: none;
                             color: #9ca3af;
-                            font-size: 20px;
+                            font-size: ${isMobile ? '28px' : '20px'};
                             cursor: pointer;
                             padding: 0;
-                            width: 28px;
-                            height: 28px;
+                            width: ${isMobile ? '36px' : '28px'};
+                            height: ${isMobile ? '36px' : '28px'};
                             display: flex;
                             align-items: center;
                             justify-content: center;
@@ -8051,14 +8051,14 @@
                         </div>
 
                         <!-- 三列布局：移动端垂直排列，桌面端三列 -->
-                        <div style="display: ${isMobile ? 'flex' : 'grid'}; ${isMobile ? 'flex-direction: column; gap: 10px;' : 'grid-template-columns: 1fr 1fr 1fr; gap: 10px;'} margin-bottom: 8px;">
+                        <div style="display: ${isMobile ? 'flex' : 'grid'}; ${isMobile ? 'flex-direction: column; gap: 6px;' : 'grid-template-columns: 1fr 1fr 1fr; gap: 10px;'} margin-bottom: 8px;">
                             <!-- 1. 均线分析（独立行） -->
-                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 6px; font-weight: 600;">均线指标 (MA5-MA250)</div>
+                            <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '4px' : '6px'}; font-weight: 600;">均线指标 (MA5-MA250)</div>
                                 <!-- 上：当天情况 - 3行结构 -->
-                                <div style="margin-bottom: 8px;">
+                                <div style="margin-bottom: ${isMobile ? '6px' : '8px'};">
                                     ${maTrend.length > 0 ? `
-                                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;">
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: ${isMobile ? '4px' : '6px'};">
                                         ${maTrend.slice(0, 2).map(trend => `
                                             <span style="padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 600; background: ${trend.color}20; color: ${trend.color}; border: 1px solid ${trend.color};">${trend.type}</span>
                                         `).join('')}
@@ -8142,9 +8142,9 @@
                             </div>
 
                             <!-- 2. 量能分析（中） -->
-                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 6px; font-weight: 600;">量能分析与对比</div>
-                                <div style="margin-bottom: 8px;">
+                            <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '4px' : '6px'}; font-weight: 600;">量能分析与对比</div>
+                                <div style="margin-bottom: ${isMobile ? '6px' : '8px'};">
                                     <!-- 当天量能 -->
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                         <div style="font-size: 9px; color: #9ca3af;">当天成交量</div>
@@ -8191,37 +8191,37 @@
                             </div>
 
                             <!-- 3. 威科夫阶段（右） -->
-                            <div style="background: #111827; padding: 8px; border-radius: 4px;">
-                                <div style="color: #9ca3af; font-size: 11px; margin-bottom: 8px; font-weight: 600;">威科夫阶段</div>
+                            <div style="background: #111827; padding: ${isMobile ? '6px' : '8px'}; border-radius: 4px;">
+                                <div style="color: #9ca3af; font-size: ${isMobile ? '10px' : '11px'}; margin-bottom: ${isMobile ? '6px' : '8px'}; font-weight: 600;">威科夫阶段</div>
 
                                 <!-- 当天阶段：文本左，图标右 -->
-                                <div class="modal-wyckoff-tooltip" style="display: flex; align-items: center; justify-content: space-between; cursor: help; margin-bottom: 10px; padding: 6px 8px; background: rgba(0,0,0,0.2); border-radius: 4px;" data-tooltip="${phaseTooltip}">
-                                    <div style="font-size: 13px; font-weight: 600; color: ${phaseColor};">
+                                <div class="modal-wyckoff-tooltip" style="display: flex; align-items: center; justify-content: space-between; cursor: help; margin-bottom: ${isMobile ? '8px' : '10px'}; padding: ${isMobile ? '4px 6px' : '6px 8px'}; background: rgba(0,0,0,0.2); border-radius: 4px;" data-tooltip="${phaseTooltip}">
+                                    <div style="font-size: ${isMobile ? '11px' : '13px'}; font-weight: 600; color: ${phaseColor};">
                                         ${currentPhase === 'U' ? 'U 上升' : currentPhase === 'D' ? 'D 下降' : currentPhase === 'A' ? 'A 吸筹' : currentPhase === 'DS' ? 'DS 下跌吸筹' : '震荡'}
                                     </div>
-                                    <div style="font-size: 24px; line-height: 1;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
+                                    <div style="font-size: ${isMobile ? '20px' : '24px'}; line-height: 1;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
                                 </div>
 
                                 <!-- 历史对比 + 操作建议 -->
                                 ${prevQ ? `
-                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
                                     <!-- 阶段变化 -->
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: ${isMobile ? '4px' : '6px'}; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
                                         <div style="text-align: center;">
                                             <div style="font-size: 8px; color: #9ca3af;">上期</div>
-                                            <div style="font-size: 14px;">${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}</div>
+                                            <div style="font-size: ${isMobile ? '12px' : '14px'};">${prevPhase === 'U' ? '📈' : prevPhase === 'D' ? '📉' : prevPhase === 'A' ? '🔄' : prevPhase === 'DS' ? '📥' : '⚡'}</div>
                                         </div>
-                                        <div style="font-size: 14px; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
+                                        <div style="font-size: ${isMobile ? '12px' : '14px'}; color: ${phaseChangeColor};">${phaseChangeStrength}</div>
                                         <div style="text-align: center;">
                                             <div style="font-size: 8px; color: #9ca3af;">本期</div>
-                                            <div style="font-size: 14px;">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
+                                            <div style="font-size: ${isMobile ? '12px' : '14px'};">${currentPhase === 'U' ? '📈' : currentPhase === 'D' ? '📉' : currentPhase === 'A' ? '🔄' : currentPhase === 'DS' ? '📥' : '⚡'}</div>
                                         </div>
                                     </div>
 
                                     <!-- 操作建议 -->
-                                    <div style="display: flex; align-items: center; gap: 6px; padding: 6px; background: ${operationColor}15; border-radius: 4px; border-left: 3px solid ${operationColor};">
-                                        <span style="font-size: 14px;">💡</span>
-                                        <span style="font-size: 11px; font-weight: 600; color: ${operationColor}; flex: 1;">${operationAdvice}</span>
+                                    <div style="display: flex; align-items: center; gap: 6px; padding: ${isMobile ? '4px' : '6px'}; background: ${operationColor}15; border-radius: 4px; border-left: 3px solid ${operationColor};">
+                                        <span style="font-size: ${isMobile ? '12px' : '14px'};">💡</span>
+                                        <span style="font-size: ${isMobile ? '10px' : '11px'}; font-weight: 600; color: ${operationColor}; flex: 1;">${operationAdvice}</span>
                                     </div>
                                 </div>
                                 ` : '<div style="text-align: center; color: #9ca3af; font-size: 9px; padding: 15px 0;">无历史数据</div>'}
