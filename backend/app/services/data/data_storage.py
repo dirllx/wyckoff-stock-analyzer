@@ -299,16 +299,11 @@ class DataStorage:
             if timeframe in ["1", "5", "15", "30", "60"]:
                 logger.info(f"分钟线数据实时更新: {code} {timeframe}分钟")
 
-                # 删除该股票该周期的旧数据（分钟线数据量小，可以直接删除重建）
-                self.db.query(StockQuote).filter(
-                    StockQuote.stock_id == stock.id,
-                    StockQuote.timeframe == timeframe
-                ).delete()
-
                 # 获取最新的分钟线数据（获取足够的数据用于计算均线）
                 end_date = datetime.now().strftime("%Y-%m-%d")
                 start_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")  # 最近60天
 
+                # 先获取新数据，成功后再删除旧数据（避免获取失败导致数据丢失）
                 quotes_dict = scheduler.fetch_with_fallback(
                     code=code,
                     timeframe=timeframe,
@@ -317,8 +312,18 @@ class DataStorage:
                 )
 
                 if not quotes_dict:
-                    logger.warning(f"股票{code} {timeframe}分钟线无数据")
+                    logger.warning(f"股票{code} {timeframe}分钟线获取失败，保留旧数据")
                     return False
+
+                # 只保留最新500条
+                quotes_dict = quotes_dict[-500:] if len(quotes_dict) > 500 else quotes_dict
+
+                # 新数据获取成功后，删除该股票该周期的旧数据
+                self.db.query(StockQuote).filter(
+                    StockQuote.stock_id == stock.id,
+                    StockQuote.timeframe == timeframe
+                ).delete()
+                logger.info(f"已删除 {code} {timeframe} 的旧数据，准备保存新数据")
 
                 # 只保留最新500条
                 quotes_dict = quotes_dict[-500:] if len(quotes_dict) > 500 else quotes_dict

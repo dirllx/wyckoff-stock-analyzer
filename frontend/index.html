@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20260328-1900">
+    <meta name="version" content="20260401-2600">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -744,66 +744,29 @@
 
         <!-- 我的关注Tab -->
         <div id="tab-watchlist" class="tab-content">
-            <div class="card-header">
-                <h2 class="card-title">⭐ 我的关注</h2>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <button class="btn btn-secondary" onclick="toggleBatchImport()">📥 批量导入</button>
-                    <button class="btn btn-primary" onclick="batchAnalyzeWatchlist()">⚡ 批量分析</button>
-                    <button class="btn btn-secondary" onclick="refreshWatchlist()">🔄 刷新</button>
+            <!-- 主工具栏 -->
+            <div style="background: #1f2937; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #374151;">
+                <!-- 第一行：添加 + 操作按钮 -->
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                    <!-- 添加股票（宽度减少50%） -->
+                    <div style="display: flex; gap: 6px; flex: 0 0 auto;">
+                        <input type="text" class="form-input" id="watchlistCode" placeholder="股票代码" style="width: 150px; padding: 6px 10px; font-size: 13px;">
+                        <button class="btn btn-primary" onclick="addToWatchlist()" style="padding: 6px 12px; font-size: 12px;">➕ 添加</button>
+                    </div>
+
+                    <div style="flex: 1;"></div>
+
+                    <!-- 操作按钮 -->
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="toggleBatchImport()" style="padding: 6px 12px; font-size: 12px;">📥 批量导入</button>
+                        <button class="btn btn-primary" onclick="batchAnalyzeWatchlist()" style="padding: 6px 12px; font-size: 12px;">⚡ 批量分析</button>
+                        <button class="btn btn-secondary" onclick="refreshWatchlist()" style="padding: 6px 12px; font-size: 12px;">🔄 刷新</button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 子标签导航 -->
-            <div style="display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid #374151; padding-bottom: 12px;">
-                <button id="subtab-favorite" onclick="switchWatchlistTab('favorite')" style="padding: 8px 16px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                    ⭐ 自选股
-                </button>
-                <button id="subtab-browse" onclick="switchWatchlistTab('browse')" style="padding: 8px 16px; background: #374151; color: #f9faff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
-                    📖 浏览股
-                </button>
-
-                <div style="flex: 1;"></div>
-
-                <!-- 视图模式切换 -->
-                <div style="display: flex; gap: 4px;">
-                    <button id="viewMode-card" onclick="switchWatchlistViewMode('card')" style="padding: 6px 12px; background: #374151; color: #f9fafb; border: 1px solid #4b5563; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                        📇 卡片
-                    </button>
-                    <button id="viewMode-list" onclick="switchWatchlistViewMode('list')" style="padding: 6px 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                        📋 列表
-                    </button>
-                </div>
-            </div>
-
-            <!-- 列表视图的周期选择器 -->
-            <div id="listViewControls" style="display: none; padding: 12px; background: #1f2937; border-radius: 8px; margin: 0 16px 12px 16px; border: 1px solid #374151;">
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <span style="color: #9ca3af; font-size: 12px;">⏰ 周期:</span>
-                    <select id="watchlistTimeframe" onchange="refreshWatchlistListView()" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 4px; font-size: 12px;">
-                        <option value="30">30分钟</option>
-                        <option value="60">60分钟</option>
-                        <option value="daily" selected>日线</option>
-                        <option value="weekly">周线</option>
-                        <option value="monthly">月线</option>
-                    </select>
-                    <span style="color: #9ca3af; font-size: 11px; margin-left: auto;">💡 提示：基金、港股无数据也会显示</span>
-                </div>
-            </div>
-
-            <!-- 排序筛选工具栏 -->
-            <div style="padding: 12px; background: #1f2937; border-radius: 8px; margin: 12px 16px; border: 1px solid #374151;">
-                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <span style="color: #9ca3af; font-size: 12px;">🔍 排序:</span>
-                    <select id="sortSelect" onchange="applySortAndFilter()" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 4px; font-size: 12px;">
-                        <option value="default">默认</option>
-                        <option value="score_desc">评分 (高→低)</option>
-                        <option value="score_asc">评分 (低→高)</option>
-                        <option value="price_desc">价格 (高→低)</option>
-                        <option value="price_asc">价格 (低→高)</option>
-                        <option value="code_asc">代码 (A→Z)</option>
-                    </select>
-
-                    <span style="color: #9ca3af; font-size: 12px; margin-left: 8px;">🎯 筛选:</span>
+                <!-- 第二行：筛选 -->
+                <div id="filterRow" style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                    <span style="color: #9ca3af; font-size: 11px;">🎯 筛选:</span>
                     <label style="color: #f9fafb; font-size: 12px;">
                         <input type="checkbox" id="filterBullish" onchange="applySortAndFilter()"> 只看看涨
                     </label>
@@ -811,60 +774,104 @@
                         <input type="checkbox" id="filterBearish" onchange="applySortAndFilter()"> 只看看跌
                     </label>
                     <label style="color: #f9fafb; font-size: 12px;">
-                        <input type="checkbox" id="filterHighScore" onchange="applySortAndFilter()"> 评分≥3分
+                        <input type="checkbox" id="filterHighScore" onchange="applySortAndFilter()"> 评分≥3
                     </label>
+                </div>
+
+                <!-- 第三行：自选股 / 浏览股 / 周期选择 -->
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                    <button id="subtab-favorite" onclick="switchWatchlistTab('favorite')" style="padding: 8px 20px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        ⭐ 自选股
+                    </button>
+                    <button id="subtab-browse" onclick="switchWatchlistTab('browse')" style="padding: 8px 20px; height: 40px; background: #374151; color: #f9faff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        📖 浏览股
+                    </button>
+
+                    <!-- 周期选择器 -->
+                    <div style="display: flex; align-items: center; gap: 6px; margin-left: 12px;">
+                        <span style="color: #9ca3af; font-size: 13px;">⏰ 周期:</span>
+                        <select id="watchlistMainTimeframe" onchange="onWatchlistTimeframeChange()" style="padding: 6px 10px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 5px; font-size: 13px; cursor: pointer;">
+                            <option value="30">30分钟</option>
+                            <option value="60">60分钟</option>
+                            <option value="daily">日线</option>
+                            <option value="weekly">周线</option>
+                            <option value="monthly">月线</option>
+                        </select>
+                        <span id="stockTypeIndicator" style="color: #10b981; font-size: 11px; margin-left: 8px; padding: 2px 8px; background: #1f2937; border-radius: 4px; border: 1px solid #374151;">
+                            📈 A股
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 第四行：视图 + 排序 + 批量选择 -->
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                    <!-- 视图模式切换 -->
+                    <div style="display: flex; gap: 4px;">
+                        <button id="viewMode-card" onclick="switchWatchlistViewMode('card')" style="padding: 5px 12px; background: #374151; color: #f9fafb; border: 1px solid #4b5563; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                            📇 卡片
+                        </button>
+                        <button id="viewMode-list" onclick="switchWatchlistViewMode('list')" style="padding: 5px 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                            📋 列表
+                        </button>
+                    </div>
+
+                    <!-- 列表视图的周期选择器 -->
+                    <div id="listViewControls" style="display: none; align-items: center; gap: 6px;">
+                        <!-- 列表视图的提示信息 -->
+                        <span style="color: #9ca3af; font-size: 12px;">📊 列表视图</span>
+                    </div>
 
                     <div style="flex: 1;"></div>
-                    <button onclick="toggleBatchSelect()" id="batchSelectBtn" style="padding: 4px 12px; background: #8b5cf6; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 8px;">
-                        ☑️ 批量选择
-                    </button>
-                    <button onclick="batchDeleteSelected()" id="batchDeleteBtn" style="padding: 4px 12px; background: #dc2626; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;">
-                        🗑️ 删除选中
-                    </button>
-                    <span id="filterStats" style="color: #10b981; font-size: 11px;"></span>
+
+                    <!-- 排序（仅卡片视图） -->
+                    <div id="cardViewSortControls" style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #9ca3af; font-size: 11px;">📊 排序:</span>
+                        <select id="sortSelect" onchange="applySortAndFilter()" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 4px; font-size: 12px;">
+                            <option value="default">默认</option>
+                            <option value="score_desc">评分 (高→低)</option>
+                            <option value="score_asc">评分 (低→高)</option>
+                            <option value="price_desc">价格 (高→低)</option>
+                            <option value="price_asc">价格 (低→高)</option>
+                            <option value="code_asc">代码 (A→Z)</option>
+                        </select>
+                    </div>
+
+                    <!-- 批量选择（仅卡片视图） -->
+                    <div id="cardViewBatchControls" style="display: flex; gap: 8px; align-items: center;">
+                        <button onclick="toggleBatchSelect()" id="batchSelectBtn" style="padding: 4px 10px; background: #8b5cf6; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                            ☑️ 批量选择
+                        </button>
+                        <button onclick="batchDeleteSelected()" id="batchDeleteBtn" style="padding: 4px 10px; background: #dc2626; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; display: none;">
+                            🗑️ 删除
+                        </button>
+                        <span id="filterStats" style="color: #10b981; font-size: 11px;"></span>
+                    </div>
+                </div>
+
+                <!-- 批量导入区域（可折叠） -->
+                <div id="batchImportArea" style="display: none; background: #111827; padding: 12px; border-radius: 6px; border: 1px solid #374151; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #f9fafb;">📥 批量导入</div>
+                        <button onclick="toggleBatchImport()" style="background: none; border: none; color: #9ca3af; font-size: 18px; cursor: pointer;">&times;</button>
+                    </div>
+                    <textarea
+                        id="batchImportText"
+                        placeholder="粘贴文本，自动识别股票代码。支持：603520、SH603520、sz300001 或任何包含6位数字的文本"
+                        style="width: 100%; min-height: 80px; padding: 10px; background: #1f2937; border: 1px solid #374151; border-radius: 4px; color: #f9fafb; font-size: 12px; resize: vertical; margin-bottom: 8px;"
+                    ></textarea>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="previewBatchImport()" style="padding: 6px 12px; font-size: 12px;">🔍 识别</button>
+                        <button class="btn btn-secondary" onclick="clearBatchImport()" style="padding: 6px 12px; font-size: 12px;">清空</button>
+                    </div>
+                    <div id="batchPreview" style="display: none; margin-top: 8px;">
+                        <div style="font-size: 11px; color: #9ca3af; margin-bottom: 6px;">识别到：</div>
+                        <div id="batchPreviewList" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+                        <button class="btn btn-primary" onclick="confirmBatchImport()" style="width: 100%; padding: 8px; font-size: 12px;">✅ 确认导入</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 手动添加区域 -->
-            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" class="form-input" id="watchlistCode" placeholder="输入股票代码（如：603520）" style="width: 200px;">
-                    <button class="btn btn-primary" onclick="addToWatchlist()" style="padding: 10px 20px;">➕ 添加</button>
-                </div>
-                <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">
-                    💡 提示：输入股票代码添加到关注列表
-                </div>
-            </div>
-
-            <!-- 批量导入区域（可折叠） -->
-            <div id="batchImportArea" style="display: none; padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px; border: 1px solid #374151;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div style="font-size: 14px; font-weight: 600; color: #f9fafb;">📥 批量导入股票</div>
-                    <button onclick="toggleBatchImport()" style="background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer;">&times;</button>
-                </div>
-
-                <!-- 文本输入区 -->
-                <textarea
-                    id="batchImportText"
-                    placeholder="粘贴文本，自动识别股票代码||支持格式：|• 603520|• SH603520、sz300001|• 股票代码:603520|• 或任何包含6位数字的文本"
-                    style="width: 100%; min-height: 120px; padding: 12px; background: #111827; border: 1px solid #374151; border-radius: 6px; color: #f9fafb; font-size: 13px; resize: vertical; margin-bottom: 12px;"
-                ></textarea>
-
-                <!-- 操作按钮 -->
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-primary" onclick="previewBatchImport()">🔍 识别预览</button>
-                    <button class="btn btn-secondary" onclick="clearBatchImport()">清空</button>
-                </div>
-
-                <!-- 预览结果 -->
-                <div id="batchPreview" style="margin-top: 12px; display: none;">
-                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">识别到以下股票代码：</div>
-                    <div id="batchPreviewList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
-                    <button class="btn btn-primary" onclick="confirmBatchImport()" style="width: 100%;">✅ 确认导入</button>
-                </div>
-            </div>
-
-            <!-- 关注列表 -->
+            <!-- 第五行：显示内容 -->
             <div id="watchlistContent" style="padding: 0 16px 16px 16px;"></div>
         </div>
 
@@ -1222,6 +1229,9 @@
         let useTableMode = true;  // 默认显示表格（图表有兼容性问题）
         let currentWatchlistTab = 'favorite';  // 当前关注的子标签：favorite=自选股, browse=浏览股
         let currentWatchlistViewMode = 'list';  // 当前关注列表视图模式：card=卡片, list=列表
+        let currentWatchlistTimeframe = 'daily';  // 当前关注列表数据周期
+        let currentWatchlistQuoteOffset = 0;  // 当前K线索引偏移（0=最新，1=前一期，-1=下一期）
+        let currentWatchlistStockType = 'A股';  // 当前关注列表的股票类型：A股/基金/港股
 
         // ========== 日志系统 ==========
         function addLog(action, detail) {
@@ -1294,10 +1304,10 @@
 
                     if (overallText.textContent !== newStatus || overallText.textContent === '检查中...') {
                         addLog('健康检查', `系统: ${newStatus}, 数据库: ${data.database}, Redis: ${data.redis}`);
+                    }
                     updateTestStatus('健康检查', true, `系统: ${newStatus}`);
                     updateTestStatus('数据库', data.database === 'connected', data.database);
                     updateTestStatus('Redis', data.redis === 'connected', data.redis);
-                }
                 }
 
                 const dbDot = document.getElementById('dbStatusDot');
@@ -1323,6 +1333,30 @@
             } catch (error) {
                 console.error('健康检查失败:', error);
                 addLog('健康检查失败', error.message);
+
+                // 更新UI为错误状态
+                const overallDot = document.getElementById('overallStatusDot');
+                const overallText = document.getElementById('overallStatusText');
+                if (overallDot && overallText) {
+                    overallDot.className = 'health-dot error';
+                    overallText.textContent = '连接失败';
+                }
+
+                const dbDot = document.getElementById('dbStatusDot');
+                const dbText = document.getElementById('dbStatusText');
+                if (dbDot && dbText) {
+                    dbDot.className = 'health-dot error';
+                    dbText.textContent = '未连接';
+                }
+
+                const redisDot = document.getElementById('redisStatusDot');
+                const redisText = document.getElementById('redisStatusText');
+                if (redisDot && redisText) {
+                    redisDot.className = 'health-dot error';
+                    redisText.textContent = '未连接';
+                }
+
+                updateTestStatus('健康检查', false, `连接失败: ${error.message}`);
             }
         }
 
@@ -1492,6 +1526,151 @@
             tooltip += '||━━━━━━━━━━━━|指标含义：|OBV上涨 = 资金净流入|OBV下跌 = 资金净流出|用于验证价格走势的可靠性';
 
             return tooltip;
+        }
+
+        // ========== 股票类型判断 ==========
+        function getStockType(code) {
+            if (!code) return '未知';
+
+            // 港股：4-5位纯数字或带HK前缀
+            if ((code.length >= 4 && code.length <= 5 && /^\d+$/.test(code)) || code.startsWith('HK')) {
+                return '港股';
+            }
+
+            // 基金/ETF：5开头且长度为6（排除科创板688）
+            if (code.startsWith('5') && code.length === 6) {
+                return '基金';
+            }
+
+            // 科创板A股：688开头
+            if (code.startsWith('688') && code.length === 6) {
+                return 'A股';
+            }
+
+            // 普通A股：0/3开头，或6开头但不是688
+            if (code.startsWith('0') || code.startsWith('3') ||
+                (code.startsWith('6') && code.length === 6)) {
+                return 'A股';
+            }
+
+            return '未知';
+        }
+
+        // 判断整个关注列表的主要股票类型
+        function getWatchlistStockType(items) {
+            if (!items || items.length === 0) return 'A股';
+
+            const typeCount = {
+                'A股': 0,
+                '基金': 0,
+                '港股': 0
+            };
+
+            items.forEach(item => {
+                const type = getStockType(item.stock_code);
+                if (typeCount[type] !== undefined) {
+                    typeCount[type]++;
+                }
+            });
+
+            // 返回数量最多的类型
+            let maxType = 'A股';
+            let maxCount = 0;
+            for (const [type, count] of Object.entries(typeCount)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxType = type;
+                }
+            }
+
+            return maxType;
+        }
+
+        // 根据股票类型更新周期选择器
+        function updateWatchlistTimeframeOptions(stockType) {
+            const select = document.getElementById('watchlistMainTimeframe');
+            const indicator = document.getElementById('stockTypeIndicator');
+            if (!select) return;
+
+            const currentTimeframe = select.value;
+            const supportsMinute = stockType === 'A股';
+
+            console.log(`[updateWatchlistTimeframeOptions] 股票类型: ${stockType}, 支持分钟线: ${supportsMinute}`);
+
+            // 更新股票类型指示器
+            if (indicator) {
+                const typeIcons = {
+                    'A股': '📈',
+                    '基金': '💰',
+                    '港股': '🌏'
+                };
+                const typeColors = {
+                    'A股': '#10b981',
+                    '基金': '#f59e0b',
+                    '港股': '#8b5cf6'
+                };
+                indicator.textContent = `${typeIcons[stockType] || '📊'} ${stockType}`;
+                indicator.style.color = typeColors[stockType] || '#10b981';
+            }
+
+            // 清空现有选项
+            select.innerHTML = '';
+
+            // 添加选项
+            if (supportsMinute) {
+                const opt30 = document.createElement('option');
+                opt30.value = '30';
+                opt30.textContent = '30分钟';
+                select.appendChild(opt30);
+
+                const opt60 = document.createElement('option');
+                opt60.value = '60';
+                opt60.textContent = '60分钟';
+                select.appendChild(opt60);
+            } else {
+                // 添加禁用的分钟选项，提示用户
+                const opt30 = document.createElement('option');
+                opt30.value = '30';
+                opt30.textContent = '30分钟（仅A股支持）';
+                opt30.disabled = true;
+                select.appendChild(opt30);
+
+                const opt60 = document.createElement('option');
+                opt60.value = '60';
+                opt60.textContent = '60分钟（仅A股支持）';
+                opt60.disabled = true;
+                select.appendChild(opt60);
+            }
+
+            // 添加日线、周线、月线（所有类型都支持）
+            const optDaily = document.createElement('option');
+            optDaily.value = 'daily';
+            optDaily.textContent = '日线';
+            select.appendChild(optDaily);
+
+            const optWeekly = document.createElement('option');
+            optWeekly.value = 'weekly';
+            optWeekly.textContent = '周线';
+            select.appendChild(optWeekly);
+
+            const optMonthly = document.createElement('option');
+            optMonthly.value = 'monthly';
+            optMonthly.textContent = '月线';
+            select.appendChild(optMonthly);
+
+            // 如果当前选中的周期不支持，则切换到日线
+            if (!supportsMinute && (currentTimeframe === '30' || currentTimeframe === '60')) {
+                select.value = 'daily';
+                currentWatchlistTimeframe = 'daily';
+                addLog('周期调整', `${stockType}不支持分钟线，已切换到日线`);
+            } else if (select.querySelector(`option[value="${currentTimeframe}"]`)) {
+                select.value = currentTimeframe;
+            } else {
+                select.value = 'daily';
+                currentWatchlistTimeframe = 'daily';
+            }
+
+            currentWatchlistStockType = stockType;
         }
 
         // ========== 日期格式化函数 ==========
@@ -3395,9 +3574,11 @@
                 console.error('分析失败:', error);
                 const errorMsg = error.message || '未知错误';
 
-                // 检查是否是不支持分钟线数据的错误
+                // 检查是否是不支持分钟线数据的错误（只有明确说"不支持"才是）
                 const isMinuteNotSupported = errorMsg.includes('不支持分钟线') ||
-                                              errorMsg.includes('暂无数据');
+                                              errorMsg.includes('仅支持日线') ||
+                                              errorMsg.includes('基金/ETF') ||
+                                              errorMsg.includes('港股不支持');
 
                 // 根据错误类型显示不同的提示
                 let hintMessage = '';
@@ -3552,6 +3733,10 @@
 
         // 监听股票代码输入框变化
         document.addEventListener('DOMContentLoaded', () => {
+            // 输出关注列表初始状态
+            console.log('[页面初始化] 关注列表偏移量初始值:', currentWatchlistQuoteOffset);
+            console.log('[页面初始化] 关注列表当前周期:', currentWatchlistTimeframe);
+
             const codeInput = document.getElementById('multiStockCode');
             if (codeInput) {
                 let debounceTimer;
@@ -3571,6 +3756,26 @@
             if (defaultCode) {
                 loadDateSelector(defaultCode);
             }
+
+            // 初始化关注列表视图模式
+            switchWatchlistViewMode(currentWatchlistViewMode);
+
+            // 确保关注列表标签页状态正确（默认为自选股）
+            currentWatchlistTab = 'favorite';
+            console.log('[初始化] 设置默认关注类型: 自选股 (favorite)');
+
+            // 初始化关注列表周期选择器（根据开市/收市设置默认周期）
+            initWatchlistTimeframe();
+
+            // 后台更新股票名称（静默执行，不阻塞页面）
+            setTimeout(async () => {
+                try {
+                    await fetch(`${API_BASE}/api/v1/watchlist/update`);
+                    console.log('✓ 股票名称已更新');
+                } catch (error) {
+                    console.warn('更新股票名称失败:', error);
+                }
+            }, 2000); // 延迟2秒执行，避免影响页面加载
         });
 
         async function analyzeMultiTimeframe() {
@@ -4731,6 +4936,9 @@
             document.querySelectorAll('.timeframe-checkbox').forEach(cb => cb.checked = false);
         }
 
+        // 股票名称缓存
+        const stockNameCache = new Map();
+
         // 显示关注列表选择器
         async function showWatchlistPicker(targetInputId) {
             try {
@@ -4741,6 +4949,41 @@
                 if (!data.items || data.items.length === 0) {
                     alert('关注列表为空，请先添加股票到关注列表');
                     return;
+                }
+
+                // 找出没有名称的股票（使用缓存检查）
+                const itemsNeedingNames = data.items.filter(item => {
+                    const cachedName = stockNameCache.get(item.stock_code);
+                    if (cachedName) {
+                        item.stock_name = cachedName;
+                        return false; // 使用缓存，不需要请求
+                    }
+                    return !item.stock_name || item.stock_name.trim() === '';
+                });
+
+                // 批量获取缺少的股票名称（限制并发数为5）
+                if (itemsNeedingNames.length > 0) {
+                    const chunks = [];
+                    for (let i = 0; i < itemsNeedingNames.length; i += 5) {
+                        chunks.push(itemsNeedingNames.slice(i, i + 5));
+                    }
+
+                    for (const chunk of chunks) {
+                        await Promise.all(chunk.map(async (item) => {
+                            try {
+                                const stockInfoResponse = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}`);
+                                if (stockInfoResponse.ok) {
+                                    const stockInfo = await stockInfoResponse.json();
+                                    if (stockInfo.name) {
+                                        item.stock_name = stockInfo.name;
+                                        stockNameCache.set(item.stock_code, stockInfo.name); // 缓存名称
+                                    }
+                                }
+                            } catch (error) {
+                                console.warn(`获取股票 ${item.stock_code} 名称失败:`, error);
+                            }
+                        }));
+                    }
                 }
 
                 // 分组为自选股和浏览股
@@ -4770,18 +5013,20 @@
                 if (favoriteItems.length > 0) {
                     optionsHtml += '<div style="margin-bottom: 16px;">';
                     optionsHtml += '<div style="color: #fbbf24; font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-left: 4px;">⭐ 自选股 (' + favoriteItems.length + ')</div>';
-                    optionsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;">';
+                    optionsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px;">';
 
                     favoriteItems.forEach(item => {
                         const code = item.stock_code;
-                        const name = item.stock_name || '';
+                        const name = item.stock_name || '未知';
+                        const displayCode = code.length > 6 ? code.substring(0, 6) : code;
+                        const safeName = name.replace(/'/g, "\\'"); // 转义单引号
                         optionsHtml += `
-                            <button onclick="selectStockFromWatchlist('${code}', '${targetInputId}')"
-                                    style="background: #374151; border: 1px solid #fbbf24; color: #f9fafb; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s;"
+                            <button onclick="selectStockFromWatchlist('${code}', '${targetInputId}', '${safeName}')"
+                                    style="background: #374151; border: 1px solid #fbbf24; color: #f9fafb; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s;"
                                     onmouseover="this.style.background='#4b5563'"
                                     onmouseout="this.style.background='#374151'">
-                                <div style="font-weight: 600; color: #10b981; margin-bottom: 4px;">${code}</div>
-                                <div style="font-size: 11px; color: #9ca3af;">${name}</div>
+                                <div style="font-weight: 600; color: #10b981; margin-bottom: 6px; font-size: 15px;">${displayCode}</div>
+                                <div style="font-size: 13px; color: #e5e7eb; font-weight: 500;">${name}</div>
                             </button>
                         `;
                     });
@@ -4798,18 +5043,20 @@
                 if (browseItems.length > 0) {
                     optionsHtml += '<div>';
                     optionsHtml += '<div style="color: #60a5fa; font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-left: 4px;">📖 浏览股 (' + browseItems.length + ')</div>';
-                    optionsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;">';
+                    optionsHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px;">';
 
                     browseItems.forEach(item => {
                         const code = item.stock_code;
-                        const name = item.stock_name || '';
+                        const name = item.stock_name || '未知';
+                        const displayCode = code.length > 6 ? code.substring(0, 6) : code;
+                        const safeName = name.replace(/'/g, "\\'"); // 转义单引号
                         optionsHtml += `
-                            <button onclick="selectStockFromWatchlist('${code}', '${targetInputId}')"
-                                    style="background: #374151; border: 1px solid #4b5563; color: #f9fafb; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s;"
+                            <button onclick="selectStockFromWatchlist('${code}', '${targetInputId}', '${safeName}')"
+                                    style="background: #374151; border: 1px solid #4b5563; color: #f9fafb; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s;"
                                     onmouseover="this.style.background='#4b5563'"
                                     onmouseout="this.style.background='#374151'">
-                                <div style="font-weight: 600; color: #10b981; margin-bottom: 4px;">${code}</div>
-                                <div style="font-size: 11px; color: #9ca3af;">${name}</div>
+                                <div style="font-weight: 600; color: #10b981; margin-bottom: 6px; font-size: 15px;">${displayCode}</div>
+                                <div style="font-size: 13px; color: #e5e7eb; font-weight: 500;">${name}</div>
                             </button>
                         `;
                     });
@@ -4831,12 +5078,16 @@
         }
 
         // 从关注列表选择股票
-        function selectStockFromWatchlist(code, targetInputId) {
+        function selectStockFromWatchlist(code, targetInputId, stockName) {
             const input = document.getElementById(targetInputId);
             if (input) {
                 input.value = code;
                 // 触发change事件以更新历史记录
                 input.dispatchEvent(new Event('change'));
+                // 保存股票名称到历史记录
+                if (stockName && stockName !== '未知') {
+                    saveStockHistory(code, stockName);
+                }
             }
             closeWatchlistPicker();
         }
@@ -4866,14 +5117,21 @@
                 return;
             }
 
+            // 重置偏移量（刷新时回到最新数据）
+            currentWatchlistQuoteOffset = 0;
+
             // 显示加载中
             content.innerHTML = '<div style="text-align:center; padding:40px; color:#10b981;">🔄 正在加载...</div>';
 
             try {
                 // 根据当前标签页获取不同类型的数据
                 const watchType = currentWatchlistTab;
+                console.log(`[refreshWatchlist] 正在加载 ${watchType} 类型的关注列表...`);
+
                 const response = await fetch(`${API_BASE}/api/v1/watchlist?watch_type=${watchType}`);
                 const data = await response.json();
+
+                console.log(`[refreshWatchlist] API返回: ${data.total} 只股票, 类型: ${watchType}`);
 
                 if (!data.items || data.items.length === 0) {
                     const emptyMessage = watchType === 'favorite'
@@ -4885,7 +5143,7 @@
                             <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">${emptyMessage}</div>
                         </div>
                     `;
-                    addLog('刷新完成', '列表为空');
+                    addLog('刷新完成', `${watchType === 'favorite' ? '自选股' : '浏览股'}列表为空`);
                     watchlistData.items = [];
                     watchlistData.filteredItems = [];
                     return;
@@ -4918,6 +5176,12 @@
                 watchlistData.items = data.items;
                 watchlistData.allItems = data.items;  // 保存所有项目供详情弹窗使用
                 watchlistData.filteredItems = data.items;
+
+                // 检测股票类型并更新周期选择器
+                const stockType = getWatchlistStockType(data.items);
+                updateWatchlistTimeframeOptions(stockType);
+
+                console.log(`[refreshWatchlist] 已加载 ${watchType} 类型的股票: ${data.items.length} 只，主要类型: ${stockType}`);
 
                 // 应用排序和筛选
                 applySortAndFilter();
@@ -5215,7 +5479,7 @@
                 data.forEach((item, index) => {
                     const quote = watchlistData.quoteMap[item.stock_code];
                     const summary = watchlistData.quoteMap[item.stock_code + '_summary'];
-                    const isFavorite = watchType === 'favorite';
+                    const isFavorite = item.watch_type === 'favorite';  // 修复：使用item的类型而不是全局类型
 
                     // 提取关键数据
                     const currentPrice = quote?.close || 0;
@@ -5326,8 +5590,64 @@
             }
         }
 
+        // 判断是否在开市时间（周一到周五 9:30-15:00）
+        function isMarketOpen() {
+            const now = new Date();
+            const day = now.getDay(); // 0=周日, 6=周六
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+
+            // 周末不开市
+            if (day === 0 || day === 6) {
+                return false;
+            }
+
+            // 开市时间：9:30-15:00
+            const openTime = 9 * 60 + 30;  // 9:30
+            const closeTime = 15 * 60;     // 15:00
+            const currentTime = hour * 60 + minute;
+
+            return currentTime >= openTime && currentTime < closeTime;
+        }
+
+        // 初始化关注列表周期选择器
+        function initWatchlistTimeframe() {
+            const select = document.getElementById('watchlistMainTimeframe');
+            if (!select) return;
+
+            // 根据开市状态设置默认周期
+            const defaultTimeframe = isMarketOpen() ? '30' : 'daily';
+            select.value = defaultTimeframe;
+            currentWatchlistTimeframe = defaultTimeframe;
+
+            console.log(`关注列表默认周期: ${defaultTimeframe} (${isMarketOpen() ? '开市中' : '收市'})`);
+        }
+
+        // 周期切换处理
+        function onWatchlistTimeframeChange() {
+            const select = document.getElementById('watchlistMainTimeframe');
+            if (!select) return;
+
+            const newTimeframe = select.value;
+            console.log(`[onWatchlistTimeframeChange] 切换周期: ${currentWatchlistTimeframe} -> ${newTimeframe}, 当前偏移: ${currentWatchlistQuoteOffset}`);
+
+            if (newTimeframe !== currentWatchlistTimeframe) {
+                currentWatchlistTimeframe = newTimeframe;
+                currentWatchlistQuoteOffset = 0; // 重置偏移量
+                console.log(`[onWatchlistTimeframeChange] 已重置偏移量为0`);
+
+                // 如果当前是列表视图，立即刷新数据
+                if (currentWatchlistViewMode === 'list') {
+                    refreshWatchlistListView();
+                }
+
+                addLog('切换周期', `关注列表周期切换为: ${newTimeframe}`);
+            }
+        }
+
         // 切换关注列表子标签
         function switchWatchlistTab(tab) {
+            console.log(`[switchWatchlistTab] 切换到: ${tab}`);
             currentWatchlistTab = tab;
 
             // 更新按钮样式
@@ -5346,6 +5666,11 @@
                 favoriteBtn.style.color = '#f9faff';
             }
 
+            // 清空旧数据，确保不会显示错误类型的股票
+            watchlistData.items = [];
+            watchlistData.filteredItems = [];
+            watchlistData.quoteMap = {};
+
             // 刷新列表
             refreshWatchlist();
             addLog('切换标签', `切换到${tab === 'favorite' ? '自选股' : '浏览股'}`);
@@ -5353,12 +5678,23 @@
 
         // 切换关注列表视图模式
         function switchWatchlistViewMode(mode) {
+            console.log('[switchWatchlistViewMode] 切换到:', mode, '当前偏移:', currentWatchlistQuoteOffset);
             currentWatchlistViewMode = mode;
+
+            // 切换到列表视图时，重置偏移量
+            if (mode === 'list') {
+                if (currentWatchlistQuoteOffset !== 0) {
+                    console.log('[switchWatchlistViewMode] 切换到列表视图，重置偏移量从', currentWatchlistQuoteOffset, '到0');
+                    currentWatchlistQuoteOffset = 0;
+                }
+            }
 
             // 更新按钮样式
             const cardBtn = document.getElementById('viewMode-card');
             const listBtn = document.getElementById('viewMode-list');
             const listControls = document.getElementById('listViewControls');
+            const cardSortControls = document.getElementById('cardViewSortControls');
+            const cardBatchControls = document.getElementById('cardViewBatchControls');
 
             if (mode === 'card') {
                 cardBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
@@ -5368,6 +5704,8 @@
                 listBtn.style.color = '#f9faff';
                 listBtn.style.border = '1px solid #4b5563';
                 listControls.style.display = 'none';
+                cardSortControls.style.display = 'flex';
+                cardBatchControls.style.display = 'flex';
             } else {
                 listBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
                 listBtn.style.color = 'white';
@@ -5376,6 +5714,8 @@
                 cardBtn.style.color = '#f9faff';
                 cardBtn.style.border = '1px solid #4b5563';
                 listControls.style.display = 'block';
+                cardSortControls.style.display = 'none';
+                cardBatchControls.style.display = 'none';
             }
 
             // 刷新列表
@@ -5385,11 +5725,12 @@
 
         // 渲染列表视图（参考日分析表格）
         async function refreshWatchlistListView() {
+            console.log('[refreshWatchlistListView] 开始渲染，当前偏移:', currentWatchlistQuoteOffset);
             try {
                 const content = document.getElementById('watchlistContent');
                 if (!content) return;
 
-                const timeframe = document.getElementById('watchlistTimeframe')?.value || 'daily';
+                const timeframe = currentWatchlistTimeframe;  // 使用全局变量
                 const data = watchlistData.filteredItems || [];
                 const allItems = watchlistData.allItems || watchlistData.items || [];
 
@@ -5412,57 +5753,142 @@
                 const summaryMap = {};
                 const quotesListMap = {};  // 存储K线列表用于详情弹窗
 
-                for (const item of data) {
-                    try {
-                        const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=500`);
-                        if (quotesRes.ok) {
-                            const quotesData = await quotesRes.json();
-                            if (quotesData.quotes && quotesData.quotes.length > 0) {
-                                quotesMap[item.stock_code] = quotesData.quotes[0];
-                                quotesListMap[item.stock_code] = quotesData.quotes;
-                            }
-                        }
+                // 将数据分批，每批10只股票，避免服务器压力
+                const batchSize = 10;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const batch = data.slice(i, i + batchSize);
 
-                        const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: item.stock_code, timeframe })
-                        });
-                        if (analyzeRes.ok) {
-                            const analysisData = await analyzeRes.json();
-                            if (analysisData.analysis_summary) {
-                                summaryMap[item.stock_code] = analysisData.analysis_summary;
+                    await Promise.all(batch.map(async (item) => {
+                        try {
+                            // 获取K线数据（当前周期）
+                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=500`);
+
+                            // 获取分析数据（当前周期）
+                            const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: item.stock_code, timeframe })
+                            });
+
+                            // 获取日线分析（用于威科夫阶段统一显示）
+                            const dailyAnalyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                            });
+
+                            if (quotesRes.ok) {
+                                const quotesData = await quotesRes.json();
+                                if (quotesData.quotes && quotesData.quotes.length > 0) {
+                                    // API返回的是升序（旧→新），根据偏移量获取对应位置的数据
+                                    const quotes = quotesData.quotes;
+                                    const offset = currentWatchlistQuoteOffset;
+                                    const quoteIndex = quotes.length - 1 - offset;
+
+                                    console.log(`[${item.stock_code}] 数据总数: ${quotes.length}, 偏移: ${offset}, 索引: ${quoteIndex}`);
+                                    console.log(`[${item.stock_code}] 第一条: ${quotes[0].date}, 最后一条: ${quotes[quotes.length-1].date}`);
+
+                                    // 确保索引有效
+                                    if (quoteIndex >= 0 && quoteIndex < quotes.length) {
+                                        const selectedQuote = quotes[quoteIndex];
+                                        console.log(`[${item.stock_code}] 选中数据:`, selectedQuote.date, 'close:', selectedQuote.close);
+                                        quotesMap[item.stock_code] = selectedQuote;
+                                    } else if (quotes.length > 0) {
+                                        // 如果索引越界，取最接近的有效数据
+                                        const clampedIndex = Math.max(0, Math.min(quoteIndex, quotes.length - 1));
+                                        console.log(`[${item.stock_code}] 索引越界，使用索引: ${clampedIndex}`);
+                                        quotesMap[item.stock_code] = quotes[clampedIndex];
+                                    }
+                                    quotesListMap[item.stock_code] = quotes;
+                                }
+                            } else {
+                                // 获取K线数据失败，输出错误详情
+                                const errorText = await quotesRes.text();
+                                console.warn(`[${item.stock_code}] 获取K线数据失败 (${quotesRes.status}):`, errorText);
+
+                                // 如果是404错误，可能是该周期数据不存在
+                                if (quotesRes.status === 404) {
+                                    console.warn(`[${item.stock_code}] ${timeframe}周期数据不存在，该股票可能不支持此周期`);
+                                }
                             }
+
+                            // 存储当前周期的分析数据
+                            if (analyzeRes.ok) {
+                                const analysisData = await analyzeRes.json();
+                                if (analysisData.analysis_summary) {
+                                    summaryMap[item.stock_code] = analysisData.analysis_summary;
+                                }
+                            }
+
+                            // 存储日线的威科夫阶段（统一使用）
+                            if (dailyAnalyzeRes.ok) {
+                                const dailyAnalysis = await dailyAnalyzeRes.json();
+                                if (dailyAnalysis.analysis_summary) {
+                                    // 将日线威科夫阶段存储到summaryMap中，添加标识
+                                    if (!summaryMap[item.stock_code]) {
+                                        summaryMap[item.stock_code] = {};
+                                    }
+                                    const dailyPhase = dailyAnalysis.analysis_summary.wyckoff_phase || '-';
+                                    summaryMap[item.stock_code].wyckoff_phase_daily = dailyPhase;
+                                }
+                            }
+                        } catch (error) {
+                            console.warn(`获取 ${item.stock_code} 数据失败:`, error);
                         }
-                    } catch (error) {
-                        console.warn(`获取 ${item.stock_code} 数据失败:`, error);
-                        // 即使失败也要在表格中显示
-                    }
+                    }));
                 }
 
                 // 保存K线数据供详情弹窗使用
                 watchlistData.quotesListMap = quotesListMap;
                 watchlistData.currentTimeframe = timeframe;
 
-                // 渲染表格
+                // 计算当前显示的时间点信息
+                const totalQuotes = Object.values(quotesListMap).map(list => list.length).reduce((a, b) => Math.max(a, b), 0);
+                const currentOffset = currentWatchlistQuoteOffset;
+                const currentIndex = totalQuotes - 1 - currentOffset;
+                const canGoBack = currentIndex > 0;
+                const canGoForward = currentOffset > 0;
+
+                console.log('[表格渲染] 总数据:', totalQuotes, '当前偏移:', currentOffset, '当前索引:', currentIndex, '可后退:', canGoBack, '可前进:', canGoForward);
+
+                // 渲染控制栏和表格
                 let html = `
-                    <div class="table-container">
-                        <table class="kline-table">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoBack ? 'disabled' : ''}
+                                style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                ◀ 上一期
+                            </button>
+                            <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoForward ? 'disabled' : ''}
+                                style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                下一期 ▶
+                            </button>
+                            <button onclick="window.navigateWatchlistPeriod(0)"
+                                style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                ↺ 返回最新
+                            </button>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 11px;">
+                            当前显示：${currentOffset === 0 ? '最新数据' : `前第 ${currentOffset} 期`}${totalQuotes > 0 ? ` （共 ${totalQuotes} 期）` : ''}
+                        </div>
+                    </div>
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: fixed;">
                             <thead>
                                 <tr>
-                                    <th style="width: 80px;">代码</th>
-                                    <th style="width: 120px;">名称</th>
-                                    <th>日期</th>
-                                    <th>开</th>
-                                    <th>高</th>
-                                    <th>低</th>
-                                    <th>收</th>
-                                    <th>成交量</th>
-                                    <th>MA5/10/20</th>
-                                    <th>量能</th>
-                                    <th>威科夫</th>
-                                    <th style="width: 60px;">评分</th>
-                                    <th style="width: 60px;">操作</th>
+                                    <th style="width: 55px;">代码</th>
+                                    <th style="width: 45px;">名称</th>
+                                    <th style="width: 70px;">日期</th>
+                                    <th style="width: 55px;">收盘</th>
+                                    <th style="width: 50px;">涨跌</th>
+                                    <th style="width: 45px;">量能</th>
+                                    <th style="width: 60px;">MA5</th>
+                                    <th style="width: 60px;">MA10</th>
+                                    <th style="width: 60px;">MA15</th>
+                                    <th style="width: 55px;">威(短)</th>
+                                    <th style="width: 55px;">威(长)</th>
+                                    <th style="width: 35px;">评分</th>
+                                    <th style="width: 45px;">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -5473,7 +5899,51 @@
                     const summary = summaryMap[item.stock_code];
                     const direction = summary?.direction || 'NEUTRAL';
                     const score = summary?.score || 0;
-                    const phase = summary?.wyckoff_phase || '-';
+
+                    // 短线威科夫阶段（前端算法：基于成交量&均线）
+                    let shortTermPhase = '-';
+                    let shortTermColor = '#9ca3af';
+
+                    // 长线威科夫阶段（后端算法：基于价格位置&趋势）
+                    let longTermPhase = summary?.wyckoff_phase_daily || summary?.wyckoff_phase || '-';
+                    let longTermColor = '#9ca3af';
+
+                    if (quote) {
+                        const close = quote.close;
+                        const ma5 = quote.ma5;
+                        const ma10 = quote.ma10;
+                        const ma20 = quote.ma20;
+                        const volume = quote.volume;
+                        const volume_ma5 = quote.volume_ma5;
+
+                        // 前端算法：短线威科夫阶段
+                        if (ma20 && ma5 && ma10 && close > ma20 && ma5 > ma10 && ma10 > ma20) {
+                            shortTermPhase = 'U上升';
+                            shortTermColor = '#10b981';
+                        } else if (ma20 && ma5 && ma10 && close < ma20 && ma5 < ma10 && ma10 < ma20) {
+                            shortTermPhase = 'D下降';
+                            shortTermColor = '#ef4444';
+                        } else if (volume_ma5 && volume > volume_ma5 * 1.5) {
+                            shortTermPhase = 'A吸筹';
+                            shortTermColor = '#f59e0b';
+                        } else if (ma5 && ma20 && close < ma5 && close > ma20) {
+                            shortTermPhase = 'DS派发';
+                            shortTermColor = '#8b5cf6';
+                        } else {
+                            shortTermPhase = '震荡';
+                        }
+
+                        // 后端算法：长线威科夫阶段颜色
+                        if (longTermPhase.includes('U') || longTermPhase.includes('上升')) {
+                            longTermColor = '#10b981';
+                        } else if (longTermPhase.includes('D') || longTermPhase.includes('下降')) {
+                            longTermColor = '#ef4444';
+                        } else if (longTermPhase.includes('A') || longTermPhase.includes('吸筹')) {
+                            longTermColor = '#f59e0b';
+                        } else if (longTermPhase.includes('DS') || longTermPhase.includes('派发')) {
+                            longTermColor = '#8b5cf6';
+                        }
+                    }
 
                     // 方向颜色
                     let directionColor = '#9ca3af';
@@ -5492,49 +5962,140 @@
                     else if (score >= 1) scoreColor = '#f59e0b';
                     else if (score <= -1) scoreColor = '#ef4444';
 
-                    // MA显示
-                    let maDisplay = '-';
-                    if (quote && quote.ma5 && quote.ma10 && quote.ma20) {
-                        const isBullish = quote.ma5 > quote.ma10 && quote.ma10 > quote.ma20;
-                        const isBearish = quote.ma5 < quote.ma10 && quote.ma10 < quote.ma20;
-                        maDisplay = `<span style="color: ${isBullish ? '#10b981' : isBearish ? '#ef4444' : '#9ca3af'};">
-                            ${quote.ma5.toFixed(0)}/${quote.ma10.toFixed(0)}/${quote.ma20.toFixed(0)}
-                        </span>`;
+                    // 生成威科夫阶段tooltip说明
+                    let shortTermTooltip = '';
+                    if (shortTermPhase === 'U上升') {
+                        shortTermTooltip = 'U上升阶段（短线）\n\n判断依据：均线多头排列\n- 收盘价 > MA20\n- MA5 > MA10 > MA20\n\n含义：上升趋势明确，适合做多\n\n操作建议：持股待涨，逢低介入';
+                    } else if (shortTermPhase === 'D下降') {
+                        shortTermTooltip = 'D下降阶段（短线）\n\n判断依据：均线空头排列\n- 收盘价 < MA20\n- MA5 < MA10 < MA20\n\n含义：下降趋势明确，建议回避\n\n操作建议：空仓观望，不宜抄底';
+                    } else if (shortTermPhase === 'A吸筹') {
+                        const volumeRatio = quote && quote.volume_ma5 ? (quote.volume / quote.volume_ma5).toFixed(2) : '-';
+                        shortTermTooltip = `A吸筹阶段（短线）\n\n判断依据：成交量异常放大\n- 成交量是量MA5的${volumeRatio}倍\n- 超过1.5倍阈值\n\n含义：资金积极进场，可能吸筹\n\n操作建议：密切关注，择机参与`;
+                    } else if (shortTermPhase === 'DS派发') {
+                        shortTermTooltip = 'DS派发阶段（短线）\n\n判断依据：上升趋势回调\n- 收盘价 < MA5\n- 但收盘价 > MA20\n\n含义：上升趋势中回调，洗盘\n\n操作建议：关注低吸机会';
+                    } else {
+                        shortTermTooltip = '震荡阶段（短线）\n\n判断依据：无明显特征\n- 均线无明确排列\n- 成交量无明显异常\n\n含义：方向不明，等待信号\n\n操作建议：继续等待，观望为主';
                     }
 
-                    // 量能分析
-                    let volumeDisplay = '-';
-                    if (quote && quote.volume && quote.volume_ma5) {
-                        const ratio = (quote.volume / quote.volume_ma5).toFixed(2);
-                        const volColor = quote.volume > quote.volume_ma5 * 1.2 ? '#10b981' :
-                                      quote.volume < quote.volume_ma5 * 0.8 ? '#ef4444' : '#9ca3af';
-                        const volText = quote.volume > quote.volume_ma5 * 1.2 ? '放量' :
-                                     quote.volume < quote.volume_ma5 * 0.8 ? '缩量' : '平稳';
-                        volumeDisplay = `<span style="color: ${volColor};">${volText} ${ratio}x</span>`;
+                    let longTermTooltip = '';
+                    if (longTermPhase.includes('U') || longTermPhase.includes('上升')) {
+                        longTermTooltip = 'U上升阶段（长线）\n\n判断依据：趋势强度强\n- 方向：做多\n- 强度：强劲\n\n含义：中长期上升趋势\n\n操作建议：持仓为主，中长线持有';
+                    } else if (longTermPhase.includes('D') || longTermPhase.includes('下降')) {
+                        longTermTooltip = 'D下降阶段（长线）\n\n判断依据：趋势强度强\n- 方向：做空\n- 强度：强劲\n\n含义：中长期下降趋势\n\n操作建议：回避为主，等待企稳';
+                    } else if (longTermPhase.includes('A') || longTermPhase.includes('吸筹')) {
+                        longTermTooltip = 'A吸筹阶段（长线）\n\n判断依据：低位横盘\n- 趋势强度：弱/中等\n- 价格位置：下半区\n\n含义：主力低位吸筹\n\n操作建议：耐心等待，突破后跟进';
+                    } else if (longTermPhase.includes('DS') || longTermPhase.includes('派发')) {
+                        longTermTooltip = 'DS派发阶段（长线）\n\n判断依据：高位横盘\n- 趋势强度：弱/中等\n- 价格位置：上半区\n\n含义：主力高位派发\n\n操作建议：警惕风险，获利了结';
+                    } else {
+                        longTermTooltip = '震荡阶段（长线）\n\n判断依据：无明显特征\n- 趋势强度：弱/中等\n- 价格位置：中间区域\n\n含义：方向不明，整理阶段\n\n操作建议：继续等待，观望为主';
                     }
+
+                    // 生成评分tooltip说明
+                    let scoreTooltip = '';
+                    if (score >= 4) {
+                        scoreTooltip = `评分：${score}分（强烈买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列强势\n2. 威科夫阶段（25%）：处于有利阶段\n3. 量价协调（25%）：量价配合良好\n4. 动量信号（25%）：动量强劲\n\n综合建议：强烈看好，积极买入`;
+                    } else if (score >= 3) {
+                        scoreTooltip = `评分：${score}分（看好买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列向好\n2. 威科夫阶段（25%）：阶段相对有利\n3. 量价协调（25%）：量价基本协调\n4. 动量信号（25%）：动量稳定\n\n综合建议：整体看好，可以买入`;
+                    } else if (score >= 1) {
+                        scoreTooltip = `评分：${score}分（中性偏多）\n\n评分维度：\n1. 趋势强度（25%）：趋势不明或偏弱\n2. 威科夫阶段（25%）：阶段中性\n3. 量价协调（25%）：量价一般配合\n4. 动量信号（25%）：动量平稳\n\n综合建议：谨慎参与，控制仓位`;
+                    } else if (score <= -1) {
+                        scoreTooltip = `评分：${score}分（偏弱信号）\n\n评分维度：\n1. 趋势强度（25%）：趋势偏空\n2. 威科夫阶段（25%）：处于不利阶段\n3. 量价协调（25%）：量价背离\n4. 动量信号（25%）：动量疲弱\n\n综合建议：建议观望，不宜介入`;
+                    } else {
+                        scoreTooltip = `评分：${score}分（震荡观望）\n\n评分维度：\n1. 趋势强度（25%）：无明显趋势\n2. 威科夫阶段（25%）：震荡阶段\n3. 量价协调（25%）：量价中性\n4. 动量信号（25%）：动量平稳\n\n综合建议：信号不明，继续等待`;
+                    }
+
+                    // 计算涨跌（从quotes列表中获取前一日数据）
+                    let changeDisplay = '-';
+                    let changeColor = '#9ca3af';
+                    if (quote) {
+                        const quotesList = quotesListMap[item.stock_code] || [];
+                        if (quotesList.length >= 2) {
+                            const prevQuote = quotesList[quotesList.length - 2]; // 前一日数据
+                            if (prevQuote && prevQuote.close) {
+                                const changePct = ((quote.close - prevQuote.close) / prevQuote.close * 100);
+                                changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+                                changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
+                            }
+                        }
+                    }
+
+                    // MA5显示 - 值和对比（一行显示）
+                    let ma5Display = '-';
+                    if (quote && quote.ma5) {
+                        const diff = quote.close ? ((quote.close - quote.ma5) / quote.ma5 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma5Display = `${quote.ma5.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA10显示 - 值和对比（一行显示）
+                    let ma10Display = '-';
+                    if (quote && quote.ma10) {
+                        const diff = quote.close ? ((quote.close - quote.ma10) / quote.ma10 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma10Display = `${quote.ma10.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA15显示 - 值和对比（一行显示）
+                    let ma15Display = '-';
+                    if (quote && quote.ma15) {
+                        const diff = quote.close ? ((quote.close - quote.ma15) / quote.ma15 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma15Display = `${quote.ma15.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA颜色判断
+                    const getMaColor = (maValue) => {
+                        if (!quote || !maValue) return '#9ca3af';
+                        const diff = quote.close ? ((quote.close - maValue) / maValue * 100) : 0;
+                        return diff >= 0 ? '#10b981' : '#ef4444';
+                    };
+
+                    const ma5Color = getMaColor(quote?.ma5);
+                    const ma10Color = getMaColor(quote?.ma10);
+                    const ma15Color = getMaColor(quote?.ma15);
+
+                    // 简化量能显示 - emoji + 比率
+                    let volSimpleDisplay = '-';
+                    if (quote && quote.volume_ma5) {
+                        const ratio = (quote.volume / quote.volume_ma5).toFixed(1);
+                        const emoji = parseFloat(ratio) >= 1.5 ? '🔥' : (parseFloat(ratio) >= 1.2 ? '📈' : '📊');
+                        volSimpleDisplay = `${emoji}${ratio}x`;
+                    }
+
+                    // 威科夫显示 - 完整值（不缩减）
+                    const shortTermDisplay = shortTermPhase;
+                    const longTermDisplay = longTermPhase;
+
+                    // 简化名称 - 最多4个字符
+                    const displayName = item.stock_name ? (item.stock_name.length > 4 ? item.stock_name.substring(0, 4) : item.stock_name) : '-';
+
+                    // 格式化日期（分钟周期显示时分）
+                    const formattedDate = quote ? formatDateString(quote.date, timeframe) : '-';
 
                     html += `
-                        <tr style="${!quote ? 'opacity: 0.5;' : ''}" onclick="${quote ? `showQuoteDetail(${allItems.findIndex(i => i.stock_code === item.stock_code)})` : ''}" ${quote ? 'style="cursor: pointer;"' : ''}>
+                        <tr style="${!quote ? 'opacity: 0.5;' : ''}" onclick="${quote ? `showWatchlistQuoteDetail('${item.stock_code}')` : ''}" ${quote ? 'style="cursor: pointer;"' : ''}>
                             <td><strong style="color: #f9fafb;">${item.stock_code}</strong></td>
-                            <td><span style="color: #10b981; font-size: 11px;">${item.stock_name || '-'}</span></td>
-                            <td style="color: #9ca3af; font-size: 11px;">${quote ? quote.date?.split(' ')[0] : '-'}</td>
-                            <td style="color: #f9fafb;">${quote ? quote.open?.toFixed(2) : '-'}</td>
-                            <td style="color: #10b981;">${quote ? quote.high?.toFixed(2) : '-'}</td>
-                            <td style="color: #ef4444;">${quote ? quote.low?.toFixed(2) : '-'}</td>
+                            <td><span style="color: #10b981;">${displayName}</span></td>
+                            <td style="color: #9ca3af;">${formattedDate}</td>
                             <td style="color: ${quote && quote.close < quote.open ? '#ef4444' : '#10b981'}; font-weight: 600;">
                                 ${quote ? quote.close?.toFixed(2) : '-'}
                             </td>
-                            <td style="color: #9ca3af; font-size: 11px;">
-                                ${quote && quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}
+                            <td style="color: ${changeColor};">${changeDisplay}</td>
+                            <td>${volSimpleDisplay}</td>
+                            <td style="color: ${ma5Color}; text-align: center;">${ma5Display}</td>
+                            <td style="color: ${ma10Color}; text-align: center;">${ma10Display}</td>
+                            <td style="color: ${ma15Color}; text-align: center;">${ma15Display}</td>
+                            <td style="text-align: center;">
+                                <span style="color: ${shortTermColor}; cursor: help;" data-tooltip="${shortTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${shortTermDisplay}</span>
                             </td>
-                            <td style="font-size: 10px;">${maDisplay}</td>
-                            <td style="font-size: 10px;">${volumeDisplay}</td>
-                            <td style="font-size: 10px; max-width: 120px;">${phase}</td>
-                            <td style="color: ${scoreColor}; font-weight: 600;">${score}</td>
-                            <td>
+                            <td style="text-align: center;">
+                                <span style="color: ${longTermColor}; cursor: help;" data-tooltip="${longTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${longTermDisplay}</span>
+                            </td>
+                            <td style="color: ${scoreColor}; font-weight: 600; text-align: center; cursor: help;" data-tooltip="${scoreTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${score}</td>
+                            <td style="text-align: center;">
                                 <button onclick="event.stopPropagation(); analyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')"
-                                    style="padding: 3px 8px; background: #3b82f6; border: none; color: white; border-radius: 3px; font-size: 10px; cursor: pointer;"
-                                    title="日线分析">
+                                    style="padding: 3px 8px; background: #3b82f6; border: none; color: white; border-radius: 3px; cursor: pointer;"
+                                    title="分析">
                                     分析
                                 </button>
                             </td>
@@ -5559,6 +6120,35 @@
                 addLog('渲染失败', `错误: ${error.message}`);
             }
         }
+
+        // 翻页函数 - 上一期/下一期
+        function navigateWatchlistPeriod(direction) {
+            console.log('[navigateWatchlistPeriod] 被调用，direction:', direction, '当前偏移:', currentWatchlistQuoteOffset);
+
+            if (direction === 0) {
+                // 返回最新数据
+                currentWatchlistQuoteOffset = 0;
+                addLog('时间导航', '返回最新数据');
+            } else {
+                // 上一期或下一期
+                currentWatchlistQuoteOffset += direction;
+                if (currentWatchlistQuoteOffset < 0) {
+                    currentWatchlistQuoteOffset = 0; // 不允许负偏移
+                }
+                const periodText = direction > 0 ? '下一期' : '上一期';
+                addLog('时间导航', `${periodText}（当前偏移: ${currentWatchlistQuoteOffset}）`);
+
+                // 如果偏移量过大（超过100），发出警告
+                if (currentWatchlistQuoteOffset > 100) {
+                    console.warn(`[navigateWatchlistPeriod] ⚠️ 偏移量过大: ${currentWatchlistQuoteOffset}，可能显示很旧的数据！`);
+                    addLog('警告', `偏移量已达${currentWatchlistQuoteOffset}，建议点击"返回最新"`);
+                }
+            }
+
+            console.log('[navigateWatchlistPeriod] 更新后偏移:', currentWatchlistQuoteOffset);
+            refreshWatchlistListView();
+        }
+
 
 
         // 收藏股票（浏览股 -> 自选股）
@@ -6220,7 +6810,10 @@
                 const response = await fetch(`${API_BASE}/api/v1/watchlist/${code}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ watch_type: 'browse' })
+                    body: JSON.stringify({
+                        code: code,
+                        watch_type: 'browse'
+                    })
                 });
 
                 if (!response.ok) {
@@ -7770,19 +8363,53 @@
         });
 
         // ========== K线详情弹窗 ==========
+        // 关注列表专用的弹窗函数（接收股票代码）
+        function showWatchlistQuoteDetail(stockCode) {
+            if (!watchlistData.quotesListMap || !watchlistData.quotesListMap[stockCode]) {
+                alert('数据不存在');
+                return;
+            }
+
+            const quotes = watchlistData.quotesListMap[stockCode];
+            if (!quotes || quotes.length === 0) {
+                alert('K线数据不存在');
+                return;
+            }
+
+            // 使用最后一根K线（最新的）
+            const index = quotes.length - 1;
+            window.currentQuotes = quotes;
+            window.currentTimeframe = watchlistData.currentTimeframe || 'daily';
+
+            // 设置标记，避免再次从 filteredItems 获取
+            window.currentStockCode = stockCode;
+
+            // 调用原来的弹窗函数
+            showQuoteDetail(index);
+        }
+
         function showQuoteDetail(index) {
-            // 检查是否从关注列表视图触发
-            if (watchlistData.quotesListMap && Object.keys(watchlistData.quotesListMap).length > 0) {
-                // 使用关注列表的K线数据
-                const stockCode = watchlistData.filteredItems[index]?.stock_code;
-                if (!stockCode || !watchlistData.quotesListMap[stockCode]) {
+            // 检查是否已经设置了 currentStockCode（从关注列表触发）
+            if (window.currentStockCode && window.currentQuotes) {
+                // 关注列表触发的弹窗，直接使用已设置的数据
+                if (index < 0 || index >= window.currentQuotes.length) {
                     alert('数据不存在');
                     return;
                 }
-
-                window.currentQuotes = watchlistData.quotesListMap[stockCode];
-                window.currentTimeframe = watchlistData.currentTimeframe || 'daily';
+            } else if (watchlistData.quotesListMap && Object.keys(watchlistData.quotesListMap).length > 0) {
+                // 从关注列表视图触发的（旧逻辑，兼容性保留）
+                const stockCode = watchlistData.filteredItems[index]?.stock_code;
+                if (stockCode && watchlistData.quotesListMap[stockCode]) {
+                    window.currentQuotes = watchlistData.quotesListMap[stockCode];
+                    window.currentTimeframe = watchlistData.currentTimeframe || 'daily';
+                    window.currentStockCode = stockCode;
+                } else if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
+                    // 如果没有找到关注列表的数据，检查全局数据
+                    alert('数据不存在');
+                    return;
+                }
             } else if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
+                // 日分析页签触发的弹窗
                 alert('数据不存在');
                 return;
             }
@@ -8543,6 +9170,8 @@
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
+                    // 清除标记
+                    window.currentStockCode = null;
                 }
             });
 

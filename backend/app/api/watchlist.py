@@ -14,7 +14,10 @@ from app.models.watchlist_schemas import (
     WatchlistItemResponse,
     MessageResponse as WatchlistMessageResponse
 )
+from app.models.watchlist import UserStockWatch
 from app.services.watchlist_service import WatchlistService
+from app.repositories.stock_repository import StockRepository
+from datetime import datetime
 
 router = APIRouter(prefix="/watchlist", tags=["关注列表"])
 
@@ -55,22 +58,37 @@ def get_watchlist(
 ):
     try:
         service = WatchlistService(db)
+        repo = StockRepository(db)
         watchlist = service.get_watchlist(limit, watch_type)
 
-        return WatchlistResponse(
-            total=len(watchlist),
-            items=[
+        # 为每只股票获取名称（从Stock表）
+        items_with_names = []
+        for item in watchlist:
+            # 优先使用关注列表中的名称，如果为空则从Stock表获取
+            stock_name = item.stock_name
+            if not stock_name or stock_name.strip() == "":
+                stock = repo.find_by_code(item.stock_code)
+                if stock and stock.name:
+                    stock_name = stock.name
+                    # 同步更新关注列表中的名称
+                    item.stock_name = stock_name
+                    db.commit()
+
+            items_with_names.append(
                 WatchlistItemResponse(
                     id=item.id,
                     stock_code=item.stock_code,
-                    stock_name=item.stock_name,
+                    stock_name=stock_name or "",
                     priority=item.priority,
                     watch_type=item.watch_type,
                     created_at=item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     updated_at=item.updated_at.strftime("%Y-%m-%d %H:%M:%S")
                 )
-                for item in watchlist
-            ]
+            )
+
+        return WatchlistResponse(
+            total=len(items_with_names),
+            items=items_with_names
         )
     except Exception as e:
         logger.error(f"获取关注列表失败: {e}")
@@ -168,6 +186,65 @@ def remove_from_watchlist(code: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"删除股票失败: {e}")
         raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+
+
+@router.patch(
+    "/{code}",
+    response_model=MessageResponse,
+    summary="更新关注列表中股票的类型",
+    description="""
+    更新关注列表中股票的关注类型。
+
+    ## 参数说明
+
+    - **code**: 股票代码（路径参数）
+    - **watch_type**: 新的关注类型 (favorite=自选股, browse=浏览股)
+
+    ## 示例请求
+
+    ```
+    PATCH /api/v1/watchlist/688234
+    {
+      "watch_type": "browse"
+    }
+    ```
+
+    ## 返回结果
+
+    成功更新返回200
+    """
+)
+def update_watchlist_item(
+    code: str,
+    request: WatchlistAddRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        service = WatchlistService(db)
+
+        # 获取现有的关注记录
+        existing = db.query(UserStockWatch).filter(
+            UserStockWatch.stock_code == code
+        ).first()
+
+        if not existing:
+            raise HTTPException(status_code=404, detail=f"股票{code}不在关注列表中")
+
+        # 更新关注类型
+        existing.watch_type = request.watch_type
+        existing.updated_at = datetime.now()
+        db.commit()
+
+        return MessageResponse(
+            message=f"股票{code}已转为{'自选股' if request.watch_type == 'favorite' else '浏览股'}",
+            data={"code": code, "watch_type": request.watch_type}
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新股票类型失败: {e}")
+        raise HTTPException(status_code=500, detail=f"更新失败: {str(e)}")
 
 
 @router.get("/update")
