@@ -3888,10 +3888,20 @@
                 // 统计量能
                 if (summary.volume_signal === 'HIGH') volumeHigh++;
 
-                // 统计威科夫阶段 - 使用前端规则计算（与表格保持一致）
-                const phaseResult = calculateWyckoffPhase(data.quote);
-                const phase = phaseResult.phase;
-                phaseTypes[phase] = (phaseTypes[phase] || 0) + 1;
+                // 使用后端返回的威科夫阶段（避免前后端不一致）
+                const wyckoffPhase = summary.wyckoff_phase || '';
+                // 提取阶段代码（U/D/A/DS等）
+                let phaseCode = '震荡';
+                if (wyckoffPhase.includes('U') || wyckoffPhase.includes('上升')) {
+                    phaseCode = 'U';
+                } else if (wyckoffPhase.includes('D') && !wyckoffPhase.includes('DS')) {
+                    phaseCode = 'D';
+                } else if (wyckoffPhase.includes('A') || wyckoffPhase.includes('吸筹')) {
+                    phaseCode = 'A';
+                } else if (wyckoffPhase.includes('DS') || wyckoffPhase.includes('派发')) {
+                    phaseCode = 'DS';
+                }
+                phaseTypes[phaseCode] = (phaseTypes[phaseCode] || 0) + 1;
             });
 
             const avgScore = totalScore / phaseData.length;
@@ -4181,9 +4191,19 @@
                 const direction = summary.direction || 'NEUTRAL';
                 const quote = data.quote;
 
-                // 使用前端规则计算威科夫阶段（与表格保持一致）
-                const phaseResult = calculateWyckoffPhase(quote);
-                const wyckoffPhase = phaseResult.phase;
+                // 使用后端返回的威科夫阶段（避免前后端不一致）
+                const wyckoffPhaseRaw = summary.wyckoff_phase || '';
+                // 提取简短阶段代码
+                let wyckoffPhase = '震荡';
+                if (wyckoffPhaseRaw.includes('U') || wyckoffPhaseRaw.includes('上升')) {
+                    wyckoffPhase = 'U';
+                } else if (wyckoffPhaseRaw.includes('D') && !wyckoffPhaseRaw.includes('DS')) {
+                    wyckoffPhase = 'D';
+                } else if (wyckoffPhaseRaw.includes('A') || wyckoffPhaseRaw.includes('吸筹')) {
+                    wyckoffPhase = 'A';
+                } else if (wyckoffPhaseRaw.includes('DS') || wyckoffPhaseRaw.includes('派发')) {
+                    wyckoffPhase = 'DS';
+                }
 
                 // 计算均线状态
                 const maStatus = calculateMAStatus(quote);
@@ -4222,6 +4242,7 @@
                 phaseDetails.push({
                     period: tfName,
                     phase: wyckoffPhase,
+                    phaseFull: wyckoffPhaseRaw, // 保留完整阶段名称用于显示
                     quote: quote
                 });
             });
@@ -4366,10 +4387,12 @@
                                   detail.phase === 'D' ? '#ef4444' :
                                   detail.phase === 'A' ? '#f59e0b' :
                                   detail.phase === 'DS' ? '#8b5cf6' : '#9ca3af';
+                // 使用完整阶段名称（phaseFull）如果可用，否则使用简短代码
+                const phaseDisplay = detail.phaseFull || detail.phase;
                 html += `
                     <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(0,0,0,0.2); border-radius: 4px;">
                         <span style="color: #9ca3af; font-size: 10px;">${detail.period}:</span>
-                        <span style="color: ${phaseColor}; font-weight: 600; font-size: 11px;">${detail.phase}</span>
+                        <span style="color: ${phaseColor}; font-weight: 600; font-size: 11px;">${phaseDisplay}</span>
                     </div>
                 `;
             });
