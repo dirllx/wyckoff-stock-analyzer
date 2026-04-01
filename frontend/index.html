@@ -5365,6 +5365,9 @@
 
         // 显示分析弹窗
         async function showAnalysisModal(code, name, type) {
+            // 检测是否为移动端
+            const isMobile = window.innerWidth < 768;
+
             // 创建弹窗
             const modal = document.createElement('div');
             modal.id = 'analysis-modal';
@@ -5379,16 +5382,17 @@
                 justify-content: center;
                 align-items: center;
                 z-index: 10000;
+                padding: ${isMobile ? '10px' : '0'};
             `;
 
             const content = document.createElement('div');
             content.style.cssText = `
                 background: #1f2937;
-                border-radius: 12px;
-                max-width: 800px;
-                width: 95%;
-                max-height: 72.6vh;
-                padding: 16px;
+                border-radius: ${isMobile ? '8px' : '12px'};
+                max-width: ${isMobile ? '100%' : '800px'};
+                width: ${isMobile ? 'calc(100% - 20px)' : '95%'};
+                max-height: ${isMobile ? '85vh' : '72.6vh'};
+                padding: ${isMobile ? '12px' : '16px'};
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                 overflow-y: auto;
                 position: relative;
@@ -5399,16 +5403,16 @@
             closeBtn.innerHTML = '✕';
             closeBtn.style.cssText = `
                 position: absolute;
-                top: 12px;
-                right: 12px;
+                top: ${isMobile ? '8px' : '12px'};
+                right: ${isMobile ? '8px' : '12px'};
                 background: #374151;
                 border: none;
                 color: #f9fafb;
-                width: 32px;
-                height: 32px;
+                width: ${isMobile ? '28px' : '32px'};
+                height: ${isMobile ? '28px' : '32px'};
                 border-radius: 50%;
                 cursor: pointer;
-                font-size: 18px;
+                font-size: ${isMobile ? '16px' : '18px'};
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -5416,10 +5420,10 @@
             closeBtn.onclick = () => document.body.removeChild(modal);
 
             content.innerHTML = `
-                <div style="margin-bottom: 10px; padding-right: 40px;">
-                    <h2 style="color: #f9fafb; margin: 0; font-size: 16px;">${type === 'single' ? '📊 ' + code + (name ? ' ' + name : '') + ' 日线分析' : '📈 ' + code + (name ? ' ' + name : '') + ' 多周期分析'}</h2>
+                <div style="margin-bottom: ${isMobile ? '8px' : '10px'}; padding-right: ${isMobile ? '36px' : '40px'};">
+                    <h2 style="color: #f9fafb; margin: 0; font-size: ${isMobile ? '14px' : '16px'}; line-height: 1.3;">${type === 'single' ? '📊 ' + code + (name ? ' ' + name : '') + ' 日线分析' : '📈 ' + code + (name ? ' ' + name : '') + ' 多周期分析'}</h2>
                 </div>
-                <div id="modal-content" style="color: #10b981; text-align: center; padding: 20px;">
+                <div id="modal-content" style="color: #10b981; text-align: center; padding: ${isMobile ? '12px' : '20px'};">
                     🔄 正在加载...
                 </div>
             `;
@@ -5569,16 +5573,19 @@
             const summary = data.analysis_summary || {};
             const quote = data.current_quote;
 
+            // 检测是否为移动端
+            const isMobile = window.innerWidth < 768;
+
             let html = '<div style="text-align: left;">';
 
             // 价格信息
             if (quote) {
                 html += `
-                    <div style="background: #111827; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="font-size: 32px; font-weight: 700; color: #f9fafb; margin-bottom: 8px;">
+                    <div style="background: #111827; padding: ${isMobile ? '12px' : '16px'}; border-radius: 8px; margin-bottom: ${isMobile ? '12px' : '16px'};">
+                        <div style="font-size: ${isMobile ? '28px' : '32px'}; font-weight: 700; color: #f9fafb; margin-bottom: ${isMobile ? '6px' : '8px'};">
                             ${quote.close?.toFixed(2) || '-'}
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px;">
+                        <div style="display: grid; grid-template-columns: ${isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; font-size: ${isMobile ? '11px' : '12px'};">
                             <div><span style="color: #9ca3af;">开:</span> ${quote.open?.toFixed(2) || '-'}</div>
                             <div><span style="color: #9ca3af;">高:</span> ${quote.high?.toFixed(2) || '-'}</div>
                             <div><span style="color: #9ca3af;">低:</span> ${quote.low?.toFixed(2) || '-'}</div>
@@ -5602,10 +5609,10 @@
             }
 
             html += `
-                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
-                    <div style="flex: 1; background: ${directionColor}20; padding: 16px; border-radius: 8px; border: 1px solid ${directionColor};">
-                        <div style="color: ${directionColor}; font-size: 14px; margin-bottom: 8px;">${directionText}</div>
-                        <div style="font-size: 36px; font-weight: 700; color: ${directionColor};">${score}分</div>
+                <div style="display: flex; gap: ${isMobile ? '12px' : '16px'}; margin-bottom: ${isMobile ? '12px' : '16px'};">
+                    <div style="flex: 1; background: ${directionColor}20; padding: ${isMobile ? '12px' : '16px'}; border-radius: 8px; border: 1px solid ${directionColor};">
+                        <div style="color: ${directionColor}; font-size: ${isMobile ? '13px' : '14px'}; margin-bottom: ${isMobile ? '6px' : '8px'};">${directionText}</div>
+                        <div style="font-size: ${isMobile ? '32px' : '36px'}; font-weight: 700; color: ${directionColor};">${score}分</div>
                     </div>
                 </div>
             `;
@@ -5613,9 +5620,9 @@
             // 威科夫阶段
             if (summary.wyckoff_phase) {
                 html += `
-                    <div style="background: #1f2937; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                        <div style="color: #9ca3af; font-size: 12px; margin-bottom: 4px;">威科夫阶段</div>
-                        <div style="color: #f9fafb; font-size: 14px;">${summary.wyckoff_phase}</div>
+                    <div style="background: #1f2937; padding: ${isMobile ? '10px' : '12px'}; border-radius: 8px; margin-bottom: ${isMobile ? '10px' : '12px'};">
+                        <div style="color: #9ca3af; font-size: ${isMobile ? '11px' : '12px'}; margin-bottom: ${isMobile ? '3px' : '4px'};">威科夫阶段</div>
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '13px' : '14px'}; line-height: 1.4;">${summary.wyckoff_phase}</div>
                     </div>
                 `;
             }
@@ -5623,9 +5630,9 @@
             // 操作建议
             if (summary.suggestion) {
                 html += `
-                    <div style="background: #0a0e27; padding: 12px; border-radius: 8px; border: 1px solid #374151;">
-                        <div style="color: #fbbf24; font-size: 12px; margin-bottom: 4px;">💡 操作建议</div>
-                        <div style="color: #d1d5db; font-size: 13px;">${summary.suggestion}</div>
+                    <div style="background: #0a0e27; padding: ${isMobile ? '10px' : '12px'}; border-radius: 8px; border: 1px solid #374151;">
+                        <div style="color: #fbbf24; font-size: ${isMobile ? '11px' : '12px'}; margin-bottom: ${isMobile ? '3px' : '4px'};">💡 操作建议</div>
+                        <div style="color: #d1d5db; font-size: ${isMobile ? '12px' : '13px'}; line-height: 1.5;">${summary.suggestion}</div>
                     </div>
                 `;
             }
@@ -5633,7 +5640,7 @@
             html += '</div>';
 
             // 异步加载历史信号
-            setTimeout(() => loadAndDisplaySignals(code, container), 100);
+            setTimeout(() => loadAndDisplaySignals(code, modalContent), 100);
 
             return html;
         }
