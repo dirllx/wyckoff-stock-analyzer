@@ -761,6 +761,33 @@
                 <button id="subtab-browse" onclick="switchWatchlistTab('browse')" style="padding: 8px 16px; background: #374151; color: #f9faff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
                     📖 浏览股
                 </button>
+
+                <div style="flex: 1;"></div>
+
+                <!-- 视图模式切换 -->
+                <div style="display: flex; gap: 4px;">
+                    <button id="viewMode-card" onclick="switchWatchlistViewMode('card')" style="padding: 6px 12px; background: #374151; color: #f9fafb; border: 1px solid #4b5563; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                        📇 卡片
+                    </button>
+                    <button id="viewMode-list" onclick="switchWatchlistViewMode('list')" style="padding: 6px 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                        📋 列表
+                    </button>
+                </div>
+            </div>
+
+            <!-- 列表视图的周期选择器 -->
+            <div id="listViewControls" style="display: none; padding: 12px; background: #1f2937; border-radius: 8px; margin: 0 16px 12px 16px; border: 1px solid #374151;">
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <span style="color: #9ca3af; font-size: 12px;">⏰ 周期:</span>
+                    <select id="watchlistTimeframe" onchange="refreshWatchlistListView()" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 4px; font-size: 12px;">
+                        <option value="30">30分钟</option>
+                        <option value="60">60分钟</option>
+                        <option value="daily" selected>日线</option>
+                        <option value="weekly">周线</option>
+                        <option value="monthly">月线</option>
+                    </select>
+                    <span style="color: #9ca3af; font-size: 11px; margin-left: auto;">💡 提示：基金、港股无数据也会显示</span>
+                </div>
             </div>
 
             <!-- 排序筛选工具栏 -->
@@ -1194,6 +1221,7 @@
         let volumeChart = null;
         let useTableMode = true;  // 默认显示表格（图表有兼容性问题）
         let currentWatchlistTab = 'favorite';  // 当前关注的子标签：favorite=自选股, browse=浏览股
+        let currentWatchlistViewMode = 'list';  // 当前关注列表视图模式：card=卡片, list=列表
 
         // ========== 日志系统 ==========
         function addLog(action, detail) {
@@ -4888,6 +4916,7 @@
 
                 // 存储原始数据
                 watchlistData.items = data.items;
+                watchlistData.allItems = data.items;  // 保存所有项目供详情弹窗使用
                 watchlistData.filteredItems = data.items;
 
                 // 应用排序和筛选
@@ -4973,8 +5002,12 @@
                 statsEl.textContent = `显示 ${filtered.length}/${watchlistData.items.length} | 📈${bullishCount} 📉${bearishCount}`;
             }
 
-            // 渲染
-            renderWatchlistCards();
+            // 根据视图模式渲染
+            if (currentWatchlistViewMode === 'list') {
+                refreshWatchlistListView();
+            } else {
+                renderWatchlistCards();
+            }
         }
 
         // 生成详细的投资建议
@@ -5317,6 +5350,216 @@
             refreshWatchlist();
             addLog('切换标签', `切换到${tab === 'favorite' ? '自选股' : '浏览股'}`);
         }
+
+        // 切换关注列表视图模式
+        function switchWatchlistViewMode(mode) {
+            currentWatchlistViewMode = mode;
+
+            // 更新按钮样式
+            const cardBtn = document.getElementById('viewMode-card');
+            const listBtn = document.getElementById('viewMode-list');
+            const listControls = document.getElementById('listViewControls');
+
+            if (mode === 'card') {
+                cardBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+                cardBtn.style.color = 'white';
+                cardBtn.style.border = 'none';
+                listBtn.style.background = '#374151';
+                listBtn.style.color = '#f9faff';
+                listBtn.style.border = '1px solid #4b5563';
+                listControls.style.display = 'none';
+            } else {
+                listBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+                listBtn.style.color = 'white';
+                listBtn.style.border = 'none';
+                cardBtn.style.background = '#374151';
+                cardBtn.style.color = '#f9faff';
+                cardBtn.style.border = '1px solid #4b5563';
+                listControls.style.display = 'block';
+            }
+
+            // 刷新列表
+            refreshWatchlist();
+            addLog('切换视图', `切换到${mode === 'card' ? '卡片' : '列表'}视图`);
+        }
+
+        // 渲染列表视图（参考日分析表格）
+        async function refreshWatchlistListView() {
+            try {
+                const content = document.getElementById('watchlistContent');
+                if (!content) return;
+
+                const timeframe = document.getElementById('watchlistTimeframe')?.value || 'daily';
+                const data = watchlistData.filteredItems || [];
+                const allItems = watchlistData.allItems || watchlistData.items || [];
+
+                if (!data || data.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding: 60px; background: #1f2937; border-radius: 12px; border: 2px dashed #374151;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">没有符合条件的股票</div>
+                            <button class="btn btn-secondary" onclick="resetFilters()" style="margin-top: 12px;">重置筛选</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 显示加载中
+                content.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+
+                // 获取所有股票的K线数据
+                const quotesMap = {};
+                const summaryMap = {};
+                const quotesListMap = {};  // 存储K线列表用于详情弹窗
+
+                for (const item of data) {
+                    try {
+                        const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=500`);
+                        if (quotesRes.ok) {
+                            const quotesData = await quotesRes.json();
+                            if (quotesData.quotes && quotesData.quotes.length > 0) {
+                                quotesMap[item.stock_code] = quotesData.quotes[0];
+                                quotesListMap[item.stock_code] = quotesData.quotes;
+                            }
+                        }
+
+                        const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: item.stock_code, timeframe })
+                        });
+                        if (analyzeRes.ok) {
+                            const analysisData = await analyzeRes.json();
+                            if (analysisData.analysis_summary) {
+                                summaryMap[item.stock_code] = analysisData.analysis_summary;
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`获取 ${item.stock_code} 数据失败:`, error);
+                        // 即使失败也要在表格中显示
+                    }
+                }
+
+                // 保存K线数据供详情弹窗使用
+                watchlistData.quotesListMap = quotesListMap;
+                watchlistData.currentTimeframe = timeframe;
+
+                // 渲染表格
+                let html = `
+                    <div class="table-container">
+                        <table class="kline-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">代码</th>
+                                    <th style="width: 120px;">名称</th>
+                                    <th>日期</th>
+                                    <th>开</th>
+                                    <th>高</th>
+                                    <th>低</th>
+                                    <th>收</th>
+                                    <th>成交量</th>
+                                    <th>MA5/10/20</th>
+                                    <th>量能</th>
+                                    <th>威科夫</th>
+                                    <th style="width: 60px;">评分</th>
+                                    <th style="width: 60px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(item => {
+                    const quote = quotesMap[item.stock_code];
+                    const summary = summaryMap[item.stock_code];
+                    const direction = summary?.direction || 'NEUTRAL';
+                    const score = summary?.score || 0;
+                    const phase = summary?.wyckoff_phase || '-';
+
+                    // 方向颜色
+                    let directionColor = '#9ca3af';
+                    let directionIcon = '→';
+                    if (direction === 'LONG') {
+                        directionColor = '#10b981';
+                        directionIcon = '📈';
+                    } else if (direction === 'SHORT') {
+                        directionColor = '#ef4444';
+                        directionIcon = '📉';
+                    }
+
+                    // 评分颜色
+                    let scoreColor = '#9ca3af';
+                    if (score >= 3) scoreColor = '#10b981';
+                    else if (score >= 1) scoreColor = '#f59e0b';
+                    else if (score <= -1) scoreColor = '#ef4444';
+
+                    // MA显示
+                    let maDisplay = '-';
+                    if (quote && quote.ma5 && quote.ma10 && quote.ma20) {
+                        const isBullish = quote.ma5 > quote.ma10 && quote.ma10 > quote.ma20;
+                        const isBearish = quote.ma5 < quote.ma10 && quote.ma10 < quote.ma20;
+                        maDisplay = `<span style="color: ${isBullish ? '#10b981' : isBearish ? '#ef4444' : '#9ca3af'};">
+                            ${quote.ma5.toFixed(0)}/${quote.ma10.toFixed(0)}/${quote.ma20.toFixed(0)}
+                        </span>`;
+                    }
+
+                    // 量能分析
+                    let volumeDisplay = '-';
+                    if (quote && quote.volume && quote.volume_ma5) {
+                        const ratio = (quote.volume / quote.volume_ma5).toFixed(2);
+                        const volColor = quote.volume > quote.volume_ma5 * 1.2 ? '#10b981' :
+                                      quote.volume < quote.volume_ma5 * 0.8 ? '#ef4444' : '#9ca3af';
+                        const volText = quote.volume > quote.volume_ma5 * 1.2 ? '放量' :
+                                     quote.volume < quote.volume_ma5 * 0.8 ? '缩量' : '平稳';
+                        volumeDisplay = `<span style="color: ${volColor};">${volText} ${ratio}x</span>`;
+                    }
+
+                    html += `
+                        <tr style="${!quote ? 'opacity: 0.5;' : ''}" onclick="${quote ? `showQuoteDetail(${allItems.findIndex(i => i.stock_code === item.stock_code)})` : ''}" ${quote ? 'style="cursor: pointer;"' : ''}>
+                            <td><strong style="color: #f9fafb;">${item.stock_code}</strong></td>
+                            <td><span style="color: #10b981; font-size: 11px;">${item.stock_name || '-'}</span></td>
+                            <td style="color: #9ca3af; font-size: 11px;">${quote ? quote.date?.split(' ')[0] : '-'}</td>
+                            <td style="color: #f9fafb;">${quote ? quote.open?.toFixed(2) : '-'}</td>
+                            <td style="color: #10b981;">${quote ? quote.high?.toFixed(2) : '-'}</td>
+                            <td style="color: #ef4444;">${quote ? quote.low?.toFixed(2) : '-'}</td>
+                            <td style="color: ${quote && quote.close < quote.open ? '#ef4444' : '#10b981'}; font-weight: 600;">
+                                ${quote ? quote.close?.toFixed(2) : '-'}
+                            </td>
+                            <td style="color: #9ca3af; font-size: 11px;">
+                                ${quote && quote.volume ? (quote.volume / 10000).toFixed(0) + '万' : '-'}
+                            </td>
+                            <td style="font-size: 10px;">${maDisplay}</td>
+                            <td style="font-size: 10px;">${volumeDisplay}</td>
+                            <td style="font-size: 10px; max-width: 120px;">${phase}</td>
+                            <td style="color: ${scoreColor}; font-weight: 600;">${score}</td>
+                            <td>
+                                <button onclick="event.stopPropagation(); analyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')"
+                                    style="padding: 3px 8px; background: #3b82f6; border: none; color: white; border-radius: 3px; font-size: 10px; cursor: pointer;"
+                                    title="日线分析">
+                                    分析
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                content.innerHTML = html;
+                addLog('列表视图渲染完成', `共 ${data.length} 只股票，周期: ${timeframe}`);
+            } catch (error) {
+                console.error('❌ 渲染列表视图失败:', error);
+                const content = document.getElementById('watchlistContent');
+                if (content) {
+                    content.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:20px; font-weight:600;">❌ 渲染失败: ${error.message}</div>`;
+                }
+                addLog('渲染失败', `错误: ${error.message}`);
+            }
+        }
+
 
         // 收藏股票（浏览股 -> 自选股）
         async function favoriteStock(code) {
@@ -7528,7 +7771,18 @@
 
         // ========== K线详情弹窗 ==========
         function showQuoteDetail(index) {
-            if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
+            // 检查是否从关注列表视图触发
+            if (watchlistData.quotesListMap && Object.keys(watchlistData.quotesListMap).length > 0) {
+                // 使用关注列表的K线数据
+                const stockCode = watchlistData.filteredItems[index]?.stock_code;
+                if (!stockCode || !watchlistData.quotesListMap[stockCode]) {
+                    alert('数据不存在');
+                    return;
+                }
+
+                window.currentQuotes = watchlistData.quotesListMap[stockCode];
+                window.currentTimeframe = watchlistData.currentTimeframe || 'daily';
+            } else if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
                 alert('数据不存在');
                 return;
             }
