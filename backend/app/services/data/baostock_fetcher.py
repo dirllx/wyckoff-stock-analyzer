@@ -187,5 +187,6 @@ class BaostockFetcher:
             if self._logged_in:
                 self.bs.logout()
                 logger.info("Baostock已登出")
-        except:
+        except Exception as e:
+            logger.debug(f"Baostock登出失败（可忽略）: {e}")
             pass
