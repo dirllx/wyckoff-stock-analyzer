@@ -431,6 +431,17 @@
             100% { background-position: -200% 0; }
         }
 
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         .skeleton-text {
             height: 14px;
             margin: 6px 0;
@@ -1400,6 +1411,194 @@
             console.error(`💥 请求彻底失败（已重试${maxRetries}次）: ${url}`);
             throw lastError;
         }
+
+        // ========== 离线缓存管理器 ==========
+
+        const OfflineCache = {
+            CACHE_VERSION: 'v1',
+            CACHE_PREFIX: 'wyckoff_cache_',
+
+            /**
+             * 保存数据到缓存
+             * @param {string} key - 缓存键
+             * @param {any} data - 要缓存的数据
+             * @param {number} maxAge - 最大缓存时间（毫秒，默认30分钟）
+             */
+            set(key, data, maxAge = 30 * 60 * 1000) {
+                try {
+                    const cacheKey = this.CACHE_PREFIX + key;
+                    const cacheData = {
+                        version: this.CACHE_VERSION,
+                        timestamp: Date.now(),
+                        maxAge: maxAge,
+                        data: data
+                    };
+                    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                    console.log(`✅ 数据已缓存: ${key}`);
+                } catch (error) {
+                    console.warn(`⚠️  缓存保存失败: ${key}`, error);
+                }
+            },
+
+            /**
+             * 从缓存读取数据
+             * @param {string} key - 缓存键
+             * @returns {any|null} 缓存的数据，如果不存在或已过期则返回null
+             */
+            get(key) {
+                try {
+                    const cacheKey = this.CACHE_PREFIX + key;
+                    const cacheStr = localStorage.getItem(cacheKey);
+
+                    if (!cacheStr) {
+                        return null;
+                    }
+
+                    const cacheData = JSON.parse(cacheStr);
+
+                    // 检查版本
+                    if (cacheData.version !== this.CACHE_VERSION) {
+                        console.log(`🔄 缓存版本不匹配，清除: ${key}`);
+                        this.remove(key);
+                        return null;
+                    }
+
+                    // 检查是否过期
+                    const age = Date.now() - cacheData.timestamp;
+                    if (age > cacheData.maxAge) {
+                        console.log(`⏰ 缓存已过期: ${key}`);
+                        this.remove(key);
+                        return null;
+                    }
+
+                    console.log(`✅ 从缓存读取: ${key} (年龄: ${Math.floor(age / 1000)}秒)`);
+                    return cacheData.data;
+
+                } catch (error) {
+                    console.warn(`⚠️  缓存读取失败: ${key}`, error);
+                    return null;
+                }
+            },
+
+            /**
+             * 删除缓存
+             * @param {string} key - 缓存键
+             */
+            remove(key) {
+                try {
+                    const cacheKey = this.CACHE_PREFIX + key;
+                    localStorage.removeItem(cacheKey);
+                } catch (error) {
+                    console.warn(`⚠️  缓存删除失败: ${key}`, error);
+                }
+            },
+
+            /**
+             * 清除所有缓存
+             */
+            clear() {
+                try {
+                    const keys = Object.keys(localStorage);
+                    keys.forEach(key => {
+                        if (key.startsWith(this.CACHE_PREFIX)) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+                    console.log('🗑️  所有缓存已清除');
+                } catch (error) {
+                    console.warn('⚠️  清除缓存失败', error);
+                }
+            },
+
+            /**
+             * 获取缓存统计信息
+             */
+            getStats() {
+                try {
+                    const keys = Object.keys(localStorage);
+                    let totalSize = 0;
+                    let itemCount = 0;
+
+                    keys.forEach(key => {
+                        if (key.startsWith(this.CACHE_PREFIX)) {
+                            const value = localStorage.getItem(key);
+                            totalSize += value.length;
+                            itemCount++;
+                        }
+                    });
+
+                    return {
+                        itemCount: itemCount,
+                        totalSize: totalSize,
+                        totalSizeKB: (totalSize / 1024).toFixed(2)
+                    };
+                } catch (error) {
+                    return { itemCount: 0, totalSize: 0, totalSizeKB: '0' };
+                }
+            }
+        };
+
+        // ========== 网络状态监测 ==========
+
+        const NetworkMonitor = {
+            isOnline: navigator.onLine,
+            listeners: [],
+
+            init() {
+                window.addEventListener('online', () => this.handleStatusChange(true));
+                window.addEventListener('offline', () => this.handleStatusChange(false));
+
+                // 初始状态提示
+                this.showStatusIndicator();
+            },
+
+            handleStatusChange(isOnline) {
+                this.isOnline = isOnline;
+                console.log(`🌐 网络状态: ${isOnline ? '在线' : '离线'}`);
+
+                // 通知所有监听器
+                this.listeners.forEach(callback => callback(isOnline));
+
+                // 显示状态提示
+                this.showStatusIndicator();
+            },
+
+            showStatusIndicator() {
+                const existing = document.getElementById('network-status-indicator');
+                if (existing) existing.remove();
+
+                if (!this.isOnline) {
+                    const indicator = document.createElement('div');
+                    indicator.id = 'network-status-indicator';
+                    indicator.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        right: 10px;
+                        background: linear-gradient(135deg, #ef4444, #dc2626);
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        z-index: 10000;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        animation: slideIn 0.3s ease;
+                    `;
+                    indicator.innerHTML = '📡 离线模式 - 显示缓存数据';
+                    document.body.appendChild(indicator);
+
+                    // 3秒后自动消失
+                    setTimeout(() => indicator.remove(), 3000);
+                }
+            },
+
+            onStatusChange(callback) {
+                this.listeners.push(callback);
+            }
+        };
+
+        // 初始化网络监测
+        NetworkMonitor.init();
 
         // ========== 日志系统 ==========
 
@@ -5455,6 +5654,7 @@
             try {
                 // 根据当前标签页获取不同类型的数据
                 const watchType = currentWatchlistTab;
+                const cacheKey = `watchlist_${watchType}_${currentWatchlistTimeframe}`;
                 console.log(`[refreshWatchlist] 正在加载 ${watchType} 类型的关注列表...`);
 
                 const watchlistFetchStart = performance.now();
@@ -5596,10 +5796,66 @@
                 // 记录详细的性能日志
                 addLog('刷新完成', `${data.total}只${watchType === 'favorite' ? '自选股' : '浏览股'} | ${data.items.length}只股票 × 5期 = ${totalQuotes}条数据 | 耗时${totalTime}ms (${logTimestamp})`);
                 console.log(`[性能] 获取列表: ${watchlistFetchTime}ms, 获取行情: ${quotesFetchTime}ms, 总计: ${totalTime}ms, 数据量: ${totalQuotes}条`);
+
+                // 保存到缓存
+                OfflineCache.set(cacheKey, {
+                    items: data.items,
+                    quotesListMap: quotesListMap,
+                    scoresByOffset: scoresByOffset,
+                    quoteMap: watchlistData.quoteMap,
+                    filteredItems: watchlistData.filteredItems,
+                    currentTimeframe: timeframe,
+                    timestamp: Date.now()
+                }, 30 * 60 * 1000);  // 缓存30分钟
+
             } catch (error) {
                 console.error('❌ 刷新关注列表失败:', error);
-                content.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:20px; font-weight:600;">❌ 加载失败: ${error.message}</div>`;
-                addLog('刷新失败', `错误: ${error.message}`);
+
+                // 尝试从缓存读取
+                const cachedData = OfflineCache.get(cacheKey);
+
+                if (cachedData) {
+                    console.log('🔄 从缓存加载关注列表数据');
+                    addLog('离线模式', '使用缓存数据');
+
+                    // 恢复缓存数据
+                    watchlistData.items = cachedData.items || [];
+                    watchlistData.quoteMap = cachedData.quoteMap || {};
+                    watchlistData.filteredItems = cachedData.filteredItems || cachedData.items || [];
+                    watchlistData.quotesListMap = cachedData.quotesListMap || {};
+                    watchlistData.scoresByOffset = cachedData.scoresByOffset || {};
+                    watchlistData.currentTimeframe = cachedData.currentTimeframe || currentWatchlistTimeframe;
+
+                    // 渲染缓存数据
+                    applySortAndFilter();
+
+                    // 显示缓存提示
+                    const cacheAge = Math.floor((Date.now() - cachedData.timestamp) / 1000);
+                    const cacheNotice = document.createElement('div');
+                    cacheNotice.style.cssText = `
+                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        margin-bottom: 12px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-align: center;
+                    `;
+                    cacheNotice.innerHTML = `📦 离线模式 - 显示${cacheAge < 60 ? cacheAge + '秒前' : Math.floor(cacheAge / 60) + '分钟前'}的缓存数据`;
+                    content.insertBefore(cacheNotice, content.firstChild);
+
+                } else {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:#ef4444;">
+                            <div style="font-size:48px; margin-bottom:16px;">❌</div>
+                            <div style="font-size:20px; font-weight:600; margin-bottom:12px;">加载失败</div>
+                            <div style="color:#9ca3af; font-size:14px; margin-bottom:20px;">${error.message}</div>
+                            <div style="color:#9ca3af; font-size:12px;">请检查网络连接后重试</div>
+                        </div>
+                    `;
+                    addLog('刷新失败', `错误: ${error.message}`);
+                }
             } finally {
                 // 释放刷新标志
                 isRefreshing = false;
@@ -9893,6 +10149,130 @@
                 }
             }
         });
+
+        // ========== 全局错误处理 ==========
+
+        /**
+         * 错误边界处理器
+         * 捕获并优雅地处理JavaScript错误
+         */
+        window.addEventListener('error', function(event) {
+            console.error('❌ 全局错误:', event.error);
+
+            // 避免重复显示错误提示
+            if (document.getElementById('global-error-boundary')) {
+                return;
+            }
+
+            // 创建错误提示
+            const errorBoundary = document.createElement('div');
+            errorBoundary.id = 'global-error-boundary';
+            errorBoundary.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 99999;
+                max-width: 400px;
+                font-size: 14px;
+                line-height: 1.5;
+            `;
+
+            const errorMessage = event.error?.message || '未知错误';
+            const errorStack = event.error?.stack || '';
+
+            errorBoundary.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                    <span style="font-size:24px;">⚠️</span>
+                    <strong style="font-size:16px;">程序错误</strong>
+                </div>
+                <div style="margin-bottom:8px; font-size:13px;">${errorMessage}</div>
+                ${errorStack ? `<details style="margin-top:8px;">
+                    <summary style="cursor:pointer; font-size:12px; opacity:0.8;">查看详细信息</summary>
+                    <pre style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:4px; font-size:11px; overflow:auto; max-height:100px; white-space:pre-wrap;">${errorStack}</pre>
+                </details>` : ''}
+                <button onclick="this.parentElement.remove()" style="margin-top:12px; padding:6px 12px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:4px; cursor:pointer; font-size:12px;">关闭</button>
+            `;
+
+            document.body.appendChild(errorBoundary);
+
+            // 10秒后自动消失
+            setTimeout(() => {
+                if (errorBoundary.parentElement) {
+                    errorBoundary.remove();
+                }
+            }, 10000);
+        });
+
+        /**
+         * Promise错误处理
+         * 捕获未处理的Promise rejection
+         */
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('❌ 未处理的Promise错误:', event.reason);
+
+            // 避免重复显示错误提示
+            if (document.getElementById('promise-error-boundary')) {
+                return;
+            }
+
+            // 创建错误提示
+            const errorBoundary = document.createElement('div');
+            errorBoundary.id = 'promise-error-boundary';
+            errorBoundary.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 99999;
+                max-width: 400px;
+                font-size: 14px;
+                line-height: 1.5;
+            `;
+
+            const errorMessage = event.reason?.message || String(event.reason) || '未知错误';
+
+            errorBoundary.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                    <span style="font-size:24px;">⚠️</span>
+                    <strong style="font-size:16px;">异步操作错误</strong>
+                </div>
+                <div style="margin-bottom:8px; font-size:13px;">${errorMessage}</div>
+                <button onclick="this.parentElement.remove()" style="margin-top:12px; padding:6px 12px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:4px; cursor:pointer; font-size:12px;">关闭</button>
+            `;
+
+            document.body.appendChild(errorBoundary);
+
+            // 10秒后自动消失
+            setTimeout(() => {
+                if (errorBoundary.parentElement) {
+                    errorBoundary.remove();
+                }
+            }, 10000);
+        });
+
+        // 安全的包装函数 - 用于包装可能出错的函数
+        function safeExecute(fn, fallback = () => {}) {
+            return function(...args) {
+                try {
+                    return fn.apply(this, args);
+                } catch (error) {
+                    console.error('❌ 函数执行错误:', error);
+                    addLog('错误', `${fn.name || '匿名函数'}执行失败: ${error.message}`);
+                    return fallback.apply(this, args);
+                }
+            };
+        }
+
+        console.log('✅ 错误边界处理已启用');
     </script>
 
     <!-- 自定义Tooltip容器 -->
