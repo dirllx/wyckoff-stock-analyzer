@@ -5184,20 +5184,23 @@
                 // 获取所有股票的实时行情（使用批量API，一次请求获取所有数据）
                 const quotesFetchStart = performance.now();
 
-                // 批量获取行情数据（只取最近5期，不分析）
+                // 批量获取行情数据（使用当前选择的周期）
+                const timeframe = currentWatchlistTimeframe || 'daily';  // 使用用户选择的周期
                 const codes = data.items.map(item => item.stock_code);
                 const bulkResponse = await fetch(`${API_BASE}/api/v1/bulk-quotes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         codes: codes,
-                        timeframe: 'daily',
+                        timeframe: timeframe,
                         limit: 5
                     })
                 });
 
                 const bulkData = await bulkResponse.json();
                 const quotesFetchTime = (performance.now() - quotesFetchStart).toFixed(0);
+
+                console.log('[refreshWatchlist] 批量API返回，周期:', timeframe, '股票数量:', bulkData.data?.length);
 
                 // 统计实际获取的数据量
                 let totalQuotes = 0;
@@ -5208,6 +5211,7 @@
                     // 存储完整的K线列表
                     if (stock.quotes && stock.quotes.length > 0) {
                         quotesListMap[stock.code] = stock.quotes;
+                        console.log(`[refreshWatchlist] ${stock.code}: ${stock.quotes.length}条数据, 最新日期: ${stock.quotes[0]?.date}, 周期: ${stock.quotes[0]?.timeframe}`);
                     }
                 });
 
@@ -5260,7 +5264,7 @@
 
                 // 保存K线列表和评分供详情弹窗使用
                 watchlistData.quotesListMap = quotesListMap;
-                watchlistData.currentTimeframe = 'daily';
+                watchlistData.currentTimeframe = timeframe;  // 使用实际的周期
                 watchlistData.scoresByOffset = scoresByOffset;
 
                 // 存储原始数据
@@ -5735,10 +5739,8 @@
                 currentWatchlistQuoteOffset = 0; // 重置偏移量
                 console.log(`[onWatchlistTimeframeChange] 已重置偏移量为0`);
 
-                // 如果当前是列表视图，立即刷新数据
-                if (currentWatchlistViewMode === 'list') {
-                    refreshWatchlistListView();
-                }
+                // 重新获取数据（切换周期需要重新从后端获取）
+                refreshWatchlist();
 
                 addLog('切换周期', `关注列表周期切换为: ${newTimeframe}`);
             }
@@ -5828,7 +5830,7 @@
 
         // 渲染列表视图（参考日分析表格）
         async function refreshWatchlistListView() {
-            console.log('[refreshWatchlistListView] 开始渲染，当前偏移:', currentWatchlistQuoteOffset);
+            console.log('[refreshWatchlistListView] 开始渲染，当前偏移:', currentWatchlistQuoteOffset, '当前周期:', currentWatchlistTimeframe);
             try {
                 const content = document.getElementById('watchlistContent');
                 if (!content) return;
@@ -5838,6 +5840,15 @@
                     console.warn('[refreshWatchlistListView] 数据未加载，先刷新数据');
                     await refreshWatchlist();
                     return;
+                }
+
+                console.log('[refreshWatchlistListView] quotesListMap 已存在，股票数量:', Object.keys(watchlistData.quotesListMap).length);
+
+                // 打印第一只股票的数据
+                const firstStock = Object.keys(watchlistData.quotesListMap)[0];
+                if (firstStock) {
+                    const quotes = watchlistData.quotesListMap[firstStock];
+                    console.log(`[${firstStock}] 数据周期:`, quotes[0]?.timeframe, '数据量:', quotes.length, '最新日期:', quotes[0]?.date);
                 }
 
                 const timeframe = currentWatchlistTimeframe;  // 使用全局变量
@@ -5909,7 +5920,7 @@
                 let html = `
                     <div style="margin-bottom: 8px; padding: 6px 10px; background: #1f2937; border-radius: 4px; border: 1px solid #374151; display: flex; justify-content: space-between; align-items: center;">
                         <div style="color: #10b981; font-size: 11px; font-weight: 600;">
-                            📊 基于最近${totalQuotes}期数据分析
+                            📊 基于最近${totalQuotes}期${timeframe === 'daily' ? '日线' : timeframe === '30' ? '30分钟' : timeframe === '60' ? '60分钟' : timeframe + '线'}数据分析
                         </div>
                         <div style="color: #9ca3af; font-size: 10px;">
                             评分规则：MA趋势(25%) + 量价协调(25%) + 价格位置(25%) + 动量信号(25%)
@@ -9451,11 +9462,37 @@
             }, true);
         }
 
-        function showTooltip(element, text) {
+        function showTooltip(eventOrElement, text) {
             if (!tooltipElement) return;
 
+            let element, tooltipText;
+
+            // 判断调用方式
+            if (eventOrElement && eventOrElement.target) {
+                // 方式1: 传入事件对象
+                element = eventOrElement.target;
+                tooltipText = element.getAttribute('data-tooltip') || element.textContent || '';
+            } else if (eventOrElement && eventOrElement.getAttribute) {
+                // 方式2: 传入元素对象
+                element = eventOrElement;
+                tooltipText = text || element.getAttribute('data-tooltip') || element.textContent || '';
+            } else {
+                console.warn('[showTooltip] 无效的参数:', eventOrElement);
+                return;
+            }
+
+            if (!element) {
+                console.warn('[showTooltip] 元素为空');
+                return;
+            }
+
+            if (!tooltipText) {
+                console.warn('[showTooltip] 无tooltip文本');
+                return;
+            }
+
             // 设置tooltip内容，支持换行
-            tooltipElement.innerHTML = text.replace(/\n/g, '<br>');
+            tooltipElement.innerHTML = tooltipText.replace(/\n/g, '<br>');
             tooltipElement.style.display = 'block';
 
             // 计算位置
