@@ -7007,18 +7007,24 @@
 
         // 批量分析所有关注的股票
         async function batchAnalyzeWatchlist() {
-            const items = watchlistData.filteredItems || watchlistData.items || [];
+            // 获取当前标签页的股票（自选股或浏览股）
+            const watchType = currentWatchlistTab;
+            const allItems = watchlistData.items || [];
+            const items = allItems.filter(item => item.watch_type === watchType);
+
             if (items.length === 0) {
-                alert('关注列表为空，请先添加股票');
+                const typeName = watchType === 'favorite' ? '自选股' : '浏览股';
+                alert(`${typeName}列表为空，请先添加股票`);
                 return;
             }
 
             const count = items.length;
-            if (!confirm(`确定要批量分析 ${count} 只股票吗？\n\n这将需要一些时间...`)) {
+            const typeName = watchType === 'favorite' ? '自选股' : '浏览股';
+            if (!confirm(`确定要批量分析 ${count} 只${typeName}吗？\n\n这将需要一些时间...`)) {
                 return;
             }
 
-            addLog('批量分析', `开始分析 ${count} 只股票...`);
+            addLog('批量分析', `开始分析 ${count} 只${typeName}...`);
 
             // 创建进度弹窗
             const progressModal = document.createElement('div');
