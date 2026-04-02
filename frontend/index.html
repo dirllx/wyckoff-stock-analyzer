@@ -998,8 +998,8 @@
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
                         <div>
                             <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">K线数据获取数量</label>
-                            <input type="number" id="setting_kline_count" class="form-input" value="500" min="100" max="1000" step="50" style="width: 100%;">
-                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量</span>
+                            <input type="number" id="setting_kline_count" class="form-input" value="100" min="50" max="500" step="50" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量（已优化为100）</span>
                         </div>
                         <div>
                             <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">缓存有效期（小时）</label>
@@ -3737,6 +3737,19 @@
             console.log('[页面初始化] 关注列表偏移量初始值:', currentWatchlistQuoteOffset);
             console.log('[页面初始化] 关注列表当前周期:', currentWatchlistTimeframe);
 
+            // 监听用户的第一次交互
+            const markUserInteraction = () => {
+                userHasInteracted = true;
+                console.log('[用户交互] 用户已开始主动操作');
+                // 移除事件监听器，只执行一次
+                document.removeEventListener('click', markUserInteraction);
+                document.removeEventListener('keydown', markUserInteraction);
+            };
+
+            // 监听点击和键盘事件
+            document.addEventListener('click', markUserInteraction);
+            document.addEventListener('keydown', markUserInteraction);
+
             const codeInput = document.getElementById('multiStockCode');
             if (codeInput) {
                 let debounceTimer;
@@ -3757,8 +3770,15 @@
                 loadDateSelector(defaultCode);
             }
 
-            // 初始化关注列表视图模式
-            switchWatchlistViewMode(currentWatchlistViewMode);
+            // 初始化关注列表视图模式（但不自动刷新数据）
+            // switchWatchlistViewMode(currentWatchlistViewMode);
+            // 只更新按钮样式，不触发数据加载
+            const listBtn = document.getElementById('viewMode-list');
+            if (listBtn && currentWatchlistViewMode === 'list') {
+                listBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
+                listBtn.style.color = 'white';
+                listBtn.style.border = 'none';
+            }
 
             // 确保关注列表标签页状态正确（默认为自选股）
             currentWatchlistTab = 'favorite';
@@ -3809,15 +3829,15 @@
             contentEl.innerHTML = '';
 
             try {
-                // 并行请求所有周期，添加超时控制和错误处理
-                const fetchWithTimeout = async (timeframe, timeout = 30000) => {
+                // 串行获取各周期数据，避免服务器压力过大
+                const fetchWithTimeout = async (tf, timeout = 30000) => {
                     try {
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
                         // 构建请求URL，如果选择了日期则添加end_date参数
                         let url = `${API_BASE}/api/v1/stocks/analyze`;
-                        const requestBody = { code, timeframe };
+                        const requestBody = { code, timeframe: tf };
 
                         if (analysisDate) {
                             // 统一使用 ISO 8601 格式 (YYYY-MM-DD)
@@ -3839,28 +3859,16 @@
 
                         const data = await response.json();
 
-                        // 额外获取quotes数据以计算前一天变化
-                        let prevQuote = null;
-                        try {
-                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=5`);
-                            if (quotesRes.ok) {
-                                const quotesData = await quotesRes.json();
-                                if (quotesData.quotes && quotesData.quotes.length >= 2) {
-                                    // quotes是按时间正序排列的，倒数第二个是前一天
-                                    prevQuote = quotesData.quotes[quotesData.quotes.length - 2];
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('获取前一日数据失败:', e);
-                        }
+                        // 只取当前状态，不获取历史数据
+                        const prevQuote = null;
 
-                        return { success: true, data, timeframe, prevQuote };
+                        return { success: true, data, timeframe: tf, prevQuote };
                     } catch (error) {
-                        console.error(`周期${timeframe}请求失败:`, error);
+                        console.error(`周期${tf}请求失败:`, error);
                         return {
                             success: false,
                             error: error.message,
-                            timeframe,
+                            timeframe: tf,
                             prevQuote: null,
                             data: {
                                 analysis_summary: {
@@ -3876,7 +3884,9 @@
 
                 // 串行请求以避免并发过多导致失败
                 const results = [];
-                for (const timeframe of timeframes) {
+                for (let i = 0; i < timeframes.length; i++) {
+                    const timeframe = timeframes[i];
+                    console.log(`[${i+1}/${timeframes.length}] 正在获取 ${timeframe} 数据...`);
                     addLog('正在获取', `${timeframe}数据...`);
                     const result = await fetchWithTimeout(timeframe);
                     results.push(result);
@@ -4404,10 +4414,6 @@
                 const maStatus = calculateMAStatus(quote);
                 const volumeStatus = calculateVolumeStatus(quote);
 
-                // 获取前一天数据计算变化
-                const prevQuote = data.prevQuote || null;
-                const changes = calculateChanges(quote, prevQuote);
-
                 // 时间显示格式：分钟线显示日期+时分，日线以上只显示日期
                 let timeDisplay = '-';
                 if (quote?.date) {
@@ -4424,10 +4430,10 @@
                     }
                 }
 
-                // 涨跌幅
-                const priceChange = changes.priceChange !== null ? changes.priceChange : 0;
+                // 涨跌幅：使用后端返回的数据
+                const priceChange = quote.change_percent !== null && quote.change_percent !== undefined ? quote.change_percent : 0;
                 const priceChangeColor = priceChange > 0 ? '#10b981' : priceChange < 0 ? '#ef4444' : '#6b7280';
-                const priceChangeText = priceChange > 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
+                const priceChangeText = priceChange > 0 ? `+${priceChange.toFixed(2)}%` : `${priceChange.toFixed(2)}%`;
 
                 // 简化tooltip内容
                 const maTooltip = `MA5=${quote?.ma5?.toFixed(1)||'N/A'} MA10=${quote?.ma10?.toFixed(1)||'N/A'} MA20=${quote?.ma20?.toFixed(1)||'N/A'}`;
@@ -5109,7 +5115,23 @@
             filteredItems: []
         };
 
+        // 防止重复刷新的标志位（全局变量）
+        let isRefreshing = false;
+        let refreshTimeout = null;
+
         async function refreshWatchlist() {
+            // 防抖：如果已有刷新计划，先取消
+            if (refreshTimeout) {
+                clearTimeout(refreshTimeout);
+                refreshTimeout = null;
+            }
+
+            // 防止重复执行
+            if (isRefreshing) {
+                console.log('[refreshWatchlist] 已有刷新在执行，跳过重复调用');
+                return;
+            }
+
             const content = document.getElementById('watchlistContent');
 
             if (!content) {
@@ -5123,15 +5145,24 @@
             // 显示加载中
             content.innerHTML = '<div style="text-align:center; padding:40px; color:#10b981;">🔄 正在加载...</div>';
 
+            // 设置刷新标志
+            isRefreshing = true;
+
+            // 记录开始时间
+            const startTime = performance.now();
+            const logTimestamp = new Date().toLocaleTimeString();
+
             try {
                 // 根据当前标签页获取不同类型的数据
                 const watchType = currentWatchlistTab;
                 console.log(`[refreshWatchlist] 正在加载 ${watchType} 类型的关注列表...`);
 
+                const watchlistFetchStart = performance.now();
                 const response = await fetch(`${API_BASE}/api/v1/watchlist?watch_type=${watchType}`);
                 const data = await response.json();
+                const watchlistFetchTime = (performance.now() - watchlistFetchStart).toFixed(0);
 
-                console.log(`[refreshWatchlist] API返回: ${data.total} 只股票, 类型: ${watchType}`);
+                console.log(`[refreshWatchlist] API返回: ${data.total} 只股票, 类型: ${watchType}, 耗时: ${watchlistFetchTime}ms`);
 
                 if (!data.items || data.items.length === 0) {
                     const emptyMessage = watchType === 'favorite'
@@ -5143,26 +5174,81 @@
                             <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">${emptyMessage}</div>
                         </div>
                     `;
-                    addLog('刷新完成', `${watchType === 'favorite' ? '自选股' : '浏览股'}列表为空`);
+                    const totalTime = (performance.now() - startTime).toFixed(0);
+                    addLog('刷新完成', `${watchType === 'favorite' ? '自选股' : '浏览股'}列表为空 (${logTimestamp}, 耗时${totalTime}ms)`);
                     watchlistData.items = [];
                     watchlistData.filteredItems = [];
                     return;
                 }
 
-                // 获取所有股票的实时行情
-                addLog('正在获取', `获取 ${data.items.length} 只股票的实时行情...`);
-                const quotePromises = data.items.map(item =>
-                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
-                    }).then(res => res.json())
-                );
+                // 获取所有股票的实时行情（使用批量API，一次请求获取所有数据）
+                const quotesFetchStart = performance.now();
 
-                const quotes = await Promise.all(quotePromises);
+                // 批量获取行情数据（只取最近5期，不分析）
+                const codes = data.items.map(item => item.stock_code);
+                const bulkResponse = await fetch(`${API_BASE}/api/v1/bulk-quotes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codes: codes,
+                        timeframe: 'daily',
+                        limit: 5
+                    })
+                });
+
+                const bulkData = await bulkResponse.json();
+                const quotesFetchTime = (performance.now() - quotesFetchStart).toFixed(0);
+
+                // 统计实际获取的数据量
+                let totalQuotes = 0;
+                const quotesListMap = {};  // 存储K线列表供详情弹窗使用
+
+                bulkData.data?.forEach(stock => {
+                    totalQuotes += stock.quotes?.length || 0;
+                    // 存储完整的K线列表
+                    if (stock.quotes && stock.quotes.length > 0) {
+                        quotesListMap[stock.code] = stock.quotes;
+                    }
+                });
+
+                // 将批量数据转换为前端需要的格式
+                const quotes = data.items.map(item => {
+                    const stockData = bulkData.data?.find(d => d.code === item.stock_code);
+                    if (stockData && stockData.quotes && stockData.quotes.length > 0) {
+                        const latestQuote = stockData.quotes[0];
+                        // 构造简单的analysis_summary，包含评分
+                        const analysis_summary = {
+                            score: latestQuote.score || 0,
+                            direction: latestQuote.score > 0 ? 'LONG' : (latestQuote.score < 0 ? 'SHORT' : 'NEUTRAL'),
+                            confidence: 0.7,
+                            reason: `基于${stockData.quotes.length}期数据分析（MA趋势+成交量）`
+                        };
+                        return {
+                            current_quote: latestQuote,
+                            analysis_summary: analysis_summary
+                        };
+                    }
+                    return {
+                        current_quote: null,
+                        analysis_summary: null
+                    };
+                });
 
                 // 创建行情数据映射
                 watchlistData.quoteMap = {};
+                const scoresByOffset = {};  // 存储每期的评分
+
+                // 先填充scoresByOffset（从批量数据）
+                data.items.forEach(item => {
+                    const stockData = bulkData.data?.find(d => d.code === item.stock_code);
+                    if (stockData && stockData.quotes) {
+                        // 存储评分（从最新到最旧，索引0对应最新期）
+                        scoresByOffset[item.stock_code] = stockData.quotes
+                            .map(q => q.score || 0)
+                            .reverse();
+                    }
+                });
+
                 quotes.forEach((quote, index) => {
                     if (quote.current_quote) {
                         watchlistData.quoteMap[data.items[index].stock_code] = quote.current_quote;
@@ -5171,6 +5257,11 @@
                         watchlistData.quoteMap[data.items[index].stock_code + '_summary'] = quote.analysis_summary;
                     }
                 });
+
+                // 保存K线列表和评分供详情弹窗使用
+                watchlistData.quotesListMap = quotesListMap;
+                watchlistData.currentTimeframe = 'daily';
+                watchlistData.scoresByOffset = scoresByOffset;
 
                 // 存储原始数据
                 watchlistData.items = data.items;
@@ -5186,11 +5277,19 @@
                 // 应用排序和筛选
                 applySortAndFilter();
 
-                addLog('刷新完成', `共 ${data.total} 只${watchType === 'favorite' ? '自选股' : '浏览股'}`);
+                // 计算总耗时
+                const totalTime = (performance.now() - startTime).toFixed(0);
+
+                // 记录详细的性能日志
+                addLog('刷新完成', `${data.total}只${watchType === 'favorite' ? '自选股' : '浏览股'} | ${data.items.length}只股票 × 5期 = ${totalQuotes}条数据 | 耗时${totalTime}ms (${logTimestamp})`);
+                console.log(`[性能] 获取列表: ${watchlistFetchTime}ms, 获取行情: ${quotesFetchTime}ms, 总计: ${totalTime}ms, 数据量: ${totalQuotes}条`);
             } catch (error) {
                 console.error('❌ 刷新关注列表失败:', error);
                 content.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:20px; font-weight:600;">❌ 加载失败: ${error.message}</div>`;
                 addLog('刷新失败', `错误: ${error.message}`);
+            } finally {
+                // 释放刷新标志
+                isRefreshing = false;
             }
         }
 
@@ -5676,6 +5775,9 @@
             addLog('切换标签', `切换到${tab === 'favorite' ? '自选股' : '浏览股'}`);
         }
 
+        // 用户是否已主动操作过（用于区分初始化和用户操作）
+        let userHasInteracted = false;
+
         // 切换关注列表视图模式
         function switchWatchlistViewMode(mode) {
             console.log('[switchWatchlistViewMode] 切换到:', mode, '当前偏移:', currentWatchlistQuoteOffset);
@@ -5717,8 +5819,10 @@
                 cardBatchControls.style.display = 'none';
             }
 
-            // 刷新列表
-            refreshWatchlist();
+            // 只在用户主动操作时才刷新列表
+            if (userHasInteracted) {
+                refreshWatchlist();
+            }
             addLog('切换视图', `切换到${mode === 'card' ? '卡片' : '列表'}视图`);
         }
 
@@ -5728,6 +5832,13 @@
             try {
                 const content = document.getElementById('watchlistContent');
                 if (!content) return;
+
+                // 检查数据是否已加载
+                if (!watchlistData.quotesListMap || Object.keys(watchlistData.quotesListMap).length === 0) {
+                    console.warn('[refreshWatchlistListView] 数据未加载，先刷新数据');
+                    await refreshWatchlist();
+                    return;
+                }
 
                 const timeframe = currentWatchlistTimeframe;  // 使用全局变量
                 const data = watchlistData.filteredItems || [];
@@ -5750,7 +5861,7 @@
                 // 获取所有股票的K线数据
                 const quotesMap = {};
                 const summaryMap = {};
-                const quotesListMap = {};  // 存储K线列表用于详情弹窗
+                const quotesListMap = watchlistData.quotesListMap || {};  // 复用批量API已获取的数据
 
                 // 将数据分批，每批10只股票，避免服务器压力
                 const batchSize = 10;
@@ -5759,125 +5870,21 @@
                     console.log(`[批量处理] 批次 ${Math.floor(i/batchSize)}，股票数量: ${batch.length}`);
 
                     await Promise.all(batch.map(async (item) => {
-                        console.log(`[${item.stock_code}] 开始获取数据，当前offset: ${currentWatchlistQuoteOffset}`);
+                        console.log(`[${item.stock_code}] 开始处理数据，当前offset: ${currentWatchlistQuoteOffset}`);
                         try {
-                            // 获取K线数据（当前周期）
-                            // 只需要获取最近10条数据，足够查看前10期历史
-                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=10`);
-
-                            // 获取分析数据（当前周期）- 不传date参数，保持与原实现一致
-                            const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ code: item.stock_code, timeframe })
-                            });
-
-                            // 初始化评分数组
-                            if (!watchlistData.scoresByOffset) {
-                                watchlistData.scoresByOffset = {};
-                            }
-                            if (!watchlistData.scoresByOffset[item.stock_code]) {
-                                watchlistData.scoresByOffset[item.stock_code] = [];
-                            }
-
-                            // 获取日线分析（用于威科夫阶段统一显示）
-                            const dailyAnalyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
-                            });
-
-                            if (quotesRes.ok) {
-                                const quotesData = await quotesRes.json();
-                                if (quotesData.quotes && quotesData.quotes.length > 0) {
-                                    // API返回的是升序（旧→新），根据偏移量获取对应位置的数据
-                                    const quotes = quotesData.quotes;
-                                    const offset = currentWatchlistQuoteOffset;
-                                    const quoteIndex = quotes.length - 1 - offset;
-
-                                    console.log(`[${item.stock_code}] 数据总数: ${quotes.length}, 偏移: ${offset}, 索引: ${quoteIndex}`);
-                                    console.log(`[${item.stock_code}] 第一条: ${quotes[0].date}, 最后一条: ${quotes[quotes.length-1].date}`);
-
-                                    // 确保索引有效
-                                    if (quoteIndex >= 0 && quoteIndex < quotes.length) {
-                                        const selectedQuote = quotes[quoteIndex];
-                                        console.log(`[${item.stock_code}] 选中数据:`, selectedQuote.date, 'close:', selectedQuote.close);
-                                        quotesMap[item.stock_code] = selectedQuote;
-                                    } else if (quotes.length > 0) {
-                                        // 如果索引越界，取最接近的有效数据
-                                        const clampedIndex = Math.max(0, Math.min(quoteIndex, quotes.length - 1));
-                                        console.log(`[${item.stock_code}] 索引越界，使用索引: ${clampedIndex}`);
-                                        quotesMap[item.stock_code] = quotes[clampedIndex];
-                                    }
-                                    quotesListMap[item.stock_code] = quotes;
-                                }
-                            } else {
-                                // 获取K线数据失败，输出错误详情
-                                const errorText = await quotesRes.text();
-                                console.warn(`[${item.stock_code}] 获取K线数据失败 (${quotesRes.status}):`, errorText);
-
-                                // 如果是404错误，可能是该周期数据不存在
-                                if (quotesRes.status === 404) {
-                                    console.warn(`[${item.stock_code}] ${timeframe}周期数据不存在，该股票可能不支持此周期`);
+                            // 复用已获取的K线数据
+                            const quotes = quotesListMap[item.stock_code] || [];
+                            if (quotes.length > 0) {
+                                const quoteIndex = quotes.length - 1 - currentWatchlistQuoteOffset;
+                                if (quoteIndex >= 0 && quoteIndex < quotes.length) {
+                                    quotesMap[item.stock_code] = quotes[quoteIndex];
+                                    console.log(`[${item.stock_code}] 复用批量数据，索引: ${quoteIndex}, 总数据: ${quotes.length}条`);
                                 }
                             }
 
-                            // 存储当前周期的分析数据（带缓存机制）
-                            const currentOffset = currentWatchlistQuoteOffset;
-
-                            // 检查缓存中是否已有该offset的评分
-                            if (watchlistData.scoresByOffset &&
-                                watchlistData.scoresByOffset[item.stock_code] &&
-                                watchlistData.scoresByOffset[item.stock_code][currentOffset] !== undefined) {
-                                // 缓存命中，使用缓存的评分
-                                const cachedScore = watchlistData.scoresByOffset[item.stock_code][currentOffset];
-                                console.log(`[${item.stock_code}] 使用缓存评分: offset=${currentOffset}, score=${cachedScore}`);
-
-                                // 仍然需要获取完整的分析数据用于显示
-                                if (analyzeRes.ok) {
-                                    const analysisData = await analyzeRes.json();
-                                    if (analysisData.analysis_summary) {
-                                        summaryMap[item.stock_code] = analysisData.analysis_summary;
-                                    }
-                                }
-                            } else {
-                                // 缓存未命中，调用API获取评分
-                                console.log(`[${item.stock_code}] 缓存未命中，调用API获取 offset=${currentOffset} 的评分`);
-
-                                if (analyzeRes.ok) {
-                                    const analysisData = await analyzeRes.json();
-                                    if (analysisData.analysis_summary) {
-                                        summaryMap[item.stock_code] = analysisData.analysis_summary;
-
-                                        // 保存评分到缓存
-                                        const currentScore = analysisData.analysis_summary.score || 0;
-                                        if (!watchlistData.scoresByOffset) {
-                                            watchlistData.scoresByOffset = {};
-                                        }
-                                        if (!watchlistData.scoresByOffset[item.stock_code]) {
-                                            watchlistData.scoresByOffset[item.stock_code] = [];
-                                        }
-                                        watchlistData.scoresByOffset[item.stock_code][currentOffset] = currentScore;
-                                        console.log(`[${item.stock_code}] 保存评分到缓存: offset=${currentOffset}, score=${currentScore}`);
-                                    } else {
-                                        console.warn(`[${item.stock_code}] 分析数据中没有analysis_summary`);
-                                    }
-                                } else {
-                                    console.warn(`[${item.stock_code}] 分析API调用失败: ${analyzeRes.status}`);
-                                }
-                            }
-
-                            // 存储日线的威科夫阶段（统一使用）
-                            if (dailyAnalyzeRes.ok) {
-                                const dailyAnalysis = await dailyAnalyzeRes.json();
-                                if (dailyAnalysis.analysis_summary) {
-                                    // 将日线威科夫阶段存储到summaryMap中，添加标识
-                                    if (!summaryMap[item.stock_code]) {
-                                        summaryMap[item.stock_code] = {};
-                                    }
-                                    const dailyPhase = dailyAnalysis.analysis_summary.wyckoff_phase || '-';
-                                    summaryMap[item.stock_code].wyckoff_phase_daily = dailyPhase;
-                                }
+                            // 初始化summaryMap（如果不存在）
+                            if (!summaryMap[item.stock_code]) {
+                                summaryMap[item.stock_code] = {};
                             }
                         } catch (error) {
                             console.warn(`获取 ${item.stock_code} 数据失败:`, error);
@@ -5900,6 +5907,14 @@
 
                 // 渲染表格
                 let html = `
+                    <div style="margin-bottom: 8px; padding: 6px 10px; background: #1f2937; border-radius: 4px; border: 1px solid #374151; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="color: #10b981; font-size: 11px; font-weight: 600;">
+                            📊 基于最近${totalQuotes}期数据分析
+                        </div>
+                        <div style="color: #9ca3af; font-size: 10px;">
+                            评分规则：MA趋势(25%) + 量价协调(25%) + 价格位置(25%) + 动量信号(25%)
+                        </div>
+                    </div>
                     <div class="table-container" style="overflow-x: auto;">
                         <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: fixed;">
                             <thead>
@@ -5910,12 +5925,12 @@
                                     <th style="width: 55px;">收盘</th>
                                     <th style="width: 50px;">涨跌</th>
                                     <th style="width: 45px;">量能</th>
-                                    <th style="width: 60px;">MA5</th>
-                                    <th style="width: 60px;">MA10</th>
-                                    <th style="width: 60px;">MA15</th>
+                                    <th style="width: 66px;">MA5</th>
+                                    <th style="width: 66px;">MA10</th>
+                                    <th style="width: 66px;">MA15</th>
                                     <th style="width: 55px;">威(短)</th>
                                     <th style="width: 55px;">威(长)</th>
-                                    <th style="width: 39px;">评分</th>
+                                    <th style="width: 70px;">评分</th>
                                     <th style="width: 45px;">操作</th>
                                 </tr>
                             </thead>
@@ -5925,15 +5940,26 @@
                 data.forEach(item => {
                     const quote = quotesMap[item.stock_code];
                     const summary = summaryMap[item.stock_code];
-                    const direction = summary?.direction || 'NEUTRAL';
-                    const score = summary?.score || 0;
+
+                    // 从 scoresByOffset 中获取当前 offset 对应的评分
+                    let score = 0;
+                    if (watchlistData.scoresByOffset &&
+                        watchlistData.scoresByOffset[item.stock_code] &&
+                        currentWatchlistQuoteOffset < watchlistData.scoresByOffset[item.stock_code].length) {
+                        score = watchlistData.scoresByOffset[item.stock_code][currentWatchlistQuoteOffset] || 0;
+                    }
+
+                    // 从评分推断方向
+                    let direction = 'NEUTRAL';
+                    if (score >= 2) direction = 'LONG';
+                    else if (score <= -2) direction = 'SHORT';
 
                     // 短线威科夫阶段（前端算法：基于成交量&均线）
                     let shortTermPhase = '-';
                     let shortTermColor = '#9ca3af';
 
-                    // 长线威科夫阶段（后端算法：基于价格位置&趋势）
-                    let longTermPhase = summary?.wyckoff_phase_daily || summary?.wyckoff_phase || '-';
+                    // 长线威科夫阶段（前端推断：基于趋势和评分）
+                    let longTermPhase = '-';
                     let longTermColor = '#9ca3af';
 
                     if (quote) {
@@ -5961,15 +5987,21 @@
                             shortTermPhase = '震荡';
                         }
 
-                        // 后端算法：长线威科夫阶段颜色
-                        if (longTermPhase.includes('U') || longTermPhase.includes('上升')) {
+                        // 前端算法：长线威科夫阶段（基于评分和趋势）
+                        if (score >= 3) {
+                            longTermPhase = 'U上升';
                             longTermColor = '#10b981';
-                        } else if (longTermPhase.includes('D') || longTermPhase.includes('下降')) {
+                        } else if (score <= -2) {
+                            longTermPhase = 'D下降';
                             longTermColor = '#ef4444';
-                        } else if (longTermPhase.includes('A') || longTermPhase.includes('吸筹')) {
+                        } else if (score >= 1) {
+                            longTermPhase = 'A吸筹';
                             longTermColor = '#f59e0b';
-                        } else if (longTermPhase.includes('DS') || longTermPhase.includes('派发')) {
+                        } else if (score <= -1) {
+                            longTermPhase = 'DS派发';
                             longTermColor = '#8b5cf6';
+                        } else {
+                            longTermPhase = '震荡';
                         }
                     }
 
@@ -5999,15 +6031,17 @@
 
                         console.log(`[${item.stock_code}] 当前offset: ${currentOffset}, 评分数组:`, scoresArray, `当前评分: ${score}`);
 
-                        // 尝试获取前一期评分
-                        if (currentOffset > 0 && scoresArray[currentOffset - 1] !== undefined && scoresArray[currentOffset - 1] !== null) {
-                            const prevScore = scoresArray[currentOffset - 1];
+                        // 获取前一期评分（相邻期对比）
+                        // offset=0(最新) 时，前一期是 offset=1(次新)
+                        const prevOffset = currentOffset + 1;
+                        if (prevOffset < scoresArray.length && scoresArray[prevOffset] !== undefined && scoresArray[prevOffset] !== null) {
+                            const prevScore = scoresArray[prevOffset];
                             const scoreChange = score - prevScore;
                             const sign = scoreChange >= 0 ? '+' : '';
                             scoreDisplay = `${score} / ${sign}${scoreChange}分`;
-                            console.log(`[${item.stock_code}] 前一期评分: ${prevScore}, 变化: ${scoreChange}, 显示: ${scoreDisplay}`);
+                            console.log(`[${item.stock_code}] 前一期(offset=${prevOffset})评分: ${prevScore}, 变化: ${scoreChange}, 显示: ${scoreDisplay}`);
                         } else {
-                            console.log(`[${item.stock_code}] 没有前一期数据，当前offset: ${currentOffset}`);
+                            console.log(`[${item.stock_code}] 没有前一期数据，当前offset: ${currentOffset}, 下一期offset: ${prevOffset}`);
                         }
                     }
 
@@ -6039,18 +6073,18 @@
                         longTermTooltip = '震荡阶段（长线）\n\n判断依据：无明显特征\n- 趋势强度：弱/中等\n- 价格位置：中间区域\n\n含义：方向不明，整理阶段\n\n操作建议：继续等待，观望为主';
                     }
 
-                    // 生成评分tooltip说明
+                    // 生成评分tooltip说明（说明基于5期数据）
                     let scoreTooltip = '';
                     if (score >= 4) {
-                        scoreTooltip = `评分：${score}分（强烈买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列强势\n2. 威科夫阶段（25%）：处于有利阶段\n3. 量价协调（25%）：量价配合良好\n4. 动量信号（25%）：动量强劲\n\n综合建议：强烈看好，积极买入`;
+                        scoreTooltip = `评分：${score}分（强烈买入信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：均线排列强势\n2. 威科夫阶段（25%）：处于有利阶段\n3. 量价协调（25%）：量价配合良好\n4. 动量信号（25%）：动量强劲\n\n综合建议：强烈看好，积极买入`;
                     } else if (score >= 3) {
-                        scoreTooltip = `评分：${score}分（看好买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列向好\n2. 威科夫阶段（25%）：阶段相对有利\n3. 量价协调（25%）：量价基本协调\n4. 动量信号（25%）：动量稳定\n\n综合建议：整体看好，可以买入`;
+                        scoreTooltip = `评分：${score}分（看好买入信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：均线排列向好\n2. 威科夫阶段（25%）：阶段相对有利\n3. 量价协调（25%）：量价基本协调\n4. 动量信号（25%）：动量稳定\n\n综合建议：整体看好，可以买入`;
                     } else if (score >= 1) {
-                        scoreTooltip = `评分：${score}分（中性偏多）\n\n评分维度：\n1. 趋势强度（25%）：趋势不明或偏弱\n2. 威科夫阶段（25%）：阶段中性\n3. 量价协调（25%）：量价一般配合\n4. 动量信号（25%）：动量平稳\n\n综合建议：谨慎参与，控制仓位`;
+                        scoreTooltip = `评分：${score}分（中性偏多）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：趋势不明或偏弱\n2. 威科夫阶段（25%）：阶段中性\n3. 量价协调（25%）：量价一般配合\n4. 动量信号（25%）：动量平稳\n\n综合建议：谨慎参与，控制仓位`;
                     } else if (score <= -1) {
-                        scoreTooltip = `评分：${score}分（偏弱信号）\n\n评分维度：\n1. 趋势强度（25%）：趋势偏空\n2. 威科夫阶段（25%）：处于不利阶段\n3. 量价协调（25%）：量价背离\n4. 动量信号（25%）：动量疲弱\n\n综合建议：建议观望，不宜介入`;
+                        scoreTooltip = `评分：${score}分（偏弱信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：趋势偏空\n2. 威科夫阶段（25%）：处于不利阶段\n3. 量价协调（25%）：量价背离\n4. 动量信号（25%）：动量疲弱\n\n综合建议：建议观望，不宜介入`;
                     } else {
-                        scoreTooltip = `评分：${score}分（震荡观望）\n\n评分维度：\n1. 趋势强度（25%）：无明显趋势\n2. 威科夫阶段（25%）：震荡阶段\n3. 量价协调（25%）：量价中性\n4. 动量信号（25%）：动量平稳\n\n综合建议：信号不明，继续等待`;
+                        scoreTooltip = `评分：${score}分（震荡观望）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：无明显趋势\n2. 威科夫阶段（25%）：震荡阶段\n3. 量价协调（25%）：量价中性\n4. 动量信号（25%）：动量平稳\n\n综合建议：信号不明，继续等待`;
                     }
 
                     // 计算涨跌（从quotes列表中获取前一日数据）
@@ -6059,11 +6093,17 @@
                     if (quote) {
                         const quotesList = quotesListMap[item.stock_code] || [];
                         if (quotesList.length >= 2) {
-                            const prevQuote = quotesList[quotesList.length - 2]; // 前一日数据
-                            if (prevQuote && prevQuote.close) {
-                                const changePct = ((quote.close - prevQuote.close) / prevQuote.close * 100);
-                                changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
-                                changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
+                            // 找到当前quote在数组中的索引
+                            const currentIndex = quotesList.findIndex(q => q.date === quote.date);
+                            // 获取前一条数据（考虑翻页情况）
+                            const prevIndex = currentIndex >= 0 ? currentIndex - 1 : quotesList.length - 2;
+                            if (prevIndex >= 0 && prevIndex < quotesList.length) {
+                                const prevQuote = quotesList[prevIndex];
+                                if (prevQuote && prevQuote.close && quote.close) {
+                                    const changePct = ((quote.close - prevQuote.close) / prevQuote.close * 100);
+                                    changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+                                    changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
+                                }
                             }
                         }
                     }
@@ -6160,20 +6200,20 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoBack ? 'disabled' : ''}
-                                style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                style="padding: 6px 16px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
                                 ◀ 前期
                             </button>
                             <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoForward ? 'disabled' : ''}
-                                style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                style="padding: 6px 16px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
                                 后期 ▶
                             </button>
                             <button onclick="window.navigateWatchlistPeriod(0)"
-                                style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                style="padding: 6px 16px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
                                 ↺ 最新
                             </button>
                         </div>
                         <div style="color: #9ca3af; font-size: 11px;">
-                            ${currentOffset === 0 ? '显示：最新' : `显示：前第 ${currentOffset} 期`}（共10期）
+                            ${currentOffset === 0 ? '最新' : `前第 ${currentOffset} 期`}（共5笔）
                         </div>
                     </div>
                 `;
@@ -8429,7 +8469,12 @@
         window.addEventListener('load', () => {
             console.log('页面完全加载');
             addLog('页面加载', '页面完全加载完成');
-            refreshWatchlist();
+
+            // 页面加载后自动刷新关注列表（延迟1秒避免影响页面加载速度）
+            setTimeout(() => {
+                console.log('页面加载完成，自动刷新关注列表');
+                refreshWatchlist();
+            }, 1000);
         });
 
         window.addEventListener('error', (event) => {

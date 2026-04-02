@@ -12,6 +12,7 @@ from app.models.database import Stock, StockQuote, WyckoffSignal
 from app.models.schemas import (
     StockAnalysisRequest,
     StockAnalysisResponse,
+    StockQuoteResponse,
     WyckoffSignalResponse,
     MessageResponse
 )
@@ -79,7 +80,11 @@ limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
 async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Session = Depends(get_db)):
     try:
         # ========== Redis缓存：先检查缓存 ==========
-        cached_analysis = get_cached_analysis(body.code, body.timeframe)
+        # 注意：如果指定了end_date，跳过缓存（因为缓存不包含日期信息）
+        cached_analysis = None
+        if not body.end_date:
+            cached_analysis = get_cached_analysis(body.code, body.timeframe)
+
         if cached_analysis:
             logger.info(f"✅ 从缓存获取分析结果: {body.code} {body.timeframe}")
 
@@ -97,14 +102,17 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 WyckoffSignal.timeframe == body.timeframe
             ).order_by(WyckoffSignal.date.desc()).limit(5).all()
 
-            # 将缓存的current_quote字典转换为StockQuote对象
+            # 将缓存的current_quote字典转换为StockQuoteResponse对象
             current_quote_dict = cached_analysis.get("current_quote")
             current_quote = None
             if current_quote_dict:
-                current_quote = StockQuote(
-                    stock_id=stock.id,
-                    timeframe=current_quote_dict.get("timeframe"),
+                # 从缓存获取前收盘价和涨跌幅
+                prev_close = current_quote_dict.get("prev_close")
+                change_percent = current_quote_dict.get("change_percent")
+
+                current_quote = StockQuoteResponse(
                     date=datetime.strptime(current_quote_dict["date"], "%Y-%m-%d %H:%M:%S"),
+                    timeframe=current_quote_dict.get("timeframe"),
                     open=current_quote_dict.get("open"),
                     high=current_quote_dict.get("high"),
                     low=current_quote_dict.get("low"),
@@ -121,7 +129,9 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                     ma120=current_quote_dict.get("ma120"),
                     ma250=current_quote_dict.get("ma250"),
                     volume_ma5=current_quote_dict.get("volume_ma5"),
-                    obv=current_quote_dict.get("obv")
+                    obv=current_quote_dict.get("obv"),
+                    prev_close=prev_close,
+                    change_percent=change_percent
                 )
 
             return StockAnalysisResponse(
@@ -366,6 +376,14 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             WyckoffSignal.timeframe == body.timeframe
         ).order_by(WyckoffSignal.date.desc()).limit(5).all()
 
+        # 计算涨跌幅
+        latest_quote = quotes[-1] if quotes else None
+        prev_close = quotes[-2].close if len(quotes) > 1 else None
+        change_percent = None
+
+        if latest_quote and prev_close and prev_close > 0 and latest_quote.close:
+            change_percent = ((latest_quote.close - prev_close) / prev_close) * 100
+
         # ========== Redis缓存：缓存分析结果 ==========
         cache_data = {
             "current_quote": {
@@ -387,17 +405,62 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 "ma120": quotes[-1].ma120,
                 "ma250": quotes[-1].ma250,
                 "volume_ma5": quotes[-1].volume_ma5,
-                "obv": quotes[-1].obv
+                "obv": quotes[-1].obv,
+                "prev_close": prev_close,
+                "change_percent": change_percent
             },
             "analysis_summary": analysis_result
         }
-        cache_analysis(body.code, body.timeframe, cache_data)
-        logger.info(f"💾 已缓存分析结果: {body.code} {body.timeframe}")
+        # 只在没有指定end_date时缓存
+        if not body.end_date:
+            cache_analysis(body.code, body.timeframe, cache_data)
+            logger.info(f"💾 已缓存分析结果: {body.code} {body.timeframe}")
+        else:
+            logger.info(f"⏭️ 指定日期分析，不缓存: {body.code} {body.timeframe} 截止 {body.end_date}")
+
+        # 创建包含涨跌幅的响应对象
+        current_quote_with_change = None
+        if latest_quote:
+            current_quote_with_change = StockQuoteResponse(
+                date=latest_quote.date,
+                timeframe=latest_quote.timeframe,
+                open=latest_quote.open,
+                high=latest_quote.high,
+                low=latest_quote.low,
+                close=latest_quote.close,
+                volume=latest_quote.volume,
+                amount=latest_quote.amount,
+                ma5=latest_quote.ma5,
+                ma10=latest_quote.ma10,
+                ma15=latest_quote.ma15,
+                ma20=latest_quote.ma20,
+                ma30=latest_quote.ma30,
+                ma60=latest_quote.ma60,
+                ma90=latest_quote.ma90,
+                ma120=latest_quote.ma120,
+                ma250=latest_quote.ma250,
+                volume_ma5=latest_quote.volume_ma5,
+                obv=latest_quote.obv,
+                prev_close=prev_close,
+                change_percent=change_percent
+            )
 
         # 构建响应
         return StockAnalysisResponse(
             stock=stock,
-            current_quote=quotes[-1] if quotes else None,
+            current_quote=current_quote_with_change,
+            signals=[
+                WyckoffSignalResponse.model_validate(signal)
+                for signal in recent_signals
+            ],
+            analysis_summary=analysis_result,
+            from_cache=False
+        )
+
+        # 构建响应
+        return StockAnalysisResponse(
+            stock=stock,
+            current_quote=current_quote_with_change,
             signals=[
                 WyckoffSignalResponse.model_validate(signal)
                 for signal in recent_signals
@@ -903,3 +966,162 @@ async def get_stock_quotes(
     except Exception as e:
         logger.error(f"获取K线数据失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取失败: {str(e)}")
+
+
+@router.post(
+    "/bulk-quotes",
+    summary="批量获取股票行情（轻量级）",
+    description="""
+批量获取多只股票的行情数据，包含简单的评分计算，适用于关注列表等场景。
+
+## 请求参数
+
+```json
+{
+  "codes": ["688234", "688052"],
+  "timeframe": "daily",
+  "limit": 5
+}
+```
+
+## 参数说明
+
+- **codes**: 股票代码列表（最多50个）
+- **timeframe**: 时间周期（daily/weekly/monthly/5/15/30/60）
+- **limit**: 返回数量（默认5，最大100）
+
+## 返回数据
+
+返回行情数据（OHLCV、均线等）和评分（前端规则：基于MA和成交量）。
+"""
+)
+async def get_bulk_stock_quotes(
+    request: Request,
+    body: dict,
+    db: Session = Depends(get_db)
+):
+    try:
+        codes = body.get("codes", [])
+        timeframe = body.get("timeframe", "daily")
+        limit = min(body.get("limit", 5), 100)  # 最多100条
+
+        if not codes:
+            raise HTTPException(status_code=400, detail="股票代码列表不能为空")
+
+        if len(codes) > 50:
+            raise HTTPException(status_code=400, detail="最多支持50只股票")
+
+        logger.info(f"批量获取行情: {len(codes)}只股票, 周期: {timeframe}, 限制: {limit}")
+
+        storage = DataStorage(db)
+        results = []
+
+        for code in codes:
+            try:
+                # 从数据库获取K线数据
+                quotes = storage.get_quotes(code, timeframe, limit=limit)
+
+                if not quotes or len(quotes) == 0:
+                    results.append({
+                        "code": code,
+                        "quotes": [],
+                        "error": "无数据"
+                    })
+                    continue
+
+                # 使用简化评分规则（基于MA和成交量），不使用WyckoffAnalyzer（太慢）
+                quotes_dict = []
+                for i, q in enumerate(quotes):
+                    # 计算涨跌幅
+                    prev_quote = quotes[i - 1] if i > 0 else None
+                    change_percent = None
+                    if prev_quote and prev_quote.close > 0 and q.close:
+                        change_percent = ((q.close - prev_quote.close) / prev_quote.close) * 100
+
+                    # 简化评分计算（基于MA排列、成交量、价格位置、涨跌幅）
+                    score = 0
+                    # 1. 趋势强度（25%）：基于MA排列
+                    trend_score = 0
+                    if q.ma5 and q.ma10 and q.ma20:
+                        if q.close > q.ma5 > q.ma10 > q.ma20:
+                            trend_score = 1  # 多头排列
+                        elif q.close < q.ma5 < q.ma10 < q.ma20:
+                            trend_score = -1  # 空头排列
+
+                    # 2. 量价协调（25%）：成交量异常
+                    volume_score = 0
+                    if q.volume and q.volume_ma5:
+                        volume_ratio = q.volume / q.volume_ma5
+                        if volume_ratio >= 1.5:
+                            volume_score = 1  # 放量
+                        elif volume_ratio <= 0.7:
+                            volume_score = -1  # 缩量
+
+                    # 3. 价格位置（25%）：相对于MA20
+                    position_score = 0
+                    if q.ma20:
+                        if q.close > q.ma20:
+                            position_score = 1
+                        elif q.close < q.ma20:
+                            position_score = -1
+
+                    # 4. 动量信号（25%）：涨跌幅
+                    momentum_score = 0
+                    if change_percent is not None:
+                        if change_percent > 3:
+                            momentum_score = 1
+                        elif change_percent < -3:
+                            momentum_score = -1
+
+                    # 计算总分（-4到4）
+                    score = trend_score + volume_score + position_score + momentum_score
+
+                    quotes_dict.append({
+                        "date": q.date.strftime("%Y-%m-%d %H:%M:%S"),
+                        "timeframe": timeframe,
+                        "open": q.open,
+                        "high": q.high,
+                        "low": q.low,
+                        "close": q.close,
+                        "volume": q.volume,
+                        "amount": q.amount,
+                        "ma5": q.ma5,
+                        "ma10": q.ma10,
+                        "ma15": q.ma15,
+                        "ma20": q.ma20,
+                        "ma30": q.ma30,
+                        "ma60": q.ma60,
+                        "ma90": q.ma90,
+                        "ma120": q.ma120,
+                        "ma250": q.ma250,
+                        "volume_ma5": q.volume_ma5,
+                        "obv": q.obv,
+                        "prev_close": prev_quote.close if i == len(quotes) - 1 else None,
+                        "change_percent": change_percent if i == len(quotes) - 1 else None,
+                        "score": score  # 简化评分
+                    })
+
+                results.append({
+                    "code": code,
+                    "quotes": quotes_dict
+                })
+
+            except Exception as e:
+                logger.warning(f"获取{code}行情失败: {e}")
+                results.append({
+                    "code": code,
+                    "quotes": [],
+                    "error": str(e)
+                })
+
+        return {
+            "total": len(results),
+            "data": results
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"批量获取行情失败: {e}")
+        raise HTTPException(status_code=500, detail=f"批量获取失败: {str(e)}")
+

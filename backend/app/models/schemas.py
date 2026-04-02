@@ -45,6 +45,8 @@ class StockQuoteResponse(BaseModel):
     ma250: Optional[float]
     volume_ma5: Optional[float]
     obv: Optional[float]
+    prev_close: Optional[float] = None  # 前收盘价
+    change_percent: Optional[float] = None  # 涨跌幅(%)
 
     class Config:
         from_attributes = True
