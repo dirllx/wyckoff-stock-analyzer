@@ -7054,54 +7054,63 @@
 
             let successCount = 0;
             let failCount = 0;
+            const batchSize = 5; // 每批并发5个
 
-            // 串行分析，避免并发过多
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const progress = Math.round(((i + 1) / items.length) * 100);
+            // 分批并发分析，提升性能
+            for (let batchStart = 0; batchStart < items.length; batchStart += batchSize) {
+                const batchEnd = Math.min(batchStart + batchSize, items.length);
+                const batch = items.slice(batchStart, batchEnd);
 
+                // 更新进度
+                const progress = Math.round((batchStart / items.length) * 100);
                 progressBar.style.width = `${progress}%`;
-                progressText.textContent = `正在分析 ${i + 1}/${count}`;
-                progressDetail.textContent = `${item.stock_code} ${item.stock_name || ''}`;
+                progressText.textContent = `正在分析 ${batchStart + 1}-${batchEnd}/${count}`;
+                progressDetail.textContent = `批次 ${Math.floor(batchStart / batchSize) + 1}/${Math.ceil(items.length / batchSize)}`;
 
-                try {
-                    await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
-                    });
-
-                    successCount++;
-                } catch (error) {
-                    console.error(`分析${item.stock_code}失败:`, error);
-                    failCount++;
-                }
-
-                // 每次分析后更新数据
-                if (i === items.length - 1 || (i + 1) % 5 === 0) {
-                    // 每分析5个或最后一个时，重新获取行情
-                    const quotePromises = items.slice(0, i + 1).map(it =>
-                        fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                // 并发分析当前批次
+                const analysisPromises = batch.map(async (item) => {
+                    try {
+                        const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: it.stock_code, timeframe: 'daily' })
-                        }).then(res => res.json())
-                    );
+                            body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                        });
 
-                    const quotes = await Promise.all(quotePromises);
-
-                    quotes.forEach((quote, idx) => {
-                        if (quote.current_quote) {
-                            watchlistData.quoteMap[items[idx].stock_code] = quote.current_quote;
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
                         }
-                        if (quote.analysis_summary) {
-                            watchlistData.quoteMap[items[idx].stock_code + '_summary'] = quote.analysis_summary;
-                        }
-                    });
 
-                    // 更新显示
-                    applySortAndFilter();
-                }
+                        const data = await response.json();
+
+                        // 直接保存分析结果，避免重复查询
+                        if (data.current_quote) {
+                            watchlistData.quoteMap[item.stock_code] = data.current_quote;
+                        }
+                        if (data.analysis_summary) {
+                            watchlistData.quoteMap[item.stock_code + '_summary'] = data.analysis_summary;
+                        }
+
+                        return { code: item.stock_code, success: true, data };
+                    } catch (error) {
+                        console.error(`分析${item.stock_code}失败:`, error);
+                        return { code: item.stock_code, success: false, error };
+                    }
+                });
+
+                // 等待当前批次完成
+                const results = await Promise.all(analysisPromises);
+
+                // 统计结果
+                results.forEach(result => {
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                });
+
+                // 更新显示
+                applySortAndFilter();
             }
 
             // 完成
