@@ -25,6 +25,11 @@ class WatchlistService:
         """
         添加股票到关注列表
 
+        优化逻辑：
+        - 确保股票不会同时存在于自选股和浏览股中
+        - 如果添加到自选股时，股票已在浏览股中，则先从浏览股中删除
+        - 如果添加到浏览股时，股票已在自选股中，则先从自选股中删除
+
         Args:
             code: 股票代码
             priority: 优先级（用于排序）
@@ -37,7 +42,20 @@ class WatchlistService:
             # 获取或创建股票
             stock = self.storage.get_or_create_stock(code)
 
-            # 检查是否已在关注列表（同一类型）
+            # 确定另一种类型
+            other_type = "favorite" if watch_type == "browse" else "browse"
+
+            # 检查是否已在另一种类型中存在，如果存在则先删除
+            existing_other = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_id == stock.id,
+                UserStockWatch.watch_type == other_type
+            ).first()
+
+            if existing_other:
+                logger.info(f"股票{code}已在{other_type}列表中，先删除再添加到{watch_type}")
+                self.db.delete(existing_other)
+
+            # 检查是否已在当前类型中存在
             existing = self.db.query(UserStockWatch).filter(
                 UserStockWatch.stock_id == stock.id,
                 UserStockWatch.watch_type == watch_type
@@ -62,7 +80,7 @@ class WatchlistService:
             self.db.commit()
             self.db.refresh(watchlist_item)
 
-            logger.info(f"股票{code}已添加到关注列表")
+            logger.info(f"股票{code}已添加到{watch_type}列表")
             return watchlist_item
 
         except Exception as e:
@@ -254,15 +272,20 @@ class WatchlistService:
             self.db.rollback()
             return False
 
-    def favorite_stock(self, code: str) -> bool:
+    def favorite_stock(self, code: str) -> dict:
         """
         将浏览股收藏为自选股
+
+        优化逻辑：
+        - 如果股票已在自选股中，删除浏览股记录，返回"already_exists"
+        - 如果股票在浏览股中，转换为自选股，返回"converted"
+        - 如果股票不在浏览股中，返回"not_found"
 
         Args:
             code: 股票代码
 
         Returns:
-            是否收藏成功
+            dict: {"success": bool, "action": str, "message": str}
         """
         try:
             # 查找浏览股记录
@@ -273,7 +296,7 @@ class WatchlistService:
 
             if not browse_item:
                 logger.warning(f"股票{code}不在浏览股列表中")
-                return False
+                return {"success": False, "action": "not_found", "message": "股票不在浏览股中"}
 
             # 检查是否已在自选股中
             existing_favorite = self.db.query(UserStockWatch).filter(
@@ -282,11 +305,15 @@ class WatchlistService:
             ).first()
 
             if existing_favorite:
-                logger.info(f"股票{code}已在自选股列表中")
+                logger.info(f"股票{code}已在自选股列表中，删除浏览股记录")
                 # 删除浏览股记录
                 self.db.delete(browse_item)
                 self.db.commit()
-                return True
+                return {
+                    "success": True,
+                    "action": "already_exists",
+                    "message": f"股票{code}已在自选股中，已清除浏览股中的重复项"
+                }
 
             # 转换为自选股
             browse_item.watch_type = "favorite"
@@ -295,12 +322,16 @@ class WatchlistService:
 
             self.db.commit()
             logger.info(f"股票{code}已收藏到自选股")
-            return True
+            return {
+                "success": True,
+                "action": "converted",
+                "message": f"股票{code}已从浏览股转为自选股"
+            }
 
         except Exception as e:
             logger.error(f"收藏股票失败: {e}")
             self.db.rollback()
-            return False
+            return {"success": False, "action": "error", "message": str(e)}
 
     def unfavorite_stock(self, code: str) -> bool:
         """

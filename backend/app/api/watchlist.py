@@ -336,6 +336,10 @@ def favorite_stock(code: str, db: Session = Depends(get_db)):
     """
     将浏览股收藏为自选股
 
+    优化后返回更详细的消息：
+    - 如果股票已在自选股中，提示已清除浏览股重复项
+    - 如果股票在浏览股中，提示成功转换
+
     Args:
         code: 股票代码
         db: 数据库会话
@@ -345,14 +349,12 @@ def favorite_stock(code: str, db: Session = Depends(get_db)):
     """
     try:
         service = WatchlistService(db)
-        success = service.favorite_stock(code)
+        result = service.favorite_stock(code)
 
-        if success:
-            return MessageResponse(
-                message=f"股票{code}已收藏到自选股"
-            )
+        if result["success"]:
+            return MessageResponse(message=result["message"])
         else:
-            raise HTTPException(status_code=400, detail="收藏失败，股票可能不在浏览股中")
+            raise HTTPException(status_code=400, detail=result.get("message", "收藏失败"))
 
     except HTTPException:
         raise
