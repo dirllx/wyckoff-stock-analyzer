@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20260402-0004">
+    <meta name="version" content="20260402-0005">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -878,7 +878,7 @@
         <!-- 多周期Tab -->
         <div id="tab-multi" class="tab-content">
             <!-- 分析控制区 -->
-            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px 16px 0 16px; border: 1px solid #374151;">
+            <div style="padding: 16px; background: #1f2937; border-radius: 8px; margin: 16px 0 0 0; border: 1px solid #374151;">
                 <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                     <input type="text" class="form-input" id="multiStockCode" value="688234" placeholder="股票代码" style="flex: 1; min-width: 120px;">
 
@@ -2708,7 +2708,7 @@
                     </div>
                     <div style="padding: 16px;">
                         <!-- 三栏布局 -->
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+                        <div style="display: grid; grid-template-columns: 0.95fr 1.2fr 0.95fr; gap: 10px; margin-bottom: 10px;">
                             <!-- 均线分析 -->
                             <div style="background: ${maAdvice.color}20; border: 1px solid ${maAdvice.color}; border-radius: 8px; padding: 12px;">
                                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
@@ -5756,19 +5756,29 @@
                 const batchSize = 10;
                 for (let i = 0; i < data.length; i += batchSize) {
                     const batch = data.slice(i, i + batchSize);
+                    console.log(`[批量处理] 批次 ${Math.floor(i/batchSize)}，股票数量: ${batch.length}`);
 
                     await Promise.all(batch.map(async (item) => {
+                        console.log(`[${item.stock_code}] 开始获取数据，当前offset: ${currentWatchlistQuoteOffset}`);
                         try {
                             // 获取K线数据（当前周期）
-                            // 只需要获取最近10条数据，足够查看前5天历史
+                            // 只需要获取最近10条数据，足够查看前10期历史
                             const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=10`);
 
-                            // 获取分析数据（当前周期）
+                            // 获取分析数据（当前周期）- 不传date参数，保持与原实现一致
                             const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ code: item.stock_code, timeframe })
                             });
+
+                            // 初始化评分数组
+                            if (!watchlistData.scoresByOffset) {
+                                watchlistData.scoresByOffset = {};
+                            }
+                            if (!watchlistData.scoresByOffset[item.stock_code]) {
+                                watchlistData.scoresByOffset[item.stock_code] = [];
+                            }
 
                             // 获取日线分析（用于威科夫阶段统一显示）
                             const dailyAnalyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
@@ -5812,11 +5822,48 @@
                                 }
                             }
 
-                            // 存储当前周期的分析数据
-                            if (analyzeRes.ok) {
-                                const analysisData = await analyzeRes.json();
-                                if (analysisData.analysis_summary) {
-                                    summaryMap[item.stock_code] = analysisData.analysis_summary;
+                            // 存储当前周期的分析数据（带缓存机制）
+                            const currentOffset = currentWatchlistQuoteOffset;
+
+                            // 检查缓存中是否已有该offset的评分
+                            if (watchlistData.scoresByOffset &&
+                                watchlistData.scoresByOffset[item.stock_code] &&
+                                watchlistData.scoresByOffset[item.stock_code][currentOffset] !== undefined) {
+                                // 缓存命中，使用缓存的评分
+                                const cachedScore = watchlistData.scoresByOffset[item.stock_code][currentOffset];
+                                console.log(`[${item.stock_code}] 使用缓存评分: offset=${currentOffset}, score=${cachedScore}`);
+
+                                // 仍然需要获取完整的分析数据用于显示
+                                if (analyzeRes.ok) {
+                                    const analysisData = await analyzeRes.json();
+                                    if (analysisData.analysis_summary) {
+                                        summaryMap[item.stock_code] = analysisData.analysis_summary;
+                                    }
+                                }
+                            } else {
+                                // 缓存未命中，调用API获取评分
+                                console.log(`[${item.stock_code}] 缓存未命中，调用API获取 offset=${currentOffset} 的评分`);
+
+                                if (analyzeRes.ok) {
+                                    const analysisData = await analyzeRes.json();
+                                    if (analysisData.analysis_summary) {
+                                        summaryMap[item.stock_code] = analysisData.analysis_summary;
+
+                                        // 保存评分到缓存
+                                        const currentScore = analysisData.analysis_summary.score || 0;
+                                        if (!watchlistData.scoresByOffset) {
+                                            watchlistData.scoresByOffset = {};
+                                        }
+                                        if (!watchlistData.scoresByOffset[item.stock_code]) {
+                                            watchlistData.scoresByOffset[item.stock_code] = [];
+                                        }
+                                        watchlistData.scoresByOffset[item.stock_code][currentOffset] = currentScore;
+                                        console.log(`[${item.stock_code}] 保存评分到缓存: offset=${currentOffset}, score=${currentScore}`);
+                                    } else {
+                                        console.warn(`[${item.stock_code}] 分析数据中没有analysis_summary`);
+                                    }
+                                } else {
+                                    console.warn(`[${item.stock_code}] 分析API调用失败: ${analyzeRes.status}`);
                                 }
                             }
 
@@ -5851,27 +5898,8 @@
 
                 console.log('[表格渲染] 总数据:', totalQuotes, '当前偏移:', currentOffset, '当前索引:', currentIndex, '可后退:', canGoBack, '可前进:', canGoForward);
 
-                // 渲染控制栏和表格
+                // 渲染表格
                 let html = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoBack ? 'disabled' : ''}
-                                style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                ◀ 前一天
-                            </button>
-                            <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoForward ? 'disabled' : ''}
-                                style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                后一天 ▶
-                            </button>
-                            <button onclick="window.navigateWatchlistPeriod(0)"
-                                style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                ↺ 最新
-                            </button>
-                        </div>
-                        <div style="color: #9ca3af; font-size: 11px;">
-                            当前显示：${currentOffset === 0 ? '最新数据' : `前第 ${currentOffset} 期`}${totalQuotes > 0 ? ` （共 ${totalQuotes} 期）` : ''}
-                        </div>
-                    </div>
                     <div class="table-container" style="overflow-x: auto;">
                         <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: fixed;">
                             <thead>
@@ -5887,7 +5915,7 @@
                                     <th style="width: 60px;">MA15</th>
                                     <th style="width: 55px;">威(短)</th>
                                     <th style="width: 55px;">威(长)</th>
-                                    <th style="width: 35px;">评分</th>
+                                    <th style="width: 39px;">评分</th>
                                     <th style="width: 45px;">操作</th>
                                 </tr>
                             </thead>
@@ -5961,6 +5989,27 @@
                     if (score >= 3) scoreColor = '#10b981';
                     else if (score >= 1) scoreColor = '#f59e0b';
                     else if (score <= -1) scoreColor = '#ef4444';
+
+                    // 计算评分对比显示（总是显示对比格式）
+                    let scoreDisplay = `${score} / --分`;
+
+                    if (watchlistData.scoresByOffset && watchlistData.scoresByOffset[item.stock_code]) {
+                        const scoresArray = watchlistData.scoresByOffset[item.stock_code];
+                        const currentOffset = currentWatchlistQuoteOffset;
+
+                        console.log(`[${item.stock_code}] 当前offset: ${currentOffset}, 评分数组:`, scoresArray, `当前评分: ${score}`);
+
+                        // 尝试获取前一期评分
+                        if (currentOffset > 0 && scoresArray[currentOffset - 1] !== undefined && scoresArray[currentOffset - 1] !== null) {
+                            const prevScore = scoresArray[currentOffset - 1];
+                            const scoreChange = score - prevScore;
+                            const sign = scoreChange >= 0 ? '+' : '';
+                            scoreDisplay = `${score} / ${sign}${scoreChange}分`;
+                            console.log(`[${item.stock_code}] 前一期评分: ${prevScore}, 变化: ${scoreChange}, 显示: ${scoreDisplay}`);
+                        } else {
+                            console.log(`[${item.stock_code}] 没有前一期数据，当前offset: ${currentOffset}`);
+                        }
+                    }
 
                     // 生成威科夫阶段tooltip说明
                     let shortTermTooltip = '';
@@ -6091,7 +6140,7 @@
                             <td style="text-align: center;">
                                 <span style="color: ${longTermColor}; cursor: help;" data-tooltip="${longTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${longTermDisplay}</span>
                             </td>
-                            <td style="color: ${scoreColor}; font-weight: 600; text-align: center; cursor: help;" data-tooltip="${scoreTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${score}</td>
+                            <td style="color: ${scoreColor}; font-weight: 600; text-align: center; cursor: help;" data-tooltip="${scoreTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${scoreDisplay}</td>
                             <td style="text-align: center;">
                                 <button onclick="event.stopPropagation(); analyzeFromWatchlist('${item.stock_code}', '${item.stock_name || ''}')"
                                     style="padding: 3px 8px; background: #3b82f6; border: none; color: white; border-radius: 3px; cursor: pointer;"
@@ -6106,6 +6155,26 @@
                 html += `
                             </tbody>
                         </table>
+                    </div>
+                    <!-- 控制栏：放在表格下方 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoBack ? 'disabled' : ''}
+                                style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                ◀ 前期
+                            </button>
+                            <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoForward ? 'disabled' : ''}
+                                style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                后期 ▶
+                            </button>
+                            <button onclick="window.navigateWatchlistPeriod(0)"
+                                style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                ↺ 最新
+                            </button>
+                        </div>
+                        <div style="color: #9ca3af; font-size: 11px;">
+                            ${currentOffset === 0 ? '显示：最新' : `显示：前第 ${currentOffset} 期`}（共10期）
+                        </div>
                     </div>
                 `;
 
@@ -6137,10 +6206,10 @@
                 if (currentWatchlistQuoteOffset < 0) {
                     currentWatchlistQuoteOffset = 0; // 不允许负偏移
                 }
-                // 限制最多查看前5天历史
-                if (currentWatchlistQuoteOffset > 5) {
-                    currentWatchlistQuoteOffset = 5;
-                    addLog('提示', '最多只能查看前5天历史数据');
+                // 限制最多查看前10天历史
+                if (currentWatchlistQuoteOffset > 10) {
+                    currentWatchlistQuoteOffset = 10;
+                    addLog('提示', '最多只能查看前10天历史数据');
                 }
 
                 const periodText = direction > 0 ? '查看历史' : '返回最新';
