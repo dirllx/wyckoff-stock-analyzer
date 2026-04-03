@@ -1022,9 +1022,42 @@ async def get_bulk_stock_quotes(
         storage = DataStorage(db)
         results = []
 
+        # ✅ 分钟线数据实时更新：并发控制，避免过多并发请求
+        # 对于30分钟线等分钟线，每次刷新都获取最新数据
+        if timeframe in ['1', '5', '15', '30', '60']:
+            logger.info(f"⚡ 批量更新分钟线数据: {len(codes)}只股票, 周期: {timeframe}")
+
+            # 限制并发更新数量（一次最多5只），避免数据源压力过大
+            from concurrent.futures import ThreadPoolExecutor
+            import threading
+
+            update_lock = threading.Lock()
+            updated_count = 0
+            failed_count = 0
+
+            def update_single_stock(code):
+                nonlocal updated_count, failed_count
+                try:
+                    success = storage.update_stock_quotes(code, timeframe)
+                    with update_lock:
+                        if success:
+                            updated_count += 1
+                        else:
+                            failed_count += 1
+                except Exception as e:
+                    logger.warning(f"⚠️ {code} {timeframe}分钟线更新异常: {e}")
+                    with update_lock:
+                        failed_count += 1
+
+            # 使用线程池并发更新，但限制并发数为5
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                executor.map(update_single_stock, codes)
+
+            logger.info(f"✅ 批量更新完成: 成功{updated_count}只, 失败{failed_count}只")
+
         for code in codes:
             try:
-                # 从数据库获取K线数据
+                # 从数据库获取K线数据（分钟线已在上面批量更新过）
                 quotes = storage.get_quotes(code, timeframe, limit=limit)
 
                 if not quotes or len(quotes) == 0:
@@ -1034,6 +1067,21 @@ async def get_bulk_stock_quotes(
                         "error": "无数据"
                     })
                     continue
+
+                # ✅ 分钟线数据特殊处理：只返回今天的数据
+                # 对于分钟线（1/5/15/30/60），过滤掉昨天的数据，只保留今天的
+                if timeframe in ['1', '5', '15', '30', '60']:
+                    from datetime import datetime
+                    today = datetime.now().date()
+                    # 过滤出今天的数据
+                    today_quotes = [q for q in quotes if q.date.date() == today]
+                    if today_quotes:
+                        quotes = today_quotes  # 只使用今天的数据
+                        logger.info(f"✅ {code} {timeframe}分钟线：过滤出今天{len(quotes)}条数据")
+                    else:
+                        # 如果今天没有数据，使用最新的10条数据
+                        quotes = quotes[-10:] if len(quotes) > 10 else quotes
+                        logger.warning(f"⚠️ {code} {timeframe}分钟线：今天无数据，使用最新{len(quotes)}条")
 
                 # 使用简化评分规则（基于MA和成交量），不使用WyckoffAnalyzer（太慢）
                 quotes_dict = []
