@@ -13,23 +13,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'chart': ['./src/components/Chart/index.js'],
-          'table': ['./src/components/Table/index.js'],
-          'watchlist': ['./src/components/Watchlist/index.js']
-        }
-      }
-    }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html']
-    }
+    sourcemap: true
+    // Note: manualChunks will be added in later tasks when components exist
   }
 });
