@@ -2761,7 +2761,7 @@
 
                 if (!mainContainer || !volumeContainer) {
                     addLog('图表渲染', false, '图表容器未找到');
-                    alert('请先点击"分析"按钮获取数据');
+                    WyckoffUtils.ErrorHandler.showToast('请先点击"分析"按钮获取数据', 'warning');
                     return;
                 }
 
@@ -4218,7 +4218,8 @@
                 const resultDiv = document.getElementById('analyzeResult');
 
                 if (!code) {
-                    alert('请输入股票代码');
+                    // ✅ 替换alert为Toast提示
+                    WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
                     addLog('错误', '股票代码为空');
                     return;
                 }
@@ -4724,7 +4725,7 @@
         async function analyzeMultiTimeframe() {
             const code = document.getElementById('multiStockCode').value;
             if (!code) {
-                alert('请输入股票代码');
+                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
                 addLog('错误', '股票代码为空');
                 return;
             }
@@ -4734,7 +4735,7 @@
             const timeframes = Array.from(checkboxes).map(cb => cb.value);
 
             if (timeframes.length === 0) {
-                alert('请至少选择一个周期');
+                WyckoffUtils.ErrorHandler.showToast('请至少选择一个周期', 'warning');
                 return;
             }
 
@@ -6108,7 +6109,7 @@
 
             } catch (error) {
                 console.error('获取关注列表失败:', error);
-                alert('获取关注列表失败，请重试');
+                WyckoffUtils.ErrorHandler.showToast('获取关注列表失败，请重试', 'error');
             }
         }
 
@@ -8896,7 +8897,7 @@
         async function getRealtimeQuote() {
             const code = document.getElementById('realtimeCode').value;
             if (!code) {
-                alert('请输入股票代码');
+                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
                 addLog('错误', '股票代码为空');
                 return;
             }
@@ -8973,7 +8974,7 @@
             const timeframe = document.getElementById('patternTimeframe').value;
 
             if (!code) {
-                alert('请输入股票代码');
+                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
                 addLog('错误', '股票代码为空');
                 return;
             }

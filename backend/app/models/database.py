@@ -53,6 +53,7 @@ class StockQuote(Base):
     ma90 = Column(Float, comment="90日均线")
     ma120 = Column(Float, comment="120日均线")
     ma250 = Column(Float, comment="250日均线")
+    duokong_line = Column(Float, comment="多空线")
     volume_ma5 = Column(Float, comment="5日成交量均线")
     obv = Column(Float, comment="能量潮")
 
@@ -61,8 +62,14 @@ class StockQuote(Base):
     # 关联和索引
     stock = relationship("Stock", back_populates="quotes")
 
+    # ✅ 优化：添加复合索引以提升查询性能
     __table_args__ = (
-        Index('idx_stock_date', 'stock_id', 'date', 'timeframe'),
+        # 主查询索引：stock_id + timeframe + date（最常用）
+        Index('idx_stock_timeframe_date', 'stock_id', 'timeframe', 'date'),
+        # 日期查询索引：stock_id + date
+        Index('idx_stock_date', 'stock_id', 'date'),
+        # 周期查询索引：timeframe + date
+        Index('idx_timeframe_date', 'timeframe', 'date'),
     )
 
 
