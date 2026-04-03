@@ -6199,6 +6199,10 @@
         }
 
         async function refreshWatchlist() {
+            // ✅ 性能监控：开始计时
+            const perfId = WyckoffUtils.PerformanceMonitor;
+            perfId.start('关注列表刷新');
+
             // 防抖：如果已有刷新计划，先取消
             if (refreshTimeout) {
                 clearTimeout(refreshTimeout);
@@ -6466,6 +6470,11 @@
             } finally {
                 // 释放刷新标志
                 isRefreshing = false;
+
+                // ✅ 性能监控：结束计时并输出
+                if (typeof WyckoffUtils !== 'undefined' && WyckoffUtils.PerformanceMonitor) {
+                    WyckoffUtils.PerformanceMonitor.end('关注列表刷新');
+                }
             }
         }
 
