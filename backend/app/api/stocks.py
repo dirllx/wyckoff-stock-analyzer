@@ -211,7 +211,8 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                     logger.info(f"✅ 调度器成功获取 {len(quotes_dict)} 条数据，保存到数据库 {saved_count} 条")
 
                 # 从数据库获取带MA值的K线数据（而不是从原始字典创建）
-                quotes = storage.get_quotes(body.code, body.timeframe, limit=500)
+                # 日线默认300笔，其他周期500笔（由data_storage.py根据timeframe自动判断）
+                quotes = storage.get_quotes(body.code, body.timeframe)
 
             except Exception as e:
                 logger.warning(f"⚠️ 调度器获取失败，降级到传统方式: {e}")
@@ -225,7 +226,8 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 update_success = storage.update_stock_quotes(body.code, body.timeframe)
 
                 # 获取K线数据（更新后获取）
-                quotes = storage.get_quotes(body.code, body.timeframe, limit=500)
+                # 日线默认300笔，其他周期500笔（由data_storage.py根据timeframe自动判断）
+                quotes = storage.get_quotes(body.code, body.timeframe)
 
             # 如果指定了end_date，过滤到该日期
             if body.end_date and quotes:
@@ -277,7 +279,8 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 else:
                     # 没有均线数据，从数据库重新获取完整数据并缓存
                     logger.info(f"⚠️ 当前数据无均线，从数据库重新获取完整数据: {body.code} {body.timeframe}")
-                    full_quotes = storage.get_quotes(body.code, body.timeframe, limit=500)
+                    # 日线默认300笔，其他周期500笔（由data_storage.py根据timeframe自动判断）
+                    full_quotes = storage.get_quotes(body.code, body.timeframe)
                     if full_quotes and full_quotes[0].ma5 is not None:
                         quotes_dict = [
                             {
@@ -640,10 +643,19 @@ async def update_stock_data(
 async def get_stock_quotes(
     code: str,
     timeframe: str = "daily",
-    limit: int = 500,
+    limit: int = None,
     db: Session = Depends(get_db)
 ):
+    """
+    获取股票K线数据
+
+    默认返回数量：日线300笔，其他周期500笔
+    """
     try:
+        # 根据时间周期设置默认limit
+        if limit is None:
+            limit = 300 if timeframe == "daily" else 500
+
         storage = DataStorage(db)
 
         # 先创建股票（如果不存在）
@@ -722,7 +734,8 @@ async def get_stock_quotes(
             # 缓存时，使用完整的数据库数据（不受请求limit影响）
             # 防止小limit请求导致缓存不完整
             try:
-                full_quotes = storage.get_quotes(code, timeframe, limit=500)
+                # 日线默认300笔，其他周期500笔（由data_storage.py根据timeframe自动判断）
+                full_quotes = storage.get_quotes(code, timeframe)
                 if full_quotes and len(full_quotes) > len(quotes):
                     logger.info(f"📦 缓存完整数据: {code} {timeframe} ({len(full_quotes)}条，而非请求的{len(quotes)}条)")
                     full_quotes_dict = [
@@ -898,7 +911,8 @@ async def get_stock_quotes(
             update_success = storage.update_stock_quotes(code, timeframe)
 
             # 获取完整数据（用于缓存），不受请求limit影响
-            full_quotes = storage.get_quotes(code, timeframe, limit=500)
+            # 日线默认300笔，其他周期500笔（由data_storage.py根据timeframe自动判断）
+            full_quotes = storage.get_quotes(code, timeframe)
 
             if not full_quotes:
                 raise HTTPException(

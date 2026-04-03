@@ -251,7 +251,7 @@ class DataStorage:
         self,
         code: str,
         timeframe: str = "daily",
-        limit: int = 500
+        limit: int = None
     ) -> List[StockQuote]:
         """
         获取K线数据
@@ -259,11 +259,15 @@ class DataStorage:
         Args:
             code: 股票代码
             timeframe: 时间周期
-            limit: 返回数量限制
+            limit: 返回数量限制（默认：日线300，其他500）
 
         Returns:
             StockQuote列表
         """
+        # 根据时间周期设置默认limit
+        if limit is None:
+            limit = 300 if timeframe == "daily" else 500
+
         # 使用Repository查找股票
         stock = self.repo.find_by_code(code)
 
@@ -280,7 +284,7 @@ class DataStorage:
         self,
         stock_id: int,
         timeframe: str = "daily",
-        limit: int = 500
+        limit: int = None
     ) -> List[StockQuote]:
         """
         根据股票ID和周期获取K线数据
@@ -288,11 +292,15 @@ class DataStorage:
         Args:
             stock_id: 股票ID
             timeframe: 时间周期
-            limit: 返回数量限制
+            limit: 返回数量限制（默认：日线300，其他500）
 
         Returns:
             StockQuote列表
         """
+        # 根据时间周期设置默认limit
+        if limit is None:
+            limit = 300 if timeframe == "daily" else 500
+
         # 使用Repository获取K线
         quotes = self.repo.get_quotes(stock_id, timeframe, limit)
 

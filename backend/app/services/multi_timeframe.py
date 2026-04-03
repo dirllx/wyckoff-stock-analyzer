@@ -98,11 +98,10 @@ class MultiTimeframeService:
 
                 except Exception as e:
                     logger.warning(f"调度器获取失败，降级到数据库: {e}")
-                    # 降级到数据库获取（使用500条，与其他部分保持一致）
+                    # 降级到数据库获取（日线300条，其他周期500条）
                     quotes = self.storage.get_quotes_by_timeframe(
                         stock_id=stock.id,
-                        timeframe=timeframe,
-                        limit=500
+                        timeframe=timeframe
                     )
 
                 # 转换为字典格式（与Redis存储格式一致）
