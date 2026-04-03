@@ -1329,6 +1329,382 @@
 
     <script src="user_settings.js"></script>
     <script>
+        // ============================================================
+        // 🔧 工具函数库 - 前端优化版本
+        // ============================================================
+
+        const WyckoffUtils = {
+            /**
+             * 版本信息
+             */
+            VERSION: '2026-04-03-v3',
+
+            /**
+             * 防抖函数 - 延迟执行，避免频繁触发
+             * @param {Function} fn - 要执行的函数
+             * @param {number} delay - 延迟时间（毫秒）
+             * @returns {Function} - 防抖后的函数
+             */
+            debounce(fn, delay = 300) {
+                let timeoutId = null;
+                return function(...args) {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+                };
+            },
+
+            /**
+             * 节流函数 - 限制执行频率
+             * @param {Function} fn - 要执行的函数
+             * @param {number} interval - 执行间隔（毫秒）
+             * @returns {Function} - 节流后的函数
+             */
+            throttle(fn, interval = 300) {
+                let lastTime = 0;
+                return function(...args) {
+                    const now = Date.now();
+                    if (now - lastTime >= interval) {
+                        lastTime = now;
+                        return fn.apply(this, args);
+                    }
+                };
+            },
+
+            /**
+             * 错误处理器 - 统一的错误处理
+             */
+            ErrorHandler: {
+                /**
+                 * 处理错误
+                 * @param {Error} error - 错误对象
+                 * @param {string} context - 错误上下文
+                 * @param {boolean} showAlert - 是否显示提示
+                 */
+                handle(error, context = '操作', showAlert = true) {
+                    console.error(`[${context}] 失败:`, error);
+
+                    // 记录到日志
+                    if (window.addLog) {
+                        addLog(context, `失败: ${error.message}`);
+                    }
+
+                    // 显示用户友好的错误提示
+                    if (showAlert) {
+                        let message = `${context}失败`;
+
+                        if (error.name === 'AbortError') {
+                            message = `${context}超时，请检查网络连接`;
+                        } else if (error.message.includes('HTTP 4')) {
+                            message = `${context}请求错误，请检查输入`;
+                        } else if (error.message.includes('Failed to fetch')) {
+                            message = `${context}网络错误，请检查后端服务`;
+                        } else if (error.message) {
+                            message = `${context}: ${error.message}`;
+                        }
+
+                        this.showToast(message, 'error');
+                    }
+                },
+
+                /**
+                 * 显示Toast提示
+                 * @param {string} message - 消息内容
+                 * @param {string} type - 消息类型 (success/error/warning/info)
+                 * @param {number} duration - 显示时长（毫秒）
+                 */
+                showToast(message, type = 'info', duration = 3000) {
+                    // 创建Toast元素
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${type}`;
+                    toast.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 12px 20px;
+                        background: ${this._getToastColor(type)};
+                        color: white;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        z-index: 10000;
+                        opacity: 0;
+                        transform: translateX(100%);
+                        transition: all 0.3s ease;
+                        font-size: 14px;
+                        max-width: 300px;
+                    `;
+                    toast.textContent = message;
+                    document.body.appendChild(toast);
+
+                    // 显示动画
+                    requestAnimationFrame(() => {
+                        toast.style.opacity = '1';
+                        toast.style.transform = 'translateX(0)';
+                    });
+
+                    // 自动隐藏
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateX(100%)';
+                        setTimeout(() => toast.remove(), 300);
+                    }, duration);
+                },
+
+                _getToastColor(type) {
+                    const colors = {
+                        success: '#10b981',
+                        error: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#3b82f6'
+                    };
+                    return colors[type] || colors.info;
+                }
+            },
+
+            /**
+             * 加载状态管理器
+             */
+            LoadingManager: {
+                _isLoading: false,
+                _controller: null,
+                _loadingElement: null,
+
+                /**
+                 * 开始加载
+                 * @param {string} operationName - 操作名称
+                 * @param {Function} asyncFn - 异步函数
+                 * @returns {Promise} - 操作结果
+                 */
+                async start(operationName, asyncFn) {
+                    if (this._isLoading) {
+                        console.warn(`操作进行中，请等待: ${operationName}`);
+                        return null;
+                    }
+
+                    this._isLoading = true;
+                    this._controller = new AbortController();
+
+                    this.showLoading(operationName);
+
+                    try {
+                        const result = await asyncFn(this._controller.signal);
+                        return result;
+                    } finally {
+                        this._isLoading = false;
+                        this._controller = null;
+                        this.hideLoading();
+                    }
+                },
+
+                /**
+                 * 取消当前操作
+                 */
+                cancel() {
+                    if (this._controller) {
+                        this._controller.abort();
+                    }
+                },
+
+                showLoading(message) {
+                    // 如果已有loading元素，先移除
+                    this.hideLoading();
+
+                    this._loadingElement = document.createElement('div');
+                    this._loadingElement.id = 'globalLoading';
+                    this._loadingElement.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                    `;
+                    this._loadingElement.innerHTML = `
+                        <div style="background: #1f2937; padding: 30px; border-radius: 12px; text-align: center;">
+                            <div class="loading" style="margin: 0 auto 20px;">
+                                <div class="loading-dot"></div>
+                                <div class="loading-dot"></div>
+                                <div class="loading-dot"></div>
+                            </div>
+                            <div style="color: #10b981; font-size: 16px; font-weight: 600;">${message}</div>
+                        </div>
+                    `;
+                    document.body.appendChild(this._loadingElement);
+                },
+
+                hideLoading() {
+                    if (this._loadingElement) {
+                        this._loadingElement.remove();
+                        this._loadingElement = null;
+                    }
+                }
+            },
+
+            /**
+             * 数据验证器
+             */
+            DataValidator: {
+                /**
+                 * 验证股票代码
+                 * @param {string} code - 股票代码
+                 * @returns {boolean} - 是否有效
+                 */
+                validateStockCode(code) {
+                    return /^\d{6}$/.test(code);
+                },
+
+                /**
+                 * 验证K线数据
+                 * @param {Object} quote - K线数据
+                 * @returns {boolean} - 是否有效
+                 */
+                validateQuote(quote) {
+                    const required = ['date', 'open', 'high', 'low', 'close', 'volume'];
+                    const missing = required.filter(field => !(field in quote));
+
+                    if (missing.length > 0) {
+                        throw new Error(`数据不完整，缺少字段: ${missing.join(', ')}`);
+                    }
+
+                    if (quote.open < 0 || quote.close < 0 || quote.high < 0 || quote.low < 0) {
+                        throw new Error('价格数据无效：不能为负数');
+                    }
+
+                    if (quote.high < quote.low) {
+                        throw new Error('价格数据异常：最高价不能低于最低价');
+                    }
+
+                    return true;
+                },
+
+                /**
+                 * 验证K线数组
+                 * @param {Array} quotes - K线数组
+                 * @returns {boolean} - 是否有效
+                 */
+                validateQuotes(quotes) {
+                    if (!Array.isArray(quotes)) {
+                        throw new Error('数据格式错误：应为数组');
+                    }
+
+                    if (quotes.length === 0) {
+                        throw new Error('数据为空');
+                    }
+
+                    return quotes.every(quote => this.validateQuote(quote));
+                }
+            },
+
+            /**
+             * DOM操作优化工具
+             */
+            DOMUtils: {
+                /**
+                 * 批量更新DOM - 减少重排
+                 * @param {Function} updateFn - 更新函数
+                 */
+                batchUpdate(updateFn) {
+                    // 使用DocumentFragment减少重排
+                    const fragment = document.createDocumentFragment();
+                    const originalAppendChild = Element.prototype.appendChild;
+
+                    try {
+                        // 临时重写appendChild
+                        Element.prototype.appendChild = function(child) {
+                            fragment.appendChild(child);
+                            return child;
+                        };
+
+                        updateFn();
+                    } finally {
+                        // 恢复原方法
+                        Element.prototype.appendChild = originalAppendChild;
+                    }
+                },
+
+                /**
+                 * 安全地设置HTML内容（防止XSS）
+                 * @param {HTMLElement} element - 目标元素
+                 * @param {string} html - HTML内容
+                 */
+                setSafeHTML(element, html) {
+                    // 简单的XSS防护：转义HTML特殊字符
+                    const div = document.createElement('div');
+                    div.textContent = html;
+                    element.innerHTML = div.innerHTML;
+                }
+            },
+
+            /**
+             * 性能监控工具
+             */
+            PerformanceMonitor: {
+                _marks: {},
+
+                /**
+                 * 开始性能标记
+                 * @param {string} name - 标记名称
+                 */
+                start(name) {
+                    this._marks[name] = performance.now();
+                },
+
+                /**
+                 * 结束性能标记并输出
+                 * @param {string} name - 标记名称
+                 */
+                end(name) {
+                    if (this._marks[name]) {
+                        const duration = performance.now() - this._marks[name];
+                        console.log(`[性能] ${name}: ${duration.toFixed(2)}ms`);
+                        delete this._marks[name];
+                        return duration;
+                    }
+                },
+
+                /**
+                 * 测量异步函数性能
+                 * @param {string} name - 名称
+                 * @param {Function} fn - 异步函数
+                 * @returns {Promise} - 函数结果
+                 */
+                async measure(name, fn) {
+                    this.start(name);
+                    try {
+                        const result = await fn();
+                        this.end(name);
+                        return result;
+                    } catch (error) {
+                        this.end(name);
+                        throw error;
+                    }
+                }
+            }
+        };
+
+        // ============================================================
+        // 全局错误处理
+        // ============================================================
+
+        // 捕获未处理的错误
+        window.addEventListener('error', (event) => {
+            console.error('全局错误:', event.error);
+            WyckoffUtils.ErrorHandler.handle(event.error, '系统', false);
+        });
+
+        // 捕获未处理的Promise拒绝
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('未处理的Promise拒绝:', event.reason);
+            WyckoffUtils.ErrorHandler.handle(event.reason, '异步操作', false);
+        });
+
+        // ============================================================
+        // 动态检测 API 地址
+        // ============================================================
+
         // 动态检测 API 地址：根据当前访问地址自动构建后端 API 地址
         // 如果通过 100.96.99.33:3000 访问，则 API_BASE = 100.96.99.33:8000
         // 如果通过 192.168.1.80:3000 访问，则 API_BASE = 192.168.1.80:8000
@@ -1340,6 +1716,7 @@
         console.log(`当前访问地址: ${window.location.href}`);
         console.log(`检测到主机名: ${currentHost}`);
         console.log(`自动配置 API_BASE: ${API_BASE}`);
+        console.log(`📦 前端工具库版本: ${WyckoffUtils.VERSION}`);
         console.log('='.repeat(60));
 
         // ========== 通用API请求函数（带自动重试和超时）==========
@@ -1544,13 +1921,36 @@
         const NetworkMonitor = {
             isOnline: navigator.onLine,
             listeners: [],
+            _handlers: null,  // 保存事件处理器引用，用于清理
 
             init() {
-                window.addEventListener('online', () => this.handleStatusChange(true));
-                window.addEventListener('offline', () => this.handleStatusChange(false));
+                // ✅ 修复：保存处理器引用以便后续清理
+                this._handlers = {
+                    online: () => this.handleStatusChange(true),
+                    offline: () => this.handleStatusChange(false)
+                };
+
+                window.addEventListener('online', this._handlers.online);
+                window.addEventListener('offline', this._handlers.offline);
 
                 // 初始状态提示
                 this.showStatusIndicator();
+            },
+
+            /**
+             * 清理事件监听器（防止内存泄漏）
+             */
+            destroy() {
+                if (this._handlers) {
+                    window.removeEventListener('online', this._handlers.online);
+                    window.removeEventListener('offline', this._handlers.offline);
+                    this._handlers = null;
+                }
+                this.listeners = [];
+
+                // 移除状态指示器
+                const existing = document.getElementById('network-status-indicator');
+                if (existing) existing.remove();
             },
 
             handleStatusChange(isOnline) {
