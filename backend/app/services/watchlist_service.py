@@ -26,9 +26,9 @@ class WatchlistService:
         添加股票到关注列表
 
         优化逻辑：
-        - 确保股票不会同时存在于自选股和浏览股中
-        - 如果添加到自选股时，股票已在浏览股中，则先从浏览股中删除
-        - 如果添加到浏览股时，股票已在自选股中，则先从自选股中删除
+        - 如果股票已在任何列表中（自选股或浏览股），保持原状态，不修改
+        - 只有当股票不在任何列表中时，才添加到指定类型
+        - 这样可以避免用户查询股票时改变已有的关注状态
 
         Args:
             code: 股票代码
@@ -42,33 +42,20 @@ class WatchlistService:
             # 获取或创建股票
             stock = self.storage.get_or_create_stock(code)
 
-            # 确定另一种类型
-            other_type = "favorite" if watch_type == "browse" else "browse"
-
-            # 检查是否已在另一种类型中存在，如果存在则先删除
-            existing_other = self.db.query(UserStockWatch).filter(
-                UserStockWatch.stock_id == stock.id,
-                UserStockWatch.watch_type == other_type
+            # 检查股票是否已在任何列表中（自选股或浏览股）
+            existing_any = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_id == stock.id
             ).first()
 
-            if existing_other:
-                logger.info(f"股票{code}已在{other_type}列表中，先删除再添加到{watch_type}")
-                self.db.delete(existing_other)
-
-            # 检查是否已在当前类型中存在
-            existing = self.db.query(UserStockWatch).filter(
-                UserStockWatch.stock_id == stock.id,
-                UserStockWatch.watch_type == watch_type
-            ).first()
-
-            if existing:
-                logger.info(f"股票{code}已在{watch_type}列表中")
-                existing.updated_at = datetime.now()
+            if existing_any:
+                # 股票已在列表中，保持原状态，只更新时间戳
+                logger.info(f"股票{code}已在{existing_any.watch_type}列表中，保持原状态")
+                existing_any.updated_at = datetime.now()
                 self.db.commit()
-                self.db.refresh(existing)
-                return existing
+                self.db.refresh(existing_any)
+                return existing_any
 
-            # 添加到关注列表
+            # 股票不在任何列表中，添加到指定类型
             watchlist_item = UserStockWatch(
                 stock_id=stock.id,
                 stock_code=stock.code,
