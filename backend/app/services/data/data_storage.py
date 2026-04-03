@@ -69,18 +69,24 @@ class DataStorage:
             # 获取股票
             stock = self.get_or_create_stock(code)
 
-            # 保存每条K线（先保存价格、成交量等基础数据）
-            saved_count = 0
-            for _, row in quotes_df.iterrows():
-                # 检查是否已存在
-                existing = self.db.query(StockQuote).filter(
+            # ✅ 优化：批量查询已存在的记录，避免N+1查询问题
+            existing_dates = {
+                q.date: q
+                for q in self.db.query(StockQuote).filter(
                     StockQuote.stock_id == stock.id,
-                    StockQuote.date == row["date"],
-                    StockQuote.timeframe == timeframe
-                ).first()
+                    StockQuote.timeframe == timeframe,
+                    StockQuote.date.in_(quotes_df["date"].tolist())
+                ).all()
+            }
 
-                if existing:
-                    # 更新现有记录
+            # 批量创建/更新
+            quotes_to_add = []
+            saved_count = 0
+
+            for _, row in quotes_df.iterrows():
+                if row["date"] in existing_dates:
+                    # 更新现有记录（收集对象，稍后批量提交）
+                    existing = existing_dates[row["date"]]
                     existing.open = row.get("open")
                     existing.high = row.get("high")
                     existing.low = row.get("low")
@@ -88,7 +94,7 @@ class DataStorage:
                     existing.volume = row.get("volume")
                     existing.amount = row.get("amount")
                 else:
-                    # 创建新记录
+                    # 收集需要添加的新记录
                     quote = StockQuote(
                         stock_id=stock.id,
                         date=row["date"],
@@ -100,8 +106,12 @@ class DataStorage:
                         volume=row.get("volume"),
                         amount=row.get("amount")
                     )
-                    self.db.add(quote)
+                    quotes_to_add.append(quote)
                     saved_count += 1
+
+            # 批量添加新记录
+            if quotes_to_add:
+                self.db.bulk_save_objects(quotes_to_add)
 
             self.db.commit()
 
@@ -137,9 +147,9 @@ class DataStorage:
             ).order_by(StockQuote.date.asc()).all()
 
             # 转换为DataFrame
-            data = []
-            for q in all_quotes:
-                data.append({
+            # ✅ 优化：直接从ORM对象创建DataFrame
+            df = pd.DataFrame([
+                {
                     "date": q.date,
                     "open": q.open,
                     "high": q.high,
@@ -147,26 +157,15 @@ class DataStorage:
                     "close": q.close,
                     "volume": q.volume,
                     "amount": q.amount
-                })
-            df = pd.DataFrame(data)
+                }
+                for q in all_quotes
+            ])
 
             # 按时间顺序计算所有技术指标（基于最终保留的500条数据）
             df = self._calculate_indicators(df)
 
-            # 更新所有记录的均线值
-            for i, q in enumerate(all_quotes):
-                q.ma5 = df.iloc[i]["ma5"]
-                q.ma10 = df.iloc[i]["ma10"]
-                q.ma15 = df.iloc[i]["ma15"]
-                q.ma20 = df.iloc[i]["ma20"]
-                q.ma30 = df.iloc[i]["ma30"]
-                q.ma60 = df.iloc[i]["ma60"]
-                q.ma90 = df.iloc[i]["ma90"]
-                q.ma120 = df.iloc[i]["ma120"]
-                q.ma250 = df.iloc[i]["ma250"]
-                q.duokong_line = df.iloc[i]["duokong_line"]
-                q.volume_ma5 = df.iloc[i]["volume_ma5"]
-                q.obv = df.iloc[i]["obv"]
+            # ✅ 优化：使用提取的方法批量更新指标
+            self._update_quote_indicators(all_quotes, df)
 
             self.db.commit()
 
@@ -225,6 +224,28 @@ class DataStorage:
         df["obv"] = obv
 
         return df
+
+    def _update_quote_indicators(self, quotes: List[StockQuote], df: pd.DataFrame) -> None:
+        """
+        批量更新K线的技术指标（提取的公共方法，避免重复代码）
+
+        Args:
+            quotes: StockQuote对象列表
+            df: 包含技术指标的DataFrame
+        """
+        for i, q in enumerate(quotes):
+            q.ma5 = df.iloc[i]["ma5"]
+            q.ma10 = df.iloc[i]["ma10"]
+            q.ma15 = df.iloc[i]["ma15"]
+            q.ma20 = df.iloc[i]["ma20"]
+            q.ma30 = df.iloc[i]["ma30"]
+            q.ma60 = df.iloc[i]["ma60"]
+            q.ma90 = df.iloc[i]["ma90"]
+            q.ma120 = df.iloc[i]["ma120"]
+            q.ma250 = df.iloc[i]["ma250"]
+            q.duokong_line = df.iloc[i]["duokong_line"]
+            q.volume_ma5 = df.iloc[i]["volume_ma5"]
+            q.obv = df.iloc[i]["obv"]
 
     def get_quotes(
         self,
@@ -347,34 +368,22 @@ class DataStorage:
                 ).order_by(StockQuote.date.asc()).all()
 
                 if all_quotes:
-                    # 转换为DataFrame计算指标
-                    data = []
-                    for q in all_quotes:
-                        data.append({
+                    # ✅ 优化：直接从ORM对象创建DataFrame，避免中间列表
+                    df = pd.DataFrame([
+                        {
                             "date": q.date,
                             "open": q.open,
                             "high": q.high,
                             "low": q.low,
                             "close": q.close,
                             "volume": q.volume
-                        })
-                    df = pd.DataFrame(data)
+                        }
+                        for q in all_quotes
+                    ])
                     df = self._calculate_indicators(df)
 
-                    # 更新均线值
-                    for i, q in enumerate(all_quotes):
-                        q.ma5 = df.iloc[i]["ma5"]
-                        q.ma10 = df.iloc[i]["ma10"]
-                        q.ma15 = df.iloc[i]["ma15"]
-                        q.ma20 = df.iloc[i]["ma20"]
-                        q.ma30 = df.iloc[i]["ma30"]
-                        q.ma60 = df.iloc[i]["ma60"]
-                        q.ma90 = df.iloc[i]["ma90"]
-                        q.ma120 = df.iloc[i]["ma120"]
-                        q.ma250 = df.iloc[i]["ma250"]
-                        q.duokong_line = df.iloc[i]["duokong_line"]
-                        q.volume_ma5 = df.iloc[i]["volume_ma5"]
-                        q.obv = df.iloc[i]["obv"]
+                    # ✅ 优化：使用提取的方法批量更新指标
+                    self._update_quote_indicators(all_quotes, df)
 
                     self.db.commit()
                     logger.info(f"✅ {code} {timeframe}分钟线均线计算完成")

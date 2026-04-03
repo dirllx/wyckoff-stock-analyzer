@@ -3,7 +3,8 @@ Pydantic模型 - API请求和响应
 """
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+import re
 
 
 # ============== 请求模型 ==============
@@ -14,12 +15,78 @@ class StockAnalysisRequest(BaseModel):
     timeframe: Optional[str] = Field("daily", description="时间周期", example="daily")
     end_date: Optional[str] = Field(None, description="分析截止日期 (YYYYMMDD格式)，不填则使用最新数据")
 
+    @validator('code')
+    def validate_code(cls, v):
+        """验证股票代码格式"""
+        if not re.match(r'^\d{6}$', v):
+            raise ValueError(f'股票代码格式错误: {v}, 应为6位数字')
+        return v
+
+    @validator('timeframe')
+    def validate_timeframe(cls, v):
+        """验证时间周期"""
+        valid_timeframes = ['daily', 'weekly', 'monthly', '1', '5', '15', '30', '60']
+        if v and v not in valid_timeframes:
+            raise ValueError(f'无效的时间周期: {v}, 支持的周期: {", ".join(valid_timeframes)}')
+        return v
+
+    @validator('end_date')
+    def validate_end_date(cls, v):
+        """验证日期格式"""
+        if v:
+            try:
+                # 支持YYYY-MM-DD或YYYYMMDD格式
+                if '-' in v:
+                    datetime.strptime(v, "%Y-%m-%d")
+                else:
+                    datetime.strptime(v, "%Y%m%d")
+            except ValueError:
+                raise ValueError(f'日期格式错误: {v}, 应为 YYYY-MM-DD 或 YYYYMMDD')
+        return v
+
+
+class BulkQuotesRequest(BaseModel):
+    """批量获取行情请求"""
+    codes: List[str] = Field(..., min_items=1, max_items=50, description="股票代码列表")
+    timeframe: str = Field("daily", description="时间周期")
+    limit: int = Field(5, ge=1, le=100, description="返回数量限制")
+
+    @validator('codes')
+    def validate_codes(cls, v):
+        """验证股票代码列表"""
+        if not v:
+            raise ValueError('股票代码列表不能为空')
+        if len(v) > 50:
+            raise ValueError('最多支持50只股票')
+        # 验证每个代码格式
+        pattern = re.compile(r'^\d{6}$')
+        invalid_codes = [c for c in v if not pattern.match(c)]
+        if invalid_codes:
+            raise ValueError(f'无效的股票代码: {", ".join(invalid_codes)}')
+        return v
+
+    @validator('timeframe')
+    def validate_timeframe(cls, v):
+        """验证时间周期"""
+        valid_timeframes = ['daily', 'weekly', 'monthly', '1', '5', '15', '30', '60']
+        if v not in valid_timeframes:
+            raise ValueError(f'无效的时间周期: {v}, 支持的周期: {", ".join(valid_timeframes)}')
+        return v
+
 
 class SignalVerifyRequest(BaseModel):
     """信号验证请求"""
     signal_id: int = Field(..., description="信号ID")
-    current_price: float = Field(..., description="当前价格")
+    current_price: float = Field(..., description="当前价格", gt=0)
     verified: str = Field(..., description="验证状态", example="CONFIRMED")
+
+    @validator('verified')
+    def validate_verified(cls, v):
+        """验证状态"""
+        valid_statuses = ['CONFIRMED', 'FAILED', 'PENDING']
+        if v not in valid_statuses:
+            raise ValueError(f'无效的验证状态: {v}, 支持的状态: {", ".join(valid_statuses)}')
+        return v
 
 
 # ============== 响应模型 ==============
@@ -43,6 +110,7 @@ class StockQuoteResponse(BaseModel):
     ma90: Optional[float]
     ma120: Optional[float]
     ma250: Optional[float]
+    duokong_line: Optional[float] = None  # 多空线
     volume_ma5: Optional[float]
     obv: Optional[float]
     prev_close: Optional[float] = None  # 前收盘价

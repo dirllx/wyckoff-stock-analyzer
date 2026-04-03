@@ -14,7 +14,8 @@ from app.models.schemas import (
     StockAnalysisResponse,
     StockQuoteResponse,
     WyckoffSignalResponse,
-    MessageResponse
+    MessageResponse,
+    BulkQuotesRequest
 )
 from app.services import DataStorage, WyckoffAnalyzer
 from app.services.redis_service import (
@@ -1006,19 +1007,15 @@ async def get_stock_quotes(
 )
 async def get_bulk_stock_quotes(
     request: Request,
-    body: dict,
+    body: BulkQuotesRequest,
     db: Session = Depends(get_db)
 ):
+    """批量获取股票行情（使用验证模型）"""
     try:
-        codes = body.get("codes", [])
-        timeframe = body.get("timeframe", "daily")
-        limit = min(body.get("limit", 5), 100)  # 最多100条
-
-        if not codes:
-            raise HTTPException(status_code=400, detail="股票代码列表不能为空")
-
-        if len(codes) > 50:
-            raise HTTPException(status_code=400, detail="最多支持50只股票")
+        # ✅ 使用验证后的数据
+        codes = body.codes
+        timeframe = body.timeframe
+        limit = body.limit
 
         logger.info(f"批量获取行情: {len(codes)}只股票, 周期: {timeframe}, 限制: {limit}")
 
