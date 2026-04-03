@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20260403-0006">
+    <meta name="version" content="20260402-0005">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -418,102 +418,7 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-
-        /* 骨架屏样式 */
-        .skeleton {
-            background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-            border-radius: 4px;
-        }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .skeleton-text {
-            height: 14px;
-            margin: 6px 0;
-            border-radius: 2px;
-        }
-
-        .skeleton-title {
-            height: 20px;
-            width: 60%;
-            margin-bottom: 12px;
-            border-radius: 4px;
-        }
-
-        .skeleton-table-row {
-            height: 40px;
-            margin: 8px 0;
-            display: flex;
-            gap: 8px;
-        }
-
-        .skeleton-cell {
-            flex: 1;
-            height: 100%;
-            border-radius: 4px;
-        }
-
-        /* 加载进度提示 */
-        .loading-progress {
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 16px 0;
-        }
-
-        .loading-progress-bar {
-            height: 4px;
-            background: #374151;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .loading-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #10b981);
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-
-        .loading-step {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 8px 0;
-            font-size: 13px;
-            color: #9ca3af;
-        }
-
-        .loading-step.active {
-            color: #10b981;
-        }
-
-        .loading-step.completed {
-            color: #3b82f6;
-        }
-
-        .loading-step::before {
-            content: "●";
-            margin-right: 4px;
-        }
-
+        
         /* 多周期评分和信号颜色 */
         .score-high { color: #10b981; font-weight: 600; font-size: 14px; }
         .score-medium { color: #f59e0b; font-weight: 600; font-size: 14px; }
@@ -855,7 +760,6 @@
                     <div style="display: flex; gap: 8px;">
                         <button class="btn btn-secondary" onclick="toggleBatchImport()" style="padding: 6px 12px; font-size: 12px;">📥 批量导入</button>
                         <button class="btn btn-primary" onclick="batchAnalyzeWatchlist()" style="padding: 6px 12px; font-size: 12px;">⚡ 批量分析</button>
-                        <button class="btn btn-warning" onclick="clearWatchlistCache()" style="padding: 6px 12px; font-size: 12px; background: linear-gradient(135deg, #f59e0b, #d97706) !important;">🗑️ 清缓存</button>
                         <button class="btn btn-secondary" onclick="refreshWatchlist()" style="padding: 6px 12px; font-size: 12px;">🔄 刷新</button>
                     </div>
                 </div>
@@ -1019,38 +923,13 @@
             </div>
 
             <!-- 加载状态 -->
-            <div id="multiLoading" style="display: none; padding: 20px;">
-                <div class="loading-progress">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                        <div class="loading" style="margin:0;"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-                        <div style="color:#10b981; font-size:14px; font-weight:600;">正在分析多个周期，请稍候...</div>
-                    </div>
-                    <div class="loading-progress-bar">
-                        <div class="loading-progress-fill" style="width: 10%"></div>
-                    </div>
-                    <div id="multiLoadingSteps" style="margin-top:8px;">
-                        <div class="loading-step active">正在准备分析</div>
-                    </div>
+            <div id="multiLoading" style="display: none; text-align: center; padding: 40px;">
+                <div class="loading">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
                 </div>
-
-                <!-- 分析卡片骨架屏 -->
-                <div style="margin-top:16px; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:12px;">
-                    <div style="padding:16px; background:#1f2937; border-radius:8px; border:1px solid #374151;">
-                        <div class="skeleton" style="height:20px; margin-bottom:12px;"></div>
-                        <div class="skeleton" style="height:80px; margin-bottom:8px;"></div>
-                        <div class="skeleton" style="height:40px;"></div>
-                    </div>
-                    <div style="padding:16px; background:#1f2937; border-radius:8px; border:1px solid #374151;">
-                        <div class="skeleton" style="height:20px; margin-bottom:12px;"></div>
-                        <div class="skeleton" style="height:80px; margin-bottom:8px;"></div>
-                        <div class="skeleton" style="height:40px;"></div>
-                    </div>
-                    <div style="padding:16px; background:#1f2937; border-radius:8px; border:1px solid #374151;">
-                        <div class="skeleton" style="height:20px; margin-bottom:12px;"></div>
-                        <div class="skeleton" style="height:80px; margin-bottom:8px;"></div>
-                        <div class="skeleton" style="height:40px;"></div>
-                    </div>
-                </div>
+                <div style="color: #10b981; margin-top: 16px; font-size: 14px;">正在分析多个周期，请稍候...</div>
             </div>
 
             <!-- 综合分析结果 -->
@@ -1119,8 +998,8 @@
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
                         <div>
                             <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">K线数据获取数量</label>
-                            <input type="number" id="setting_kline_count" class="form-input" value="100" min="50" max="500" step="50" style="width: 100%;">
-                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量（已优化为100）</span>
+                            <input type="number" id="setting_kline_count" class="form-input" value="500" min="100" max="1000" step="50" style="width: 100%;">
+                            <span style="color: #6b7280; font-size: 11px;">用于技术分析的历史K线数量</span>
                         </div>
                         <div>
                             <label style="color: #9ca3af; font-size: 13px; display: block; margin-bottom: 6px;">缓存有效期（小时）</label>
@@ -1329,386 +1208,6 @@
 
     <script src="user_settings.js"></script>
     <script>
-        // ============================================================
-        // 🔧 工具函数库 - 前端优化版本
-        // ============================================================
-
-        const WyckoffUtils = {
-            /**
-             * 版本信息
-             */
-            VERSION: '2026-04-03-v3',
-
-            /**
-             * 防抖函数 - 延迟执行，避免频繁触发
-             * @param {Function} fn - 要执行的函数
-             * @param {number} delay - 延迟时间（毫秒）
-             * @returns {Function} - 防抖后的函数
-             */
-            debounce(fn, delay = 300) {
-                let timeoutId = null;
-                return function(...args) {
-                    clearTimeout(timeoutId);
-                    timeoutId = setTimeout(() => fn.apply(this, args), delay);
-                };
-            },
-
-            /**
-             * 节流函数 - 限制执行频率
-             * @param {Function} fn - 要执行的函数
-             * @param {number} interval - 执行间隔（毫秒）
-             * @returns {Function} - 节流后的函数
-             */
-            throttle(fn, interval = 300) {
-                let lastTime = 0;
-                return function(...args) {
-                    const now = Date.now();
-                    if (now - lastTime >= interval) {
-                        lastTime = now;
-                        return fn.apply(this, args);
-                    }
-                };
-            },
-
-            /**
-             * 错误处理器 - 统一的错误处理
-             */
-            ErrorHandler: {
-                /**
-                 * 处理错误
-                 * @param {Error} error - 错误对象
-                 * @param {string} context - 错误上下文
-                 * @param {boolean} showAlert - 是否显示提示
-                 */
-                handle(error, context = '操作', showAlert = true) {
-                    console.error(`[${context}] 失败:`, error);
-
-                    // 记录到日志（延迟检查，因为addLog可能还未定义）
-                    if (typeof addLog === 'function') {
-                        try {
-                            addLog(context, `失败: ${error.message}`);
-                        } catch (e) {
-                            // 忽略日志记录错误
-                        }
-                    }
-
-                    // 显示用户友好的错误提示
-                    if (showAlert) {
-                        let message = `${context}失败`;
-
-                        if (error.name === 'AbortError') {
-                            message = `${context}超时，请检查网络连接`;
-                        } else if (error.message && error.message.includes('HTTP 4')) {
-                            message = `${context}请求错误，请检查输入`;
-                        } else if (error.message && error.message.includes('Failed to fetch')) {
-                            message = `${context}网络错误，请检查后端服务`;
-                        } else if (error.message) {
-                            message = `${context}: ${error.message}`;
-                        }
-
-                        this.showToast(message, 'error');
-                    }
-                },
-
-                /**
-                 * 显示Toast提示
-                 * @param {string} message - 消息内容
-                 * @param {string} type - 消息类型 (success/error/warning/info)
-                 * @param {number} duration - 显示时长（毫秒）
-                 */
-                showToast(message, type = 'info', duration = 3000) {
-                    // 创建Toast元素
-                    const toast = document.createElement('div');
-                    toast.className = `toast toast-${type}`;
-                    toast.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        padding: 12px 20px;
-                        background: ${this._getToastColor(type)};
-                        color: white;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        z-index: 10000;
-                        opacity: 0;
-                        transform: translateX(100%);
-                        transition: all 0.3s ease;
-                        font-size: 14px;
-                        max-width: 300px;
-                    `;
-                    toast.textContent = message;
-                    document.body.appendChild(toast);
-
-                    // 显示动画
-                    requestAnimationFrame(() => {
-                        toast.style.opacity = '1';
-                        toast.style.transform = 'translateX(0)';
-                    });
-
-                    // 自动隐藏
-                    setTimeout(() => {
-                        toast.style.opacity = '0';
-                        toast.style.transform = 'translateX(100%)';
-                        setTimeout(() => toast.remove(), 300);
-                    }, duration);
-                },
-
-                _getToastColor(type) {
-                    const colors = {
-                        success: '#10b981',
-                        error: '#ef4444',
-                        warning: '#f59e0b',
-                        info: '#3b82f6'
-                    };
-                    return colors[type] || colors.info;
-                }
-            },
-
-            /**
-             * 加载状态管理器
-             */
-            LoadingManager: {
-                _isLoading: false,
-                _controller: null,
-                _loadingElement: null,
-
-                /**
-                 * 开始加载
-                 * @param {string} operationName - 操作名称
-                 * @param {Function} asyncFn - 异步函数
-                 * @returns {Promise} - 操作结果
-                 */
-                async start(operationName, asyncFn) {
-                    if (this._isLoading) {
-                        console.warn(`操作进行中，请等待: ${operationName}`);
-                        return null;
-                    }
-
-                    this._isLoading = true;
-                    this._controller = new AbortController();
-
-                    this.showLoading(operationName);
-
-                    try {
-                        const result = await asyncFn(this._controller.signal);
-                        return result;
-                    } finally {
-                        this._isLoading = false;
-                        this._controller = null;
-                        this.hideLoading();
-                    }
-                },
-
-                /**
-                 * 取消当前操作
-                 */
-                cancel() {
-                    if (this._controller) {
-                        this._controller.abort();
-                    }
-                },
-
-                showLoading(message) {
-                    // 如果已有loading元素，先移除
-                    this.hideLoading();
-
-                    this._loadingElement = document.createElement('div');
-                    this._loadingElement.id = 'globalLoading';
-                    this._loadingElement.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: rgba(0,0,0,0.5);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        z-index: 9999;
-                    `;
-                    this._loadingElement.innerHTML = `
-                        <div style="background: #1f2937; padding: 30px; border-radius: 12px; text-align: center;">
-                            <div class="loading" style="margin: 0 auto 20px;">
-                                <div class="loading-dot"></div>
-                                <div class="loading-dot"></div>
-                                <div class="loading-dot"></div>
-                            </div>
-                            <div style="color: #10b981; font-size: 16px; font-weight: 600;">${message}</div>
-                        </div>
-                    `;
-                    document.body.appendChild(this._loadingElement);
-                },
-
-                hideLoading() {
-                    if (this._loadingElement) {
-                        this._loadingElement.remove();
-                        this._loadingElement = null;
-                    }
-                }
-            },
-
-            /**
-             * 数据验证器
-             */
-            DataValidator: {
-                /**
-                 * 验证股票代码
-                 * @param {string} code - 股票代码
-                 * @returns {boolean} - 是否有效
-                 */
-                validateStockCode(code) {
-                    return /^\d{6}$/.test(code);
-                },
-
-                /**
-                 * 验证K线数据
-                 * @param {Object} quote - K线数据
-                 * @returns {boolean} - 是否有效
-                 */
-                validateQuote(quote) {
-                    const required = ['date', 'open', 'high', 'low', 'close', 'volume'];
-                    const missing = required.filter(field => !(field in quote));
-
-                    if (missing.length > 0) {
-                        throw new Error(`数据不完整，缺少字段: ${missing.join(', ')}`);
-                    }
-
-                    if (quote.open < 0 || quote.close < 0 || quote.high < 0 || quote.low < 0) {
-                        throw new Error('价格数据无效：不能为负数');
-                    }
-
-                    if (quote.high < quote.low) {
-                        throw new Error('价格数据异常：最高价不能低于最低价');
-                    }
-
-                    return true;
-                },
-
-                /**
-                 * 验证K线数组
-                 * @param {Array} quotes - K线数组
-                 * @returns {boolean} - 是否有效
-                 */
-                validateQuotes(quotes) {
-                    if (!Array.isArray(quotes)) {
-                        throw new Error('数据格式错误：应为数组');
-                    }
-
-                    if (quotes.length === 0) {
-                        throw new Error('数据为空');
-                    }
-
-                    return quotes.every(quote => this.validateQuote(quote));
-                }
-            },
-
-            /**
-             * DOM操作优化工具
-             */
-            DOMUtils: {
-                /**
-                 * 批量更新DOM - 减少重排
-                 * @param {Function} updateFn - 更新函数
-                 */
-                batchUpdate(updateFn) {
-                    // 使用DocumentFragment减少重排
-                    const fragment = document.createDocumentFragment();
-                    const originalAppendChild = Element.prototype.appendChild;
-
-                    try {
-                        // 临时重写appendChild
-                        Element.prototype.appendChild = function(child) {
-                            fragment.appendChild(child);
-                            return child;
-                        };
-
-                        updateFn();
-                    } finally {
-                        // 恢复原方法
-                        Element.prototype.appendChild = originalAppendChild;
-                    }
-                },
-
-                /**
-                 * 安全地设置HTML内容（防止XSS）
-                 * @param {HTMLElement} element - 目标元素
-                 * @param {string} html - HTML内容
-                 */
-                setSafeHTML(element, html) {
-                    // 简单的XSS防护：转义HTML特殊字符
-                    const div = document.createElement('div');
-                    div.textContent = html;
-                    element.innerHTML = div.innerHTML;
-                }
-            },
-
-            /**
-             * 性能监控工具
-             */
-            PerformanceMonitor: {
-                _marks: {},
-
-                /**
-                 * 开始性能标记
-                 * @param {string} name - 标记名称
-                 */
-                start(name) {
-                    this._marks[name] = performance.now();
-                },
-
-                /**
-                 * 结束性能标记并输出
-                 * @param {string} name - 标记名称
-                 */
-                end(name) {
-                    if (this._marks[name]) {
-                        const duration = performance.now() - this._marks[name];
-                        console.log(`[性能] ${name}: ${duration.toFixed(2)}ms`);
-                        delete this._marks[name];
-                        return duration;
-                    }
-                },
-
-                /**
-                 * 测量异步函数性能
-                 * @param {string} name - 名称
-                 * @param {Function} fn - 异步函数
-                 * @returns {Promise} - 函数结果
-                 */
-                async measure(name, fn) {
-                    this.start(name);
-                    try {
-                        const result = await fn();
-                        this.end(name);
-                        return result;
-                    } catch (error) {
-                        this.end(name);
-                        throw error;
-                    }
-                }
-            }
-        };
-
-        // ============================================================
-        // 全局错误处理
-        // ============================================================
-
-        // 捕获未处理的错误
-        window.addEventListener('error', (event) => {
-            console.error('全局错误:', event.error);
-            WyckoffUtils.ErrorHandler.handle(event.error, '系统', false);
-        });
-
-        // 捕获未处理的Promise拒绝
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('未处理的Promise拒绝:', event.reason);
-            WyckoffUtils.ErrorHandler.handle(event.reason, '异步操作', false);
-        });
-
-        // ============================================================
-        // 动态检测 API 地址
-        // ============================================================
-
         // 动态检测 API 地址：根据当前访问地址自动构建后端 API 地址
         // 如果通过 100.96.99.33:3000 访问，则 API_BASE = 100.96.99.33:8000
         // 如果通过 192.168.1.80:3000 访问，则 API_BASE = 192.168.1.80:8000
@@ -1720,292 +1219,7 @@
         console.log(`当前访问地址: ${window.location.href}`);
         console.log(`检测到主机名: ${currentHost}`);
         console.log(`自动配置 API_BASE: ${API_BASE}`);
-        console.log(`📦 前端工具库版本: ${WyckoffUtils.VERSION}`);
         console.log('='.repeat(60));
-
-        // ========== 通用API请求函数（带自动重试和超时）==========
-
-        /**
-         * 带自动重试和超时的fetch包装函数
-         * @param {string} url - 请求URL
-         * @param {Object} options - fetch选项
-         * @param {number} maxRetries - 最大重试次数（默认3次）
-         * @param {number} retryDelay - 初始重试延迟（毫秒，默认1000ms）
-         * @param {number} timeout - 请求超时时间（毫秒，默认30000ms）
-         * @returns {Promise<Response>} - fetch响应
-         */
-        async function fetchWithRetry(url, options = {}, maxRetries = 3, retryDelay = 1000, timeout = 30000) {
-            let lastError = null;
-
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                try {
-                    // 使用AbortController实现超时
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-                    // 将signal添加到options中
-                    const fetchOptions = {
-                        ...options,
-                        signal: controller.signal
-                    };
-
-                    const response = await fetch(url, fetchOptions);
-                    clearTimeout(timeoutId);
-
-                    // 检查HTTP状态码
-                    if (!response.ok) {
-                        // 4xx错误（客户端错误）不重试
-                        if (response.status >= 400 && response.status < 500) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        // 5xx错误（服务器错误）可以重试
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    // 请求成功
-                    if (attempt > 0) {
-                        console.log(`✅ 请求成功（重试${attempt}次后）: ${url}`);
-                    }
-                    return response;
-
-                } catch (error) {
-                    lastError = error;
-
-                    // 判断是否为超时错误
-                    const isTimeout = error.name === 'AbortError';
-                    const errorMsg = isTimeout ? `请求超时（${timeout}ms）` : error.message;
-
-                    console.warn(`❌ 请求失败（第${attempt + 1}/${maxRetries + 1}次尝试）: ${url}`, errorMsg);
-
-                    // 最后一次尝试失败，不再重试
-                    if (attempt >= maxRetries) {
-                        break;
-                    }
-
-                    // 计算指数退避延迟
-                    const delay = retryDelay * Math.pow(2, attempt);
-                    console.log(`⏳ ${delay}ms后重试...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-
-            // 所有重试都失败
-            console.error(`💥 请求彻底失败（已重试${maxRetries}次）: ${url}`);
-            throw lastError;
-        }
-
-        // ========== 离线缓存管理器 ==========
-
-        const OfflineCache = {
-            CACHE_VERSION: 'v1',
-            CACHE_PREFIX: 'wyckoff_cache_',
-
-            /**
-             * 保存数据到缓存
-             * @param {string} key - 缓存键
-             * @param {any} data - 要缓存的数据
-             * @param {number} maxAge - 最大缓存时间（毫秒，默认30分钟）
-             */
-            set(key, data, maxAge = 30 * 60 * 1000) {
-                try {
-                    const cacheKey = this.CACHE_PREFIX + key;
-                    const cacheData = {
-                        version: this.CACHE_VERSION,
-                        timestamp: Date.now(),
-                        maxAge: maxAge,
-                        data: data
-                    };
-                    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-                    console.log(`✅ 数据已缓存: ${key}`);
-                } catch (error) {
-                    console.warn(`⚠️  缓存保存失败: ${key}`, error);
-                }
-            },
-
-            /**
-             * 从缓存读取数据
-             * @param {string} key - 缓存键
-             * @returns {any|null} 缓存的数据，如果不存在或已过期则返回null
-             */
-            get(key) {
-                try {
-                    const cacheKey = this.CACHE_PREFIX + key;
-                    const cacheStr = localStorage.getItem(cacheKey);
-
-                    if (!cacheStr) {
-                        return null;
-                    }
-
-                    const cacheData = JSON.parse(cacheStr);
-
-                    // 检查版本
-                    if (cacheData.version !== this.CACHE_VERSION) {
-                        console.log(`🔄 缓存版本不匹配，清除: ${key}`);
-                        this.remove(key);
-                        return null;
-                    }
-
-                    // 检查是否过期
-                    const age = Date.now() - cacheData.timestamp;
-                    if (age > cacheData.maxAge) {
-                        console.log(`⏰ 缓存已过期: ${key}`);
-                        this.remove(key);
-                        return null;
-                    }
-
-                    console.log(`✅ 从缓存读取: ${key} (年龄: ${Math.floor(age / 1000)}秒)`);
-                    return cacheData.data;
-
-                } catch (error) {
-                    console.warn(`⚠️  缓存读取失败: ${key}`, error);
-                    return null;
-                }
-            },
-
-            /**
-             * 删除缓存
-             * @param {string} key - 缓存键
-             */
-            remove(key) {
-                try {
-                    const cacheKey = this.CACHE_PREFIX + key;
-                    localStorage.removeItem(cacheKey);
-                } catch (error) {
-                    console.warn(`⚠️  缓存删除失败: ${key}`, error);
-                }
-            },
-
-            /**
-             * 清除所有缓存
-             */
-            clear() {
-                try {
-                    const keys = Object.keys(localStorage);
-                    keys.forEach(key => {
-                        if (key.startsWith(this.CACHE_PREFIX)) {
-                            localStorage.removeItem(key);
-                        }
-                    });
-                    console.log('🗑️  所有缓存已清除');
-                } catch (error) {
-                    console.warn('⚠️  清除缓存失败', error);
-                }
-            },
-
-            /**
-             * 获取缓存统计信息
-             */
-            getStats() {
-                try {
-                    const keys = Object.keys(localStorage);
-                    let totalSize = 0;
-                    let itemCount = 0;
-
-                    keys.forEach(key => {
-                        if (key.startsWith(this.CACHE_PREFIX)) {
-                            const value = localStorage.getItem(key);
-                            totalSize += value.length;
-                            itemCount++;
-                        }
-                    });
-
-                    return {
-                        itemCount: itemCount,
-                        totalSize: totalSize,
-                        totalSizeKB: (totalSize / 1024).toFixed(2)
-                    };
-                } catch (error) {
-                    return { itemCount: 0, totalSize: 0, totalSizeKB: '0' };
-                }
-            }
-        };
-
-        // ========== 网络状态监测 ==========
-
-        const NetworkMonitor = {
-            isOnline: navigator.onLine,
-            listeners: [],
-            _handlers: null,  // 保存事件处理器引用，用于清理
-
-            init() {
-                // ✅ 修复：保存处理器引用以便后续清理
-                this._handlers = {
-                    online: () => this.handleStatusChange(true),
-                    offline: () => this.handleStatusChange(false)
-                };
-
-                window.addEventListener('online', this._handlers.online);
-                window.addEventListener('offline', this._handlers.offline);
-
-                // 初始状态提示
-                this.showStatusIndicator();
-            },
-
-            /**
-             * 清理事件监听器（防止内存泄漏）
-             */
-            destroy() {
-                if (this._handlers) {
-                    window.removeEventListener('online', this._handlers.online);
-                    window.removeEventListener('offline', this._handlers.offline);
-                    this._handlers = null;
-                }
-                this.listeners = [];
-
-                // 移除状态指示器
-                const existing = document.getElementById('network-status-indicator');
-                if (existing) existing.remove();
-            },
-
-            handleStatusChange(isOnline) {
-                this.isOnline = isOnline;
-                console.log(`🌐 网络状态: ${isOnline ? '在线' : '离线'}`);
-
-                // 通知所有监听器
-                this.listeners.forEach(callback => callback(isOnline));
-
-                // 显示状态提示
-                this.showStatusIndicator();
-            },
-
-            showStatusIndicator() {
-                const existing = document.getElementById('network-status-indicator');
-                if (existing) existing.remove();
-
-                if (!this.isOnline) {
-                    const indicator = document.createElement('div');
-                    indicator.id = 'network-status-indicator';
-                    indicator.style.cssText = `
-                        position: fixed;
-                        top: 10px;
-                        right: 10px;
-                        background: linear-gradient(135deg, #ef4444, #dc2626);
-                        color: white;
-                        padding: 8px 16px;
-                        border-radius: 6px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        z-index: 10000;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                        animation: slideIn 0.3s ease;
-                    `;
-                    indicator.innerHTML = '📡 离线模式 - 显示缓存数据';
-                    document.body.appendChild(indicator);
-
-                    // 3秒后自动消失
-                    setTimeout(() => indicator.remove(), 3000);
-                }
-            },
-
-            onStatusChange(callback) {
-                this.listeners.push(callback);
-            }
-        };
-
-        // 初始化网络监测
-        NetworkMonitor.init();
-
-        // ========== 日志系统 ==========
 
         let currentQuotesData = null;
         let operationLogs = [];
@@ -2627,7 +1841,6 @@
             const hasMa120 = uniqueQuotes.some(q => q.ma120 != null);
             const hasMa250 = uniqueQuotes.some(q => q.ma250 != null);
             const hasObv = uniqueQuotes.some(q => q.obv != null);
-            const hasDuokong = uniqueQuotes.some(q => q.duokong_line != null);
 
             // 动态生成表头
             let headerHtml = '<tr>';
@@ -2648,7 +1861,6 @@
             if (hasMa250) headerHtml += '<th>MA250</th>';
             if (hasObv) headerHtml += '<th style="cursor: help;" title="OBV能量潮指标">OBV</th>';
             headerHtml += '<th style="cursor: help;" title="信号强度指标">信号</th>';
-            if (hasDuokong) headerHtml += '<th style="cursor: help;" title="多空线指标">多空线</th>';
             headerHtml += '<th style="cursor: help;" title="威科夫阶段">阶段</th>';
             headerHtml += '</tr>';
             klineTableHead.innerHTML = headerHtml;
@@ -2729,14 +1941,6 @@
                 // 信号列 - 保留tooltip
                 rowHtml += `<td style="text-align: center;">${getSignalStrength(q)}</td>`;
 
-                // 多空线列 - 根据收盘价与多空线的关系显示不同颜色
-                if (hasDuokong) {
-                    const duokongColor = q.duokong_line != null && q.close != null
-                        ? (q.close > q.duokong_line ? '#10b981' : '#ffffff')  // 收盘价>多空线显示绿色，否则白色
-                        : '#6b7280';  // 无数据显示灰色
-                    rowHtml += `<td style="text-align: center; color: ${duokongColor}; font-weight: 600;">${q.duokong_line != null ? q.duokong_line.toFixed(2) : '-'}</td>`;
-                }
-
                 // 威科夫阶段列 - 保留tooltip
                 rowHtml += `<td><span class="phase-badge ${phaseClass}" style="cursor: help;" data-tooltip="${phaseTooltip}">${phase === 'U' ? 'U上升' : phase === 'D' ? 'D下降' : phase === 'A' ? 'A吸筹' : phase === 'DS' ? 'DS下跌吸筹' : '震荡'} ${phase === 'U' ? '📈' : phase === 'D' ? '📉' : phase === 'A' ? '🔄' : phase === 'DS' ? '📥' : '⚡'}</span></td>`;
                 rowHtml += '</tr>';
@@ -2761,14 +1965,14 @@
 
                 if (!mainContainer || !volumeContainer) {
                     addLog('图表渲染', false, '图表容器未找到');
-                    WyckoffUtils.ErrorHandler.showToast('请先点击"分析"按钮获取数据', 'warning');
+                    alert('请先点击"分析"按钮获取数据');
                     return;
                 }
 
                 // 检查图表库
                 if (typeof window.LightweightCharts === 'undefined') {
                     addLog('图表渲染', false, '图表库未加载');
-                    WyckoffUtils.ErrorHandler.showToast('图表库未加载，请刷新页面重试', 'error');
+                    alert('图表库未加载，请刷新页面重试');
                     return;
                 }
 
@@ -3050,34 +2254,6 @@
                     ma250Series.setData(ma250Data);
                 }
 
-                // 多空线 - 白色（最醒目，深色背景下的最佳选择）
-                const duokongData = uniqueDates.map(date => {
-                    const q = dateMap.get(date);
-                    return {
-                        time: convertTimeForChart(date, timeframe),
-                        value: q?.duokong_line
-                    };
-                }).filter(d => d.value !== undefined && d.value !== null);
-                console.log(`[多空线] 数据条数: ${duokongData.length}`);
-                if (duokongData.length > 0) {
-                    console.log(`[多空线] 第一条:`, duokongData[0]);
-                    console.log(`[多空线] 最后一条:`, duokongData[duokongData.length - 1]);
-                    const duokongSeries = mainChart.addLineSeries({
-                        color: '#ffffff',  // 纯白色（深色背景下最醒目）
-                        lineWidth: 2.5,  // 稍粗显示，突出重要性
-                        title: '多空线',  // 显示在图例中
-                        priceLineVisible: true,
-                        lastValueVisible: true,
-                        priceScaleId: 'right',
-                        priceFormat: {
-                            type: 'price',
-                            precision: 2,
-                            minMove: 0.01,
-                        },
-                    });
-                    duokongSeries.setData(duokongData);
-                }
-
                 // 添加威科夫阶段标注（优化版：减少标记数量）
                 const phaseMarkers = [];
                 let lastPhase = null;
@@ -3117,61 +2293,6 @@
 
                 if (phaseMarkers.length > 0) {
                     candleSeries.setMarkers(phaseMarkers);
-                }
-
-                // ========== 添加多空线金叉死叉标注 ==========
-                const crossMarkers = [];
-                const datesArray = Array.from(uniqueDates);
-
-                for (let i = 1; i < datesArray.length; i++) {
-                    const currentDate = datesArray[i];
-                    const prevDate = datesArray[i - 1];
-
-                    const currentQ = dateMap.get(currentDate);
-                    const prevQ = dateMap.get(prevDate);
-
-                    if (!currentQ || !prevQ) continue;
-                    if (!currentQ.close || !prevQ.close) continue;
-                    if (!currentQ.duokong_line || !prevQ.duokong_line) continue;
-
-                    // 金叉：价格上穿多空线（买入信号）
-                    // 判断：前一天价格<多空线，当天价格>多空线
-                    const isGoldenCross = prevQ.close < prevQ.duokong_line &&
-                                         currentQ.close > currentQ.duokong_line;
-
-                    // 死叉：价格下穿多空线（卖出信号）
-                    // 判断：前一天价格>多空线，当天价格<多空线
-                    const isDeathCross = prevQ.close > prevQ.duokong_line &&
-                                        currentQ.close < currentQ.duokong_line;
-
-                    if (isGoldenCross) {
-                        crossMarkers.push({
-                            time: convertTimeForChart(currentDate, timeframe),
-                            position: 'belowBar',
-                            color: '#10b981',  // 绿色，买入
-                            shape: 'arrowUp',
-                            text: '金叉',
-                            size: 2
-                        });
-                    }
-
-                    if (isDeathCross) {
-                        crossMarkers.push({
-                            time: convertTimeForChart(currentDate, timeframe),
-                            position: 'aboveBar',
-                            color: '#ef4444',  // 红色，卖出
-                            shape: 'arrowDown',
-                            text: '死叉',
-                            size: 2
-                        });
-                    }
-                }
-
-                if (crossMarkers.length > 0) {
-                    // 合并威科夫标注和多空线标注
-                    const allMarkers = [...phaseMarkers, ...crossMarkers];
-                    candleSeries.setMarkers(allMarkers);
-                    console.log(`[多空线标注] 金叉死叉标记数: ${crossMarkers.length}`);
                 }
 
                 // ========== 添加趋势预测K线 ==========
@@ -3587,7 +2708,7 @@
                     </div>
                     <div style="padding: 16px;">
                         <!-- 三栏布局 -->
-                        <div style="display: grid; grid-template-columns: 0.95fr 1.2fr 0.95fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
                             <!-- 均线分析 -->
                             <div style="background: ${maAdvice.color}20; border: 1px solid ${maAdvice.color}; border-radius: 8px; padding: 12px;">
                                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
@@ -4218,39 +3339,14 @@
                 const resultDiv = document.getElementById('analyzeResult');
 
                 if (!code) {
-                    // ✅ 替换alert为Toast提示
-                    WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
+                    alert('请输入股票代码');
                     addLog('错误', '股票代码为空');
                     return;
                 }
 
                 addLog('开始分析', `股票: ${code}, 周期: ${timeframe}`);
                 updateTestStatus('股票分析', false, '正在分析...');
-
-                // 显示骨架屏和进度条
-                resultDiv.innerHTML = `
-                    <div class="loading-progress">
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                            <div class="loading" style="margin:0;"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-                            <div style="color:#10b981; font-size:14px; font-weight:600;">正在分析 ${code}...</div>
-                        </div>
-                        <div class="loading-progress-bar">
-                            <div class="loading-progress-fill" style="width: 10%"></div>
-                        </div>
-                        <div class="loading-step active">正在更新股票数据</div>
-                        <div class="loading-step">正在获取K线数据</div>
-                        <div class="loading-step">正在生成分析报告</div>
-                        <div class="loading-step">正在渲染图表</div>
-                    </div>
-
-                    <!-- 图表骨架屏 -->
-                    <div style="margin-top:16px;">
-                        <div style="padding:12px; background:#1f2937; border-radius:6px; border:1px solid #374151;">
-                            <div class="skeleton" style="height:200px; margin-bottom:8px;"></div>
-                            <div class="skeleton" style="height:60px;"></div>
-                        </div>
-                    </div>
-                `;
+                resultDiv.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
 
                 // 销毁旧图表
                 if (mainChart) {
@@ -4266,22 +3362,17 @@
                 // 修复：避免并行调用导致的数据竞态问题
                 addLog('数据更新', '正在更新股票数据...');
 
-                const analysisRes = await fetchWithRetry(`${API_BASE}/api/v1/stocks/analyze`, {
+                const analysisRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code, timeframe })
-                }, 3, 1000, 60000);  // 60秒超时（需要更新数据和分析）
+                });
 
                 if (!analysisRes.ok) {
                     throw new Error('API请求失败: ' + await analysisRes.text());
                 }
 
                 const analysisData = await analysisRes.json();
-
-                // 更新进度：更新股票数据完成
-                if (typeof updateLoadingProgress === 'function') {
-                    updateLoadingProgress(30, 1);
-                }
 
                 // 保存股票名称（用于添加到关注列表）
                 if (analysisData.stock && analysisData.stock.name) {
@@ -4294,18 +3385,13 @@
                 addLog('数据更新', '数据更新完成，正在获取K线数据...');
 
                 // 分析完成后，获取K线数据
-                const quotesRes = await fetchWithRetry(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=500`, {}, 3, 1000, 30000);  // 30秒超时
+                const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=500`);
 
                 if (!quotesRes.ok) {
                     throw new Error('API请求失败: ' + await quotesRes.text());
                 }
 
                 const quotesData = await quotesRes.json();
-
-                // 更新进度：获取K线数据完成
-                if (typeof updateLoadingProgress === 'function') {
-                    updateLoadingProgress(60, 2);
-                }
 
                 // 检查响应数据
                 if (!quotesData || !quotesData.quotes || !Array.isArray(quotesData.quotes)) {
@@ -4370,11 +3456,6 @@
                         </div>
                     </div>
                 `;
-
-                // 更新进度：开始渲染
-                if (typeof updateLoadingProgress === 'function') {
-                    updateLoadingProgress(80, 3);
-                }
 
                 // 渲染界面
                 const tableHtml = `
@@ -4483,11 +3564,6 @@
 
                 // 自动添加到浏览股列表（静默）
                 await addToWatchlist(true, code, 'browse');
-
-                // 更新进度：渲染完成
-                if (typeof updateLoadingProgress === 'function') {
-                    updateLoadingProgress(100, 4);
-                }
 
                 // 渲染图表
                 if (!useTableMode) {
@@ -4661,30 +3737,17 @@
             console.log('[页面初始化] 关注列表偏移量初始值:', currentWatchlistQuoteOffset);
             console.log('[页面初始化] 关注列表当前周期:', currentWatchlistTimeframe);
 
-            // 监听用户的第一次交互
-            const markUserInteraction = () => {
-                userHasInteracted = true;
-                console.log('[用户交互] 用户已开始主动操作');
-                // 移除事件监听器，只执行一次
-                document.removeEventListener('click', markUserInteraction);
-                document.removeEventListener('keydown', markUserInteraction);
-            };
-
-            // 监听点击和键盘事件
-            document.addEventListener('click', markUserInteraction);
-            document.addEventListener('keydown', markUserInteraction);
-
             const codeInput = document.getElementById('multiStockCode');
             if (codeInput) {
-                // 使用 WyckoffUtils.debounce 统一防抖实现
-                const debouncedLoadDate = WyckoffUtils.debounce((code) => {
-                    if (code && code.length >= 6) {
-                        loadDateSelector(code);
-                    }
-                }, 500);
-
+                let debounceTimer;
                 codeInput.addEventListener('input', (e) => {
-                    debouncedLoadDate(e.target.value.trim());
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const code = e.target.value.trim();
+                        if (code && code.length >= 6) {
+                            loadDateSelector(code);
+                        }
+                    }, 500);
                 });
             }
 
@@ -4694,15 +3757,8 @@
                 loadDateSelector(defaultCode);
             }
 
-            // 初始化关注列表视图模式（但不自动刷新数据）
-            // switchWatchlistViewMode(currentWatchlistViewMode);
-            // 只更新按钮样式，不触发数据加载
-            const listBtn = document.getElementById('viewMode-list');
-            if (listBtn && currentWatchlistViewMode === 'list') {
-                listBtn.style.background = 'linear-gradient(135deg, #3b82f6, #8b5cf6)';
-                listBtn.style.color = 'white';
-                listBtn.style.border = 'none';
-            }
+            // 初始化关注列表视图模式
+            switchWatchlistViewMode(currentWatchlistViewMode);
 
             // 确保关注列表标签页状态正确（默认为自选股）
             currentWatchlistTab = 'favorite';
@@ -4725,7 +3781,7 @@
         async function analyzeMultiTimeframe() {
             const code = document.getElementById('multiStockCode').value;
             if (!code) {
-                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
+                alert('请输入股票代码');
                 addLog('错误', '股票代码为空');
                 return;
             }
@@ -4735,7 +3791,7 @@
             const timeframes = Array.from(checkboxes).map(cb => cb.value);
 
             if (timeframes.length === 0) {
-                WyckoffUtils.ErrorHandler.showToast('请至少选择一个周期', 'warning');
+                alert('请至少选择一个周期');
                 return;
             }
 
@@ -4752,26 +3808,16 @@
             loadingEl.style.display = 'block';
             contentEl.innerHTML = '';
 
-            // 初始化进度条
-            const progressFill = loadingEl.querySelector('.loading-progress-fill');
-            const stepsContainer = document.getElementById('multiLoadingSteps');
-            if (progressFill) progressFill.style.width = '10%';
-            if (stepsContainer) {
-                stepsContainer.innerHTML = `
-                    <div class="loading-step active">正在准备分析</div>
-                `;
-            }
-
             try {
-                // 串行获取各周期数据，避免服务器压力过大
-                const fetchWithTimeout = async (tf, timeout = 30000) => {
+                // 并行请求所有周期，添加超时控制和错误处理
+                const fetchWithTimeout = async (timeframe, timeout = 30000) => {
                     try {
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
                         // 构建请求URL，如果选择了日期则添加end_date参数
                         let url = `${API_BASE}/api/v1/stocks/analyze`;
-                        const requestBody = { code, timeframe: tf };
+                        const requestBody = { code, timeframe };
 
                         if (analysisDate) {
                             // 统一使用 ISO 8601 格式 (YYYY-MM-DD)
@@ -4793,16 +3839,28 @@
 
                         const data = await response.json();
 
-                        // 只取当前状态，不获取历史数据
-                        const prevQuote = null;
+                        // 额外获取quotes数据以计算前一天变化
+                        let prevQuote = null;
+                        try {
+                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${code}/quotes?timeframe=${timeframe}&limit=5`);
+                            if (quotesRes.ok) {
+                                const quotesData = await quotesRes.json();
+                                if (quotesData.quotes && quotesData.quotes.length >= 2) {
+                                    // quotes是按时间正序排列的，倒数第二个是前一天
+                                    prevQuote = quotesData.quotes[quotesData.quotes.length - 2];
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('获取前一日数据失败:', e);
+                        }
 
-                        return { success: true, data, timeframe: tf, prevQuote };
+                        return { success: true, data, timeframe, prevQuote };
                     } catch (error) {
-                        console.error(`周期${tf}请求失败:`, error);
+                        console.error(`周期${timeframe}请求失败:`, error);
                         return {
                             success: false,
                             error: error.message,
-                            timeframe: tf,
+                            timeframe,
                             prevQuote: null,
                             data: {
                                 analysis_summary: {
@@ -4818,20 +3876,8 @@
 
                 // 串行请求以避免并发过多导致失败
                 const results = [];
-                for (let i = 0; i < timeframes.length; i++) {
-                    const timeframe = timeframes[i];
-                    console.log(`[${i+1}/${timeframes.length}] 正在获取 ${timeframe} 数据...`);
+                for (const timeframe of timeframes) {
                     addLog('正在获取', `${timeframe}数据...`);
-
-                    // 更新进度条
-                    const progress = 20 + Math.floor((i / timeframes.length) * 60);
-                    if (progressFill) progressFill.style.width = `${progress}%`;
-                    if (stepsContainer) {
-                        stepsContainer.innerHTML = `
-                            <div class="loading-step ${i < timeframes.length ? 'active' : ''}" style="color: ${i < timeframes.length ? '#10b981' : '#6b7280'}">正在获取 ${timeframe} 数据 (${i+1}/${timeframes.length})</div>
-                        `;
-                    }
-
                     const result = await fetchWithTimeout(timeframe);
                     results.push(result);
                 }
@@ -4853,14 +3899,6 @@
                     };
                 });
 
-                // 更新进度：渲染完成
-                if (progressFill) progressFill.style.width = '100%';
-                if (stepsContainer) {
-                    stepsContainer.innerHTML = `
-                        <div class="loading-step" style="color: #10b981;">分析完成</div>
-                    `;
-                }
-
                 // 渲染结果 - 使用新的表格展示方式
                 renderMultiTimeframeTable(code, analysisData);
                 addLog('分析完成', `多周期分析完成，共${timeframes.length}个周期`);
@@ -4877,66 +3915,66 @@
         /**
          * 计算均线状态
          * @param {Object} quote - K线数据
-         * @returns {Object} - { status: 状态, text: 描述, color: 颜色, category: 分类用于统计 }
+         * @returns {Object} - { status: 状态, text: 描述, color: 颜色 }
          */
         function calculateMAStatus(quote) {
             if (!quote || !quote.ma5 || !quote.ma10 || !quote.ma20) {
-                return { status: 'unknown', text: '数据不足', color: '#9ca3af', category: '未知' };
+                return { status: 'unknown', text: '数据不足', color: '#9ca3af' };
             }
 
             const { close, ma5, ma10, ma20 } = quote;
 
             // 多头排列
             if (close > ma20 && ma5 > ma10 && ma10 > ma20) {
-                return { status: 'bullish_aligned', text: '📈 多头排列', color: '#10b981', category: '多头排列' };
+                // 检查金叉
+                if (ma5 > ma10 && ma10 > ma20) {
+                    return { status: 'bullish_aligned', text: '📈 多头排列', color: '#10b981' };
+                }
+                return { status: 'bullish', text: '看涨', color: '#10b981' };
             }
             // 空头排列
             else if (close < ma20 && ma5 < ma10 && ma10 < ma20) {
-                return { status: 'bearish_aligned', text: '📉 空头排列', color: '#ef4444', category: '空头排列' };
+                // 检查死叉
+                if (ma5 < ma10 && ma10 < ma20) {
+                    return { status: 'bearish_aligned', text: '📉 空头排列', color: '#ef4444' };
+                }
+                return { status: 'bearish', text: '看跌', color: '#ef4444' };
             }
             // 金叉信号
             else if (ma5 > ma10 && ma10 < ma20) {
-                return { status: 'golden_cross', text: '⭐ 金叉', color: '#fbbf24', category: '金叉' };
+                return { status: 'golden_cross', text: '⭐ 金叉', color: '#fbbf24' };
             }
             // 死叉信号
             else if (ma5 < ma10 && ma10 > ma20) {
-                return { status: 'death_cross', text: '💀 死叉', color: '#ef4444', category: '死叉' };
-            }
-            // 看涨但未形成多头排列
-            else if (close > ma20) {
-                return { status: 'bullish', text: '看涨', color: '#10b981', category: '看涨' };
-            }
-            // 看跌但未形成空头排列
-            else if (close < ma20) {
-                return { status: 'bearish', text: '看跌', color: '#ef4444', category: '看跌' };
+                return { status: 'death_cross', text: '💀 死叉', color: '#ef4444' };
             }
             // 震荡
             else {
-                return { status: 'neutral', text: '震荡', color: '#9ca3af', category: '震荡' };
+                return { status: 'neutral', text: '震荡', color: '#9ca3af' };
             }
         }
 
         /**
          * 计算量能状态
          * @param {Object} quote - K线数据
-         * @returns {Object} - { status: 状态, text: 描述, color: 颜色, category: 分类用于统计 }
+         * @returns {Object} - { status: 状态, text: 描述, color: 颜色 }
          */
         function calculateVolumeStatus(quote) {
             if (!quote || !quote.volume || !quote.volume_ma5) {
-                return { status: 'unknown', text: '数据不足', color: '#9ca3af', category: '未知', ratio: 0 };
+                return { status: 'unknown', text: '数据不足', color: '#9ca3af' };
             }
 
             const { volume, volume_ma5 } = quote;
             const ratio = volume / volume_ma5;
 
             if (ratio >= 2.0) {
-                return { status: 'very_high', text: '🔥 异常放量', color: '#ef4444', category: '放量', ratio };
-            } else if (ratio >= 1.2) {
-                return { status: 'high', text: '📈 放量', color: '#fbbf24', category: '放量', ratio };
+                return { status: 'very_high', text: '🔥 异常放量', color: '#ef4444', ratio };
+            } else if (ratio >= 1.5) {
+                return { status: 'high', text: '📈 放量', color: '#fbbf24', ratio };
             } else if (ratio >= 0.8) {
-                return { status: 'normal', text: '正常', color: '#9ca3af', category: '平稳', ratio };
+                return { status: 'normal', text: '正常', color: '#9ca3af', ratio };
             } else {
-                return { status: 'low', text: '📉 缩量', color: '#6b7280', category: '缩量', ratio };
+                return { status: 'low', text: '📉 缩量', color: '#6b7280', ratio };
             }
         }
 
@@ -5344,7 +4382,6 @@
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">价格</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">涨跌</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 50px;">信号</th>
-                                    <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">多空线</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">均线</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">量能</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">阶段</th>
@@ -5367,6 +4404,10 @@
                 const maStatus = calculateMAStatus(quote);
                 const volumeStatus = calculateVolumeStatus(quote);
 
+                // 获取前一天数据计算变化
+                const prevQuote = data.prevQuote || null;
+                const changes = calculateChanges(quote, prevQuote);
+
                 // 时间显示格式：分钟线显示日期+时分，日线以上只显示日期
                 let timeDisplay = '-';
                 if (quote?.date) {
@@ -5383,10 +4424,10 @@
                     }
                 }
 
-                // 涨跌幅：使用后端返回的数据
-                const priceChange = quote.change_percent !== null && quote.change_percent !== undefined ? quote.change_percent : 0;
+                // 涨跌幅
+                const priceChange = changes.priceChange !== null ? changes.priceChange : 0;
                 const priceChangeColor = priceChange > 0 ? '#10b981' : priceChange < 0 ? '#ef4444' : '#6b7280';
-                const priceChangeText = priceChange > 0 ? `+${priceChange.toFixed(2)}%` : `${priceChange.toFixed(2)}%`;
+                const priceChangeText = priceChange > 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
 
                 // 简化tooltip内容
                 const maTooltip = `MA5=${quote?.ma5?.toFixed(1)||'N/A'} MA10=${quote?.ma10?.toFixed(1)||'N/A'} MA20=${quote?.ma20?.toFixed(1)||'N/A'}`;
@@ -5401,7 +4442,6 @@
                         <td style="text-align: center; padding: 8px 4px; color: #f9fafb; font-size: 12px; font-weight: 500;">${quote?.close ? quote.close.toFixed(2) : '-'}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${priceChangeColor}; font-weight: 600; font-size: 11px;" data-tooltip="涨跌幅: ${priceChangeText}">${priceChangeText}</td>
                         <td style="text-align: center; padding: 8px 4px;">${getSignalStrength(quote)}</td>
-                        <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${quote?.duokong_line ? (quote.duokong_line < quote.close ? '#10b981' : '#ffffff') : '#6b7280'}; font-weight: 600; font-size: 11px;" data-tooltip="多空线: ${quote?.duokong_line ? quote.duokong_line.toFixed(2) : 'N/A'}">${quote?.duokong_line ? quote.duokong_line.toFixed(2) : '-'}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${maStatus.color}; font-size: 11px;" data-tooltip="${maTooltip}">${maStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${volumeStatus.color}; font-size: 11px;" data-tooltip="${volTooltip}">${volumeStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${phaseResult.phase === 'U' ? '#10b981' : phaseResult.phase === 'D' ? '#ef4444' : phaseResult.phase === 'A' ? '#f59e0b' : phaseResult.phase === 'DS' ? '#8b5cf6' : '#9ca3af'}; font-weight: 600; font-size: 11px;" data-tooltip="${wyckoffTooltip}">${wyckoffPhase}</td>
@@ -5439,12 +4479,6 @@
             const volumeStatusCount = { '放量': 0, '缩量': 0, '平稳': 0 };
             const volumeStatusDetails = [];
 
-            // 统计价格位置（价格与多空线、MA250的关系）
-            let priceAboveDuokong = 0;  // 价格高于多空线的周期数
-            let priceAboveMa250 = 0;   // 价格高于MA250的周期数
-            let priceAboveBoth = 0;    // 价格同时高于多空线和MA250的周期数
-            const pricePositionDetails = [];
-
             analysisData.forEach(data => {
                 const tfName = timeframeNames[data.timeframe] || data.timeframe;
                 const summary = data.summary;
@@ -5467,7 +4501,7 @@
 
                 // 计算均线状态
                 const maStatus = calculateMAStatus(quote);
-                maStatusCount[maStatus.category] = (maStatusCount[maStatus.category] || 0) + 1;
+                maStatusCount[maStatus.text] = (maStatusCount[maStatus.text] || 0) + 1;
                 maStatusDetails.push({
                     period: tfName,
                     status: maStatus.text,
@@ -5478,32 +4512,13 @@
 
                 // 计算量能状态
                 const volumeStatus = calculateVolumeStatus(quote);
-                volumeStatusCount[volumeStatus.category] = (volumeStatusCount[volumeStatus.category] || 0) + 1;
+                volumeStatusCount[volumeStatus.text] = (volumeStatusCount[volumeStatus.text] || 0) + 1;
                 volumeStatusDetails.push({
                     period: tfName,
                     status: volumeStatus.text,
                     color: volumeStatus.color,
                     quote: quote,
                     ratio: volumeStatus.ratio
-                });
-
-                // 统计价格位置
-                const aboveDuokong = quote && quote.duokong_line && quote.close > quote.duokong_line;
-                const aboveMa250 = quote && quote.ma250 && quote.close > quote.ma250;
-                const aboveBoth = aboveDuokong && aboveMa250;
-
-                if (aboveDuokong) priceAboveDuokong++;
-                if (aboveMa250) priceAboveMa250++;
-                if (aboveBoth) priceAboveBoth++;
-
-                pricePositionDetails.push({
-                    period: tfName,
-                    aboveDuokong: aboveDuokong,
-                    aboveMa250: aboveMa250,
-                    aboveBoth: aboveBoth,
-                    close: quote?.close,
-                    duokong: quote?.duokong_line,
-                    ma250: quote?.ma250
                 });
 
                 if (direction === 'LONG') {
@@ -5604,43 +4619,19 @@
             const phaseSummary = phaseCount['U'] || phaseCount['A'] ? '处于上升或吸筹阶段' :
                                 phaseCount['D'] ? '处于下降阶段' : '震荡整理阶段';
 
-            // 价格位置判断
-            const pricePositionRatio = priceAboveBoth / total;
-            const pricePositionColor = pricePositionRatio >= 0.6 ? '#10b981' : pricePositionRatio >= 0.4 ? '#fbbf24' : '#ef4444';
-            const pricePositionText = pricePositionRatio >= 0.6 ? '强势' : pricePositionRatio >= 0.4 ? '中性' : '弱势';
-
-            // 构建均线统计字符串
-            const maStatsList = [];
-            if (maStatusCount['多头排列']) maStatsList.push(`多头${maStatusCount['多头排列']}`);
-            if (maStatusCount['空头排列']) maStatsList.push(`空头${maStatusCount['空头排列']}`);
-            if (maStatusCount['金叉']) maStatsList.push(`金叉${maStatusCount['金叉']}`);
-            if (maStatusCount['死叉']) maStatsList.push(`死叉${maStatusCount['死叉']}`);
-            if (maStatusCount['看涨']) maStatsList.push(`看涨${maStatusCount['看涨']}`);
-            if (maStatusCount['看跌']) maStatsList.push(`看跌${maStatusCount['看跌']}`);
-            if (maStatusCount['震荡']) maStatsList.push(`震荡${maStatusCount['震荡']}`);
-            const maStatsStr = maStatsList.length > 0 ? maStatsList.join(' ') : '无数据';
-
-            // 构建量能统计字符串
-            const volStatsList = [];
-            if (volumeStatusCount['放量']) volStatsList.push(`放量${volumeStatusCount['放量']}`);
-            if (volumeStatusCount['缩量']) volStatsList.push(`缩量${volumeStatusCount['缩量']}`);
-            if (volumeStatusCount['平稳']) volStatsList.push(`平稳${volumeStatusCount['平稳']}`);
-            const volStatsStr = volStatsList.length > 0 ? volStatsList.join(' ') : '无数据';
-
             html += `
-                            <div style="margin-bottom: 2px;">📊 <strong>均线：</strong>${maSummary}（${maStatsStr}）</div>
-                            <div style="margin-bottom: 2px;">📈 <strong>量能：</strong>${volSummary}（${volStatsStr}）</div>
+                            <div style="margin-bottom: 2px;">📊 <strong>均线：</strong>${maSummary}（多头${maStatusCount['多头排列']} 空头${maStatusCount['空头排列']} 纠缠${maStatusCount['纠缠']}）</div>
+                            <div style="margin-bottom: 2px;">📈 <strong>量能：</strong>${volSummary}（放量${volumeStatusCount['放量']} 缩量${volumeStatusCount['缩量']} 平稳${volumeStatusCount['平稳']}）</div>
                             <div style="margin-bottom: 2px;">🎯 <strong>威科夫：</strong>${phaseSummary}</div>
-                            <div style="margin-bottom: 2px;">💰 <strong>价格位置：</strong><span style="color: ${pricePositionColor}; font-weight: 600;">${pricePositionText}</span>（超多空线${priceAboveDuokong}/${total} 超MA250${priceAboveMa250}/${total} 双超${priceAboveBoth}/${total}）</div>
-                            <div>⚡ <strong>综合判断：</strong>${priceAboveBoth >= 2 ? '✅ 多周期价格站稳关键均线，多头买入信号' : longRatio >= 0.6 ? '多数周期看涨，积极信号' : shortRatio >= 0.6 ? '多数周期看跌，谨慎观望' : '多空分歧，等待明确信号'}</div>
+                            <div>⚡ <strong>综合判断：</strong>${longRatio >= 0.6 ? '多数周期看涨，积极信号' : shortRatio >= 0.6 ? '多数周期看跌，谨慎观望' : '多空分歧，等待明确信号'}</div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 详细指标分析（移动端单列，桌面端四列）
+            // 详细指标分析（移动端单列，桌面端三列）
             html += `
-                <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(4, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 10px 0'};">
+                <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 10px 0'};">
                     <!-- 均线分析 -->
                     <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
                         <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">📊 均线状态</div>
@@ -5696,33 +4687,6 @@
                     <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(0,0,0,0.2); border-radius: 4px;">
                         <span style="color: #9ca3af; font-size: 10px;">${detail.period}:</span>
                         <span style="color: ${phaseColor}; font-weight: 600; font-size: 11px;">${phaseDisplay}</span>
-                    </div>
-                `;
-            });
-
-            html += `
-                        </div>
-                    </div>
-
-                    <!-- 价格位置 -->
-                    <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
-                        <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">💰 价格位置</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'};">
-            `;
-
-            pricePositionDetails.forEach(detail => {
-                const positionColor = detail.aboveBoth ? '#10b981' :
-                                     detail.aboveDuokong || detail.aboveMa250 ? '#fbbf24' : '#ef4444';
-                const positionText = detail.aboveBoth ? '✓双超' :
-                                    detail.aboveDuokong ? '↑多空' :
-                                    detail.aboveMa250 ? '↑250' : '↓均下';
-                const positionTitle = detail.aboveBoth ? '同时高于多空线和MA250' :
-                                    detail.aboveDuokong ? '高于多空线' :
-                                    detail.aboveMa250 ? '高于MA250' : '低于关键均线';
-                html += `
-                    <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(0,0,0,0.2); border-radius: 4px;" title="${positionTitle}">
-                        <span style="color: #9ca3af; font-size: 10px;">${detail.period}:</span>
-                        <span style="color: ${positionColor}; font-weight: 600; font-size: 11px;">${positionText}</span>
                     </div>
                 `;
             });
@@ -5983,7 +4947,7 @@
                 const data = await response.json();
 
                 if (!data.items || data.items.length === 0) {
-                    WyckoffUtils.ErrorHandler.showToast('关注列表为空，请先添加股票到关注列表', 'warning');
+                    alert('关注列表为空，请先添加股票到关注列表');
                     return;
                 }
 
@@ -6109,7 +5073,7 @@
 
             } catch (error) {
                 console.error('获取关注列表失败:', error);
-                WyckoffUtils.ErrorHandler.showToast('获取关注列表失败，请重试', 'error');
+                alert('获取关注列表失败，请重试');
             }
         }
 
@@ -6145,76 +5109,7 @@
             filteredItems: []
         };
 
-        // 防止重复刷新的标志位（全局变量）
-        let isRefreshing = false;
-        let refreshTimeout = null;
-
-        // 更新加载进度条
-        function updateLoadingProgress(percent, activeStepIndex) {
-            const progressFill = document.querySelector('.loading-progress-fill');
-            const steps = document.querySelectorAll('.loading-step');
-
-            if (progressFill) {
-                progressFill.style.width = `${percent}%`;
-            }
-
-            steps.forEach((step, index) => {
-                if (index === activeStepIndex) {
-                    step.classList.add('active');
-                } else if (index < activeStepIndex) {
-                    step.classList.remove('active');
-                    step.style.color = '#10b981';
-                } else {
-                    step.classList.remove('active');
-                    step.style.color = '#6b7280';
-                }
-            });
-        }
-
-        // 清除关注列表缓存
-        function clearWatchlistCache() {
-            console.log('🗑️ 开始清除缓存...');
-
-            // 清除所有 watchlist 相关的缓存
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.includes('watchlist')) {
-                    keysToRemove.push(key);
-                }
-            }
-
-            keysToRemove.forEach(key => {
-                localStorage.removeItem(key);
-                console.log(`✅ 已删除缓存: ${key}`);
-            });
-
-            console.log(`🗑️ 共删除了 ${keysToRemove.length} 个缓存项`);
-
-            // 显示提示
-            WyckoffUtils.ErrorHandler.showToast(`已清除 ${keysToRemove.length} 个缓存项，页面将重新加载`, 'success');
-
-            // 延迟重新加载页面，让用户看到提示
-            setTimeout(() => location.reload(), 1500);
-        }
-
         async function refreshWatchlist() {
-            // ✅ 性能监控：开始计时
-            const perfId = WyckoffUtils.PerformanceMonitor;
-            perfId.start('关注列表刷新');
-
-            // 防抖：如果已有刷新计划，先取消
-            if (refreshTimeout) {
-                clearTimeout(refreshTimeout);
-                refreshTimeout = null;
-            }
-
-            // 防止重复执行
-            if (isRefreshing) {
-                console.log('[refreshWatchlist] 已有刷新在执行，跳过重复调用');
-                return;
-            }
-
             const content = document.getElementById('watchlistContent');
 
             if (!content) {
@@ -6225,56 +5120,18 @@
             // 重置偏移量（刷新时回到最新数据）
             currentWatchlistQuoteOffset = 0;
 
-            // 显示加载进度
-            content.innerHTML = `
-                <div class="loading-progress">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                        <div class="loading" style="margin:0;"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-                        <div style="color:#10b981; font-size:14px; font-weight:600;">正在加载股票列表...</div>
-                    </div>
-                    <div class="loading-progress-bar">
-                        <div class="loading-progress-fill" style="width: 20%"></div>
-                    </div>
-                    <div class="loading-step active">正在获取股票列表</div>
-                    <div class="loading-step">正在获取行情数据</div>
-                    <div class="loading-step">正在渲染表格</div>
-                </div>
-
-                <!-- 表格骨架屏 -->
-                <div style="margin-top:16px;">
-                    <div style="padding:12px; background:#1f2937; border-radius:6px; border:1px solid #374151;">
-                        ${Array(6).fill().map(() => `
-                            <div class="skeleton-table-row">
-                                ${Array(13).fill().map(() => '<div class="skeleton-cell"></div>').join('')}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-
-            // 设置刷新标志
-            isRefreshing = true;
-
-            // 记录开始时间
-            const startTime = performance.now();
-            const logTimestamp = new Date().toLocaleTimeString();
-
-            // 根据当前标签页获取不同类型的数据（在try块外定义，使catch块也能访问）
-            const watchType = currentWatchlistTab;
-            const cacheKey = `watchlist_${watchType}_${currentWatchlistTimeframe}`;
+            // 显示加载中
+            content.innerHTML = '<div style="text-align:center; padding:40px; color:#10b981;">🔄 正在加载...</div>';
 
             try {
+                // 根据当前标签页获取不同类型的数据
+                const watchType = currentWatchlistTab;
                 console.log(`[refreshWatchlist] 正在加载 ${watchType} 类型的关注列表...`);
 
-                const watchlistFetchStart = performance.now();
-                const response = await fetchWithRetry(`${API_BASE}/api/v1/watchlist?watch_type=${watchType}`, {}, 3, 1000, 10000);  // 10秒超时
+                const response = await fetch(`${API_BASE}/api/v1/watchlist?watch_type=${watchType}`);
                 const data = await response.json();
-                const watchlistFetchTime = (performance.now() - watchlistFetchStart).toFixed(0);
 
-                // 更新进度：获取股票列表完成
-                updateLoadingProgress(40, 1);
-
-                console.log(`[refreshWatchlist] API返回: ${data.total} 只股票, 类型: ${watchType}, 耗时: ${watchlistFetchTime}ms`);
+                console.log(`[refreshWatchlist] API返回: ${data.total} 只股票, 类型: ${watchType}`);
 
                 if (!data.items || data.items.length === 0) {
                     const emptyMessage = watchType === 'favorite'
@@ -6286,90 +5143,26 @@
                             <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">${emptyMessage}</div>
                         </div>
                     `;
-                    const totalTime = (performance.now() - startTime).toFixed(0);
-                    addLog('刷新完成', `${watchType === 'favorite' ? '自选股' : '浏览股'}列表为空 (${logTimestamp}, 耗时${totalTime}ms)`);
+                    addLog('刷新完成', `${watchType === 'favorite' ? '自选股' : '浏览股'}列表为空`);
                     watchlistData.items = [];
                     watchlistData.filteredItems = [];
                     return;
                 }
 
-                // 获取所有股票的实时行情（使用批量API，一次请求获取所有数据）
-                const quotesFetchStart = performance.now();
+                // 获取所有股票的实时行情
+                addLog('正在获取', `获取 ${data.items.length} 只股票的实时行情...`);
+                const quotePromises = data.items.map(item =>
+                    fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                    }).then(res => res.json())
+                );
 
-                // 批量获取行情数据（使用当前选择的周期）
-                const timeframe = currentWatchlistTimeframe || 'daily';  // 使用用户选择的周期
-                const codes = data.items.map(item => item.stock_code);
-                const bulkResponse = await fetchWithRetry(`${API_BASE}/api/v1/bulk-quotes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        codes: codes,
-                        timeframe: timeframe,
-                        limit: 5
-                    })
-                }, 3, 1000, 30000);  // 30秒超时
-
-                const bulkData = await bulkResponse.json();
-                const quotesFetchTime = (performance.now() - quotesFetchStart).toFixed(0);
-
-                // 更新进度：获取行情数据完成
-                updateLoadingProgress(70, 2);
-
-                console.log('[refreshWatchlist] 批量API返回，周期:', timeframe, '股票数量:', bulkData.data?.length);
-
-                // 统计实际获取的数据量
-                let totalQuotes = 0;
-                const quotesListMap = {};  // 存储K线列表供详情弹窗使用
-
-                bulkData.data?.forEach(stock => {
-                    totalQuotes += stock.quotes?.length || 0;
-                    // 存储完整的K线列表
-                    if (stock.quotes && stock.quotes.length > 0) {
-                        quotesListMap[stock.code] = stock.quotes;
-                        const latestDate = stock.quotes[stock.quotes.length - 1]?.date;
-                        console.log(`[refreshWatchlist] ${stock.code}: ${stock.quotes.length}条数据, 最新日期: ${latestDate}`);
-                    }
-                });
-
-                // 将批量数据转换为前端需要的格式
-                const quotes = data.items.map(item => {
-                    const stockData = bulkData.data?.find(d => d.code === item.stock_code);
-                    if (stockData && stockData.quotes && stockData.quotes.length > 0) {
-                        // 批量API返回的数据是从旧到新的，取最后一条作为最新数据
-                        const latestQuote = stockData.quotes[stockData.quotes.length - 1];
-                        // 构造简单的analysis_summary，包含评分
-                        const analysis_summary = {
-                            score: latestQuote.score || 0,
-                            direction: latestQuote.score > 0 ? 'LONG' : (latestQuote.score < 0 ? 'SHORT' : 'NEUTRAL'),
-                            confidence: 0.7,
-                            reason: `基于${stockData.quotes.length}期数据分析（MA趋势+成交量）`
-                        };
-                        return {
-                            current_quote: latestQuote,
-                            analysis_summary: analysis_summary
-                        };
-                    }
-                    return {
-                        current_quote: null,
-                        analysis_summary: null
-                    };
-                });
+                const quotes = await Promise.all(quotePromises);
 
                 // 创建行情数据映射
                 watchlistData.quoteMap = {};
-                const scoresByOffset = {};  // 存储每期的评分
-
-                // 先填充scoresByOffset（从批量数据）
-                data.items.forEach(item => {
-                    const stockData = bulkData.data?.find(d => d.code === item.stock_code);
-                    if (stockData && stockData.quotes) {
-                        // 存储评分（从最新到最旧，索引0对应最新期）
-                        scoresByOffset[item.stock_code] = stockData.quotes
-                            .map(q => q.score || 0)
-                            .reverse();
-                    }
-                });
-
                 quotes.forEach((quote, index) => {
                     if (quote.current_quote) {
                         watchlistData.quoteMap[data.items[index].stock_code] = quote.current_quote;
@@ -6378,11 +5171,6 @@
                         watchlistData.quoteMap[data.items[index].stock_code + '_summary'] = quote.analysis_summary;
                     }
                 });
-
-                // 保存K线列表和评分供详情弹窗使用
-                watchlistData.quotesListMap = quotesListMap;
-                watchlistData.currentTimeframe = timeframe;  // 使用实际的周期
-                watchlistData.scoresByOffset = scoresByOffset;
 
                 // 存储原始数据
                 watchlistData.items = data.items;
@@ -6395,86 +5183,14 @@
 
                 console.log(`[refreshWatchlist] 已加载 ${watchType} 类型的股票: ${data.items.length} 只，主要类型: ${stockType}`);
 
-                // 更新进度：开始渲染
-                updateLoadingProgress(90, 3);
-
                 // 应用排序和筛选
                 applySortAndFilter();
 
-                // 计算总耗时
-                const totalTime = (performance.now() - startTime).toFixed(0);
-
-                // 记录详细的性能日志
-                addLog('刷新完成', `${data.total}只${watchType === 'favorite' ? '自选股' : '浏览股'} | ${data.items.length}只股票 × 5期 = ${totalQuotes}条数据 | 耗时${totalTime}ms (${logTimestamp})`);
-                console.log(`[性能] 获取列表: ${watchlistFetchTime}ms, 获取行情: ${quotesFetchTime}ms, 总计: ${totalTime}ms, 数据量: ${totalQuotes}条`);
-
-                // 保存到缓存
-                OfflineCache.set(cacheKey, {
-                    items: data.items,
-                    quotesListMap: quotesListMap,
-                    scoresByOffset: scoresByOffset,
-                    quoteMap: watchlistData.quoteMap,
-                    filteredItems: watchlistData.filteredItems,
-                    currentTimeframe: timeframe,
-                    timestamp: Date.now()
-                }, 30 * 60 * 1000);  // 缓存30分钟
-
+                addLog('刷新完成', `共 ${data.total} 只${watchType === 'favorite' ? '自选股' : '浏览股'}`);
             } catch (error) {
                 console.error('❌ 刷新关注列表失败:', error);
-
-                // 尝试从缓存读取
-                const cachedData = OfflineCache.get(cacheKey);
-
-                if (cachedData) {
-                    console.log('🔄 从缓存加载关注列表数据');
-                    addLog('离线模式', '使用缓存数据');
-
-                    // 恢复缓存数据
-                    watchlistData.items = cachedData.items || [];
-                    watchlistData.quoteMap = cachedData.quoteMap || {};
-                    watchlistData.filteredItems = cachedData.filteredItems || cachedData.items || [];
-                    watchlistData.quotesListMap = cachedData.quotesListMap || {};
-                    watchlistData.scoresByOffset = cachedData.scoresByOffset || {};
-                    watchlistData.currentTimeframe = cachedData.currentTimeframe || currentWatchlistTimeframe;
-
-                    // 渲染缓存数据
-                    applySortAndFilter();
-
-                    // 显示缓存提示
-                    const cacheAge = Math.floor((Date.now() - cachedData.timestamp) / 1000);
-                    const cacheNotice = document.createElement('div');
-                    cacheNotice.style.cssText = `
-                        background: linear-gradient(135deg, #f59e0b, #d97706);
-                        color: white;
-                        padding: 8px 12px;
-                        border-radius: 6px;
-                        margin-bottom: 12px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        text-align: center;
-                    `;
-                    cacheNotice.innerHTML = `📦 离线模式 - 显示${cacheAge < 60 ? cacheAge + '秒前' : Math.floor(cacheAge / 60) + '分钟前'}的缓存数据`;
-                    content.insertBefore(cacheNotice, content.firstChild);
-
-                } else {
-                    content.innerHTML = `
-                        <div style="text-align:center; padding:40px; color:#ef4444;">
-                            <div style="font-size:48px; margin-bottom:16px;">❌</div>
-                            <div style="font-size:20px; font-weight:600; margin-bottom:12px;">加载失败</div>
-                            <div style="color:#9ca3af; font-size:14px; margin-bottom:20px;">${error.message}</div>
-                            <div style="color:#9ca3af; font-size:12px;">请检查网络连接后重试</div>
-                        </div>
-                    `;
-                    addLog('刷新失败', `错误: ${error.message}`);
-                }
-            } finally {
-                // 释放刷新标志
-                isRefreshing = false;
-
-                // ✅ 性能监控：结束计时并输出
-                if (typeof WyckoffUtils !== 'undefined' && WyckoffUtils.PerformanceMonitor) {
-                    WyckoffUtils.PerformanceMonitor.end('关注列表刷新');
-                }
+                content.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:20px; font-weight:600;">❌ 加载失败: ${error.message}</div>`;
+                addLog('刷新失败', `错误: ${error.message}`);
             }
         }
 
@@ -6485,14 +5201,6 @@
             }
 
             const watchType = currentWatchlistTab;
-
-            // 打印调试信息
-            console.log('[applySortAndFilter] 开始渲染，当前周期:', currentWatchlistTimeframe);
-            if (watchlistData.items.length > 0) {
-                const firstCode = watchlistData.items[0].stock_code;
-                const firstQuote = watchlistData.quoteMap[firstCode];
-                console.log(`[${firstCode}] 当前显示的数据日期:`, firstQuote?.date, '收盘:', firstQuote?.close);
-            }
 
             // 获取筛选条件
             const filterBullish = document.getElementById('filterBullish')?.checked || false;
@@ -6871,10 +5579,6 @@
                 `;
 
                 content.innerHTML = html;
-
-                // 更新进度：渲染完成
-                updateLoadingProgress(100, 3);
-
                 addLog('渲染完成', `共 ${data.length} 只${watchType === 'favorite' ? '自选股' : '浏览股'}`);
             } catch (error) {
                 console.error('❌ 渲染关注列表失败:', error);
@@ -6932,8 +5636,10 @@
                 currentWatchlistQuoteOffset = 0; // 重置偏移量
                 console.log(`[onWatchlistTimeframeChange] 已重置偏移量为0`);
 
-                // 重新获取数据（切换周期需要重新从后端获取）
-                refreshWatchlist();
+                // 如果当前是列表视图，立即刷新数据
+                if (currentWatchlistViewMode === 'list') {
+                    refreshWatchlistListView();
+                }
 
                 addLog('切换周期', `关注列表周期切换为: ${newTimeframe}`);
             }
@@ -6969,9 +5675,6 @@
             refreshWatchlist();
             addLog('切换标签', `切换到${tab === 'favorite' ? '自选股' : '浏览股'}`);
         }
-
-        // 用户是否已主动操作过（用于区分初始化和用户操作）
-        let userHasInteracted = false;
 
         // 切换关注列表视图模式
         function switchWatchlistViewMode(mode) {
@@ -7014,35 +5717,17 @@
                 cardBatchControls.style.display = 'none';
             }
 
-            // 只在用户主动操作时才刷新列表
-            if (userHasInteracted) {
-                refreshWatchlist();
-            }
+            // 刷新列表
+            refreshWatchlist();
             addLog('切换视图', `切换到${mode === 'card' ? '卡片' : '列表'}视图`);
         }
 
         // 渲染列表视图（参考日分析表格）
         async function refreshWatchlistListView() {
-            console.log('[refreshWatchlistListView] 开始渲染，当前偏移:', currentWatchlistQuoteOffset, '当前周期:', currentWatchlistTimeframe);
+            console.log('[refreshWatchlistListView] 开始渲染，当前偏移:', currentWatchlistQuoteOffset);
             try {
                 const content = document.getElementById('watchlistContent');
                 if (!content) return;
-
-                // 检查数据是否已加载
-                if (!watchlistData.quotesListMap || Object.keys(watchlistData.quotesListMap).length === 0) {
-                    console.warn('[refreshWatchlistListView] 数据未加载，先刷新数据');
-                    await refreshWatchlist();
-                    return;
-                }
-
-                console.log('[refreshWatchlistListView] quotesListMap 已存在，股票数量:', Object.keys(watchlistData.quotesListMap).length);
-
-                // 打印第一只股票的数据
-                const firstStock = Object.keys(watchlistData.quotesListMap)[0];
-                if (firstStock) {
-                    const quotes = watchlistData.quotesListMap[firstStock];
-                    console.log(`[${firstStock}] 数据周期:`, quotes[0]?.timeframe, '数据量:', quotes.length, '最新日期:', quotes[quotes.length - 1]?.date);
-                }
 
                 const timeframe = currentWatchlistTimeframe;  // 使用全局变量
                 const data = watchlistData.filteredItems || [];
@@ -7065,37 +5750,96 @@
                 // 获取所有股票的K线数据
                 const quotesMap = {};
                 const summaryMap = {};
-                const quotesListMap = watchlistData.quotesListMap || {};  // 复用批量API已获取的数据
+                const quotesListMap = {};  // 存储K线列表用于详情弹窗
 
                 // 将数据分批，每批10只股票，避免服务器压力
                 const batchSize = 10;
                 for (let i = 0; i < data.length; i += batchSize) {
                     const batch = data.slice(i, i + batchSize);
-                    console.log(`[批量处理] 批次 ${Math.floor(i/batchSize)}，股票数量: ${batch.length}`);
 
                     await Promise.all(batch.map(async (item) => {
-                        console.log(`[${item.stock_code}] 开始处理数据，当前offset: ${currentWatchlistQuoteOffset}`);
                         try {
-                            // 复用已获取的K线数据
-                            const quotes = quotesListMap[item.stock_code] || [];
-                            if (quotes.length > 0) {
-                                const quoteIndex = quotes.length - 1 - currentWatchlistQuoteOffset;
-                                console.log(`[${item.stock_code}] 数据详情:`, {
-                                    总数据量: quotes.length,
-                                    当前偏移: currentWatchlistQuoteOffset,
-                                    计算索引: quoteIndex,
-                                    第一条日期: quotes[0]?.date,
-                                    最后一条日期: quotes[quotes.length - 1]?.date,
-                                    将要使用的数据: quotes[quoteIndex]?.date
-                                });
-                                if (quoteIndex >= 0 && quoteIndex < quotes.length) {
-                                    quotesMap[item.stock_code] = quotes[quoteIndex];
+                            // 获取K线数据（当前周期）
+                            // 只需要获取最近10条数据，足够查看前5天历史
+                            const quotesRes = await fetch(`${API_BASE}/api/v1/stocks/${item.stock_code}/quotes?timeframe=${timeframe}&limit=10`);
+
+                            // 获取分析数据（当前周期）
+                            const analyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: item.stock_code, timeframe })
+                            });
+
+                            // 获取日线分析（用于威科夫阶段统一显示）
+                            const dailyAnalyzeRes = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                            });
+
+                            if (quotesRes.ok) {
+                                const quotesData = await quotesRes.json();
+                                if (quotesData.quotes && quotesData.quotes.length > 0) {
+                                    // API返回的是升序（旧→新），根据偏移量获取对应位置的数据
+                                    const quotes = quotesData.quotes;
+                                    const offset = currentWatchlistQuoteOffset;
+                                    const quoteIndex = quotes.length - 1 - offset;
+
+                                    console.log(`[${item.stock_code}] 数据总数: ${quotes.length}, 偏移: ${offset}, 索引: ${quoteIndex}`);
+                                    console.log(`[${item.stock_code}] 第一条: ${quotes[0].date}, 最后一条: ${quotes[quotes.length-1].date}`);
+
+                                    // 确保索引有效
+                                    if (quoteIndex >= 0 && quoteIndex < quotes.length) {
+                                        const selectedQuote = quotes[quoteIndex];
+                                        console.log(`[${item.stock_code}] 选中数据:`, selectedQuote.date, 'close:', selectedQuote.close);
+                                        quotesMap[item.stock_code] = selectedQuote;
+                                    } else if (quotes.length > 0) {
+                                        // 如果索引越界，取最接近的有效数据
+                                        const clampedIndex = Math.max(0, Math.min(quoteIndex, quotes.length - 1));
+                                        console.log(`[${item.stock_code}] 索引越界，使用索引: ${clampedIndex}`);
+                                        quotesMap[item.stock_code] = quotes[clampedIndex];
+                                    }
+                                    quotesListMap[item.stock_code] = quotes;
+                                }
+                            } else {
+                                // 获取K线数据失败，输出错误详情
+                                const errorText = await quotesRes.text();
+                                console.warn(`[${item.stock_code}] 获取K线数据失败 (${quotesRes.status}):`, errorText);
+
+                                // 如果是404错误，可能是该周期数据不存在
+                                if (quotesRes.status === 404) {
+                                    console.warn(`[${item.stock_code}] ${timeframe}周期数据不存在，该股票可能不支持此周期`);
                                 }
                             }
 
-                            // 初始化summaryMap（如果不存在）
-                            if (!summaryMap[item.stock_code]) {
-                                summaryMap[item.stock_code] = {};
+                            // 存储当前周期的分析数据
+                            if (analyzeRes.ok) {
+                                const analysisData = await analyzeRes.json();
+                                if (analysisData.analysis_summary) {
+                                    summaryMap[item.stock_code] = analysisData.analysis_summary;
+
+                                    // 保存评分历史（用于对比显示）
+                                    if (!watchlistData.scoresByOffset) {
+                                        watchlistData.scoresByOffset = {};
+                                    }
+                                    if (!watchlistData.scoresByOffset[item.stock_code]) {
+                                        watchlistData.scoresByOffset[item.stock_code] = [];
+                                    }
+                                    watchlistData.scoresByOffset[item.stock_code][currentWatchlistQuoteOffset] = analysisData.analysis_summary.score || 0;
+                                }
+                            }
+
+                            // 存储日线的威科夫阶段（统一使用）
+                            if (dailyAnalyzeRes.ok) {
+                                const dailyAnalysis = await dailyAnalyzeRes.json();
+                                if (dailyAnalysis.analysis_summary) {
+                                    // 将日线威科夫阶段存储到summaryMap中，添加标识
+                                    if (!summaryMap[item.stock_code]) {
+                                        summaryMap[item.stock_code] = {};
+                                    }
+                                    const dailyPhase = dailyAnalysis.analysis_summary.wyckoff_phase || '-';
+                                    summaryMap[item.stock_code].wyckoff_phase_daily = dailyPhase;
+                                }
                             }
                         } catch (error) {
                             console.warn(`获取 ${item.stock_code} 数据失败:`, error);
@@ -7118,32 +5862,23 @@
 
                 // 渲染表格
                 let html = `
-                    <div style="margin-bottom: 8px; padding: 6px 10px; background: #1f2937; border-radius: 4px; border: 1px solid #374151; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="color: #10b981; font-size: 11px; font-weight: 600;">
-                            📊 基于最近${totalQuotes}期${timeframe === 'daily' ? '日线' : timeframe === '30' ? '30分钟' : timeframe === '60' ? '60分钟' : timeframe + '线'}数据分析
-                        </div>
-                        <div style="color: #9ca3af; font-size: 10px;">
-                            评分规则：MA趋势(25%) + 量价协调(25%) + 价格位置(25%) + 动量信号(25%)
-                        </div>
-                    </div>
                     <div class="table-container" style="overflow-x: auto;">
-                        <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: auto;">
+                        <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: fixed;">
                             <thead>
                                 <tr>
-                                    <th style="min-width: 60px;">代码</th>
-                                    <th style="min-width: 50px;">名称</th>
-                                    <th style="min-width: 70px;">日期</th>
-                                    <th style="min-width: 55px;">收盘</th>
-                                    <th style="min-width: 50px;">涨跌</th>
-                                    <th style="min-width: 45px;">量能</th>
-                                    <th style="min-width: 66px;">MA5</th>
-                                    <th style="min-width: 66px;">MA10</th>
-                                    <th style="min-width: 66px;">MA15</th>
-                                    <th style="min-width: 66px;">多空线</th>
-                                    <th style="min-width: 55px;">威(短)</th>
-                                    <th style="min-width: 55px;">威(长)</th>
-                                    <th style="min-width: 70px;">评分</th>
-                                    <th style="min-width: 45px;">操作</th>
+                                    <th style="width: 55px;">代码</th>
+                                    <th style="width: 45px;">名称</th>
+                                    <th style="width: 70px;">日期</th>
+                                    <th style="width: 55px;">收盘</th>
+                                    <th style="width: 50px;">涨跌</th>
+                                    <th style="width: 45px;">量能</th>
+                                    <th style="width: 60px;">MA5</th>
+                                    <th style="width: 60px;">MA10</th>
+                                    <th style="width: 60px;">MA15</th>
+                                    <th style="width: 55px;">威(短)</th>
+                                    <th style="width: 55px;">威(长)</th>
+                                    <th style="width: 35px;">评分</th>
+                                    <th style="width: 45px;">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -7152,26 +5887,15 @@
                 data.forEach(item => {
                     const quote = quotesMap[item.stock_code];
                     const summary = summaryMap[item.stock_code];
-
-                    // 从 scoresByOffset 中获取当前 offset 对应的评分
-                    let score = 0;
-                    if (watchlistData.scoresByOffset &&
-                        watchlistData.scoresByOffset[item.stock_code] &&
-                        currentWatchlistQuoteOffset < watchlistData.scoresByOffset[item.stock_code].length) {
-                        score = watchlistData.scoresByOffset[item.stock_code][currentWatchlistQuoteOffset] || 0;
-                    }
-
-                    // 从评分推断方向
-                    let direction = 'NEUTRAL';
-                    if (score >= 2) direction = 'LONG';
-                    else if (score <= -2) direction = 'SHORT';
+                    const direction = summary?.direction || 'NEUTRAL';
+                    const score = summary?.score || 0;
 
                     // 短线威科夫阶段（前端算法：基于成交量&均线）
                     let shortTermPhase = '-';
                     let shortTermColor = '#9ca3af';
 
-                    // 长线威科夫阶段（前端推断：基于趋势和评分）
-                    let longTermPhase = '-';
+                    // 长线威科夫阶段（后端算法：基于价格位置&趋势）
+                    let longTermPhase = summary?.wyckoff_phase_daily || summary?.wyckoff_phase || '-';
                     let longTermColor = '#9ca3af';
 
                     if (quote) {
@@ -7199,21 +5923,15 @@
                             shortTermPhase = '震荡';
                         }
 
-                        // 前端算法：长线威科夫阶段（基于评分和趋势）
-                        if (score >= 3) {
-                            longTermPhase = 'U上升';
+                        // 后端算法：长线威科夫阶段颜色
+                        if (longTermPhase.includes('U') || longTermPhase.includes('上升')) {
                             longTermColor = '#10b981';
-                        } else if (score <= -2) {
-                            longTermPhase = 'D下降';
+                        } else if (longTermPhase.includes('D') || longTermPhase.includes('下降')) {
                             longTermColor = '#ef4444';
-                        } else if (score >= 1) {
-                            longTermPhase = 'A吸筹';
+                        } else if (longTermPhase.includes('A') || longTermPhase.includes('吸筹')) {
                             longTermColor = '#f59e0b';
-                        } else if (score <= -1) {
-                            longTermPhase = 'DS派发';
+                        } else if (longTermPhase.includes('DS') || longTermPhase.includes('派发')) {
                             longTermColor = '#8b5cf6';
-                        } else {
-                            longTermPhase = '震荡';
                         }
                     }
 
@@ -7234,26 +5952,16 @@
                     else if (score >= 1) scoreColor = '#f59e0b';
                     else if (score <= -1) scoreColor = '#ef4444';
 
-                    // 计算评分对比显示（总是显示对比格式）
-                    let scoreDisplay = `${score} / --分`;
-
+                    // 计算评分对比显示
+                    let scoreDisplay = score.toString();
                     if (watchlistData.scoresByOffset && watchlistData.scoresByOffset[item.stock_code]) {
                         const scoresArray = watchlistData.scoresByOffset[item.stock_code];
                         const currentOffset = currentWatchlistQuoteOffset;
-
-                        console.log(`[${item.stock_code}] 当前offset: ${currentOffset}, 评分数组:`, scoresArray, `当前评分: ${score}`);
-
-                        // 获取前一期评分（相邻期对比）
-                        // offset=0(最新) 时，前一期是 offset=1(次新)
-                        const prevOffset = currentOffset + 1;
-                        if (prevOffset < scoresArray.length && scoresArray[prevOffset] !== undefined && scoresArray[prevOffset] !== null) {
-                            const prevScore = scoresArray[prevOffset];
+                        if (currentOffset > 0 && scoresArray[currentOffset - 1] !== undefined) {
+                            const prevScore = scoresArray[currentOffset - 1];
                             const scoreChange = score - prevScore;
                             const sign = scoreChange >= 0 ? '+' : '';
                             scoreDisplay = `${score} / ${sign}${scoreChange}分`;
-                            console.log(`[${item.stock_code}] 前一期(offset=${prevOffset})评分: ${prevScore}, 变化: ${scoreChange}, 显示: ${scoreDisplay}`);
-                        } else {
-                            console.log(`[${item.stock_code}] 没有前一期数据，当前offset: ${currentOffset}, 下一期offset: ${prevOffset}`);
                         }
                     }
 
@@ -7285,18 +5993,18 @@
                         longTermTooltip = '震荡阶段（长线）\n\n判断依据：无明显特征\n- 趋势强度：弱/中等\n- 价格位置：中间区域\n\n含义：方向不明，整理阶段\n\n操作建议：继续等待，观望为主';
                     }
 
-                    // 生成评分tooltip说明（说明基于5期数据）
+                    // 生成评分tooltip说明
                     let scoreTooltip = '';
                     if (score >= 4) {
-                        scoreTooltip = `评分：${score}分（强烈买入信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：均线排列强势\n2. 威科夫阶段（25%）：处于有利阶段\n3. 量价协调（25%）：量价配合良好\n4. 动量信号（25%）：动量强劲\n\n综合建议：强烈看好，积极买入`;
+                        scoreTooltip = `评分：${score}分（强烈买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列强势\n2. 威科夫阶段（25%）：处于有利阶段\n3. 量价协调（25%）：量价配合良好\n4. 动量信号（25%）：动量强劲\n\n综合建议：强烈看好，积极买入`;
                     } else if (score >= 3) {
-                        scoreTooltip = `评分：${score}分（看好买入信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：均线排列向好\n2. 威科夫阶段（25%）：阶段相对有利\n3. 量价协调（25%）：量价基本协调\n4. 动量信号（25%）：动量稳定\n\n综合建议：整体看好，可以买入`;
+                        scoreTooltip = `评分：${score}分（看好买入信号）\n\n评分维度：\n1. 趋势强度（25%）：均线排列向好\n2. 威科夫阶段（25%）：阶段相对有利\n3. 量价协调（25%）：量价基本协调\n4. 动量信号（25%）：动量稳定\n\n综合建议：整体看好，可以买入`;
                     } else if (score >= 1) {
-                        scoreTooltip = `评分：${score}分（中性偏多）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：趋势不明或偏弱\n2. 威科夫阶段（25%）：阶段中性\n3. 量价协调（25%）：量价一般配合\n4. 动量信号（25%）：动量平稳\n\n综合建议：谨慎参与，控制仓位`;
+                        scoreTooltip = `评分：${score}分（中性偏多）\n\n评分维度：\n1. 趋势强度（25%）：趋势不明或偏弱\n2. 威科夫阶段（25%）：阶段中性\n3. 量价协调（25%）：量价一般配合\n4. 动量信号（25%）：动量平稳\n\n综合建议：谨慎参与，控制仓位`;
                     } else if (score <= -1) {
-                        scoreTooltip = `评分：${score}分（偏弱信号）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：趋势偏空\n2. 威科夫阶段（25%）：处于不利阶段\n3. 量价协调（25%）：量价背离\n4. 动量信号（25%）：动量疲弱\n\n综合建议：建议观望，不宜介入`;
+                        scoreTooltip = `评分：${score}分（偏弱信号）\n\n评分维度：\n1. 趋势强度（25%）：趋势偏空\n2. 威科夫阶段（25%）：处于不利阶段\n3. 量价协调（25%）：量价背离\n4. 动量信号（25%）：动量疲弱\n\n综合建议：建议观望，不宜介入`;
                     } else {
-                        scoreTooltip = `评分：${score}分（震荡观望）\n\n数据基础：最近5期K线数据\n\n评分维度：\n1. 趋势强度（25%）：无明显趋势\n2. 威科夫阶段（25%）：震荡阶段\n3. 量价协调（25%）：量价中性\n4. 动量信号（25%）：动量平稳\n\n综合建议：信号不明，继续等待`;
+                        scoreTooltip = `评分：${score}分（震荡观望）\n\n评分维度：\n1. 趋势强度（25%）：无明显趋势\n2. 威科夫阶段（25%）：震荡阶段\n3. 量价协调（25%）：量价中性\n4. 动量信号（25%）：动量平稳\n\n综合建议：信号不明，继续等待`;
                     }
 
                     // 计算涨跌（从quotes列表中获取前一日数据）
@@ -7305,17 +6013,11 @@
                     if (quote) {
                         const quotesList = quotesListMap[item.stock_code] || [];
                         if (quotesList.length >= 2) {
-                            // 找到当前quote在数组中的索引
-                            const currentIndex = quotesList.findIndex(q => q.date === quote.date);
-                            // 获取前一条数据（考虑翻页情况）
-                            const prevIndex = currentIndex >= 0 ? currentIndex - 1 : quotesList.length - 2;
-                            if (prevIndex >= 0 && prevIndex < quotesList.length) {
-                                const prevQuote = quotesList[prevIndex];
-                                if (prevQuote && prevQuote.close && quote.close) {
-                                    const changePct = ((quote.close - prevQuote.close) / prevQuote.close * 100);
-                                    changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
-                                    changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
-                                }
+                            const prevQuote = quotesList[quotesList.length - 2]; // 前一日数据
+                            if (prevQuote && prevQuote.close) {
+                                const changePct = ((quote.close - prevQuote.close) / prevQuote.close * 100);
+                                changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+                                changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
                             }
                         }
                     }
@@ -7342,15 +6044,6 @@
                         const diff = quote.close ? ((quote.close - quote.ma15) / quote.ma15 * 100) : 0;
                         const sign = diff >= 0 ? '+' : '';
                         ma15Display = `${quote.ma15.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
-                    }
-
-                    // 多空线显示 - 只显示值
-                    let duokongDisplay = '-';
-                    let duokongColor = '#9ca3af';
-                    if (quote && quote.duokong_line) {
-                        duokongDisplay = quote.duokong_line.toFixed(2);
-                        // 多空线小于收盘价时显示绿色（看涨信号）
-                        duokongColor = quote.close > quote.duokong_line ? '#10b981' : '#ef4444';
                     }
 
                     // MA颜色判断
@@ -7395,7 +6088,6 @@
                             <td style="color: ${ma5Color}; text-align: center;">${ma5Display}</td>
                             <td style="color: ${ma10Color}; text-align: center;">${ma10Display}</td>
                             <td style="color: ${ma15Color}; text-align: center;">${ma15Display}</td>
-                            <td style="color: ${duokongColor}; text-align: center;">${duokongDisplay}</td>
                             <td style="text-align: center;">
                                 <span style="color: ${shortTermColor}; cursor: help;" data-tooltip="${shortTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${shortTermDisplay}</span>
                             </td>
@@ -7422,20 +6114,20 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 8px 12px; background: #1f2937; border-radius: 6px; border: 1px solid #374151;">
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <button onclick="window.navigateWatchlistPeriod(1)" ${!canGoBack ? 'disabled' : ''}
-                                style="padding: 6px 16px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                ◀ 前期
+                                style="padding: 6px 12px; background: ${canGoBack ? '#3b82f6' : '#374151'}; border: none; color: ${canGoBack ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoBack ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                ◀ 前一天
                             </button>
                             <button onclick="window.navigateWatchlistPeriod(-1)" ${!canGoForward ? 'disabled' : ''}
-                                style="padding: 6px 16px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
-                                后期 ▶
+                                style="padding: 6px 12px; background: ${canGoForward ? '#3b82f6' : '#374151'}; border: none; color: ${canGoForward ? 'white' : '#6b7280'}; border-radius: 4px; cursor: ${canGoForward ? 'pointer' : 'not-allowed'}; font-size: 12px;">
+                                后一天 ▶
                             </button>
                             <button onclick="window.navigateWatchlistPeriod(0)"
-                                style="padding: 6px 16px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                style="padding: 6px 12px; background: #10b981; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
                                 ↺ 最新
                             </button>
                         </div>
                         <div style="color: #9ca3af; font-size: 11px;">
-                            ${currentOffset === 0 ? '最新' : `前第 ${currentOffset} 期`}（共5笔）
+                            当前显示：${currentOffset === 0 ? '最新数据' : `前第 ${currentOffset} 期`}${totalQuotes > 0 ? ` （共 ${totalQuotes} 期）` : ''}
                         </div>
                     </div>
                 `;
@@ -7693,7 +6385,7 @@
                         const selectedDate = document.getElementById('modalDateSelect').value;
 
                         if (!selectedDate) {
-                            WyckoffUtils.ErrorHandler.showToast('请选择有效的交易日期', 'warning');
+                            alert('请选择有效的交易日期');
                             return;
                         }
 
@@ -8055,7 +6747,7 @@
                 }
             } catch (error) {
                 console.error('调整顺序失败:', error);
-                WyckoffUtils.ErrorHandler.showToast(`${error.message}，您也可以通过删除后重新添加来调整顺序`, 'warning');
+                alert(`⚠️ ${error.message}\n\n提示：您也可以通过删除后重新添加来调整顺序`);
             }
         }
 
@@ -8210,7 +6902,7 @@
 
         async function batchDeleteSelected() {
             if (selectedItems.size === 0) {
-                WyckoffUtils.ErrorHandler.showToast('请先选择要删除的股票', 'warning');
+                alert('请先选择要删除的股票');
                 return;
             }
 
@@ -8249,10 +6941,10 @@
 
             // 显示结果
             if (failCount === 0) {
-                WyckoffUtils.ErrorHandler.showToast(`批量删除成功，已删除 ${successCount} 只股票`, 'success');
+                alert(`✅ 批量删除成功！\n\n已删除 ${successCount} 只股票`);
                 addLog('批量删除完成', `成功删除 ${successCount} 只股票`);
             } else {
-                WyckoffUtils.ErrorHandler.showToast(`批量删除完成，成功 ${successCount} 只，失败 ${failCount} 只`, failCount > 0 ? 'warning' : 'success');
+                alert(`⚠️ 批量删除完成\n\n成功: ${successCount} 只\n失败: ${failCount} 只\n\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? '\n...' : ''}`);
                 addLog('批量删除完成', `成功 ${successCount}，失败 ${failCount}`);
             }
         }
@@ -8269,24 +6961,18 @@
 
         // 批量分析所有关注的股票
         async function batchAnalyzeWatchlist() {
-            // 获取当前标签页的股票（自选股或浏览股）
-            const watchType = currentWatchlistTab;
-            const allItems = watchlistData.items || [];
-            const items = allItems.filter(item => item.watch_type === watchType);
-
+            const items = watchlistData.filteredItems || watchlistData.items || [];
             if (items.length === 0) {
-                const typeName = watchType === 'favorite' ? '自选股' : '浏览股';
-                WyckoffUtils.ErrorHandler.showToast(`${typeName}列表为空，请先添加股票`, 'warning');
+                alert('关注列表为空，请先添加股票');
                 return;
             }
 
             const count = items.length;
-            const typeName = watchType === 'favorite' ? '自选股' : '浏览股';
-            if (!confirm(`确定要批量分析 ${count} 只${typeName}吗？\n\n这将需要一些时间...`)) {
+            if (!confirm(`确定要批量分析 ${count} 只股票吗？\n\n这将需要一些时间...`)) {
                 return;
             }
 
-            addLog('批量分析', `开始分析 ${count} 只${typeName}...`);
+            addLog('批量分析', `开始分析 ${count} 只股票...`);
 
             // 创建进度弹窗
             const progressModal = document.createElement('div');
@@ -8322,63 +7008,54 @@
 
             let successCount = 0;
             let failCount = 0;
-            const batchSize = 5; // 每批并发5个
 
-            // 分批并发分析，提升性能
-            for (let batchStart = 0; batchStart < items.length; batchStart += batchSize) {
-                const batchEnd = Math.min(batchStart + batchSize, items.length);
-                const batch = items.slice(batchStart, batchEnd);
+            // 串行分析，避免并发过多
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const progress = Math.round(((i + 1) / items.length) * 100);
 
-                // 更新进度
-                const progress = Math.round((batchStart / items.length) * 100);
                 progressBar.style.width = `${progress}%`;
-                progressText.textContent = `正在分析 ${batchStart + 1}-${batchEnd}/${count}`;
-                progressDetail.textContent = `批次 ${Math.floor(batchStart / batchSize) + 1}/${Math.ceil(items.length / batchSize)}`;
+                progressText.textContent = `正在分析 ${i + 1}/${count}`;
+                progressDetail.textContent = `${item.stock_code} ${item.stock_name || ''}`;
 
-                // 并发分析当前批次
-                const analysisPromises = batch.map(async (item) => {
-                    try {
-                        const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                try {
+                    await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                    });
+
+                    successCount++;
+                } catch (error) {
+                    console.error(`分析${item.stock_code}失败:`, error);
+                    failCount++;
+                }
+
+                // 每次分析后更新数据
+                if (i === items.length - 1 || (i + 1) % 5 === 0) {
+                    // 每分析5个或最后一个时，重新获取行情
+                    const quotePromises = items.slice(0, i + 1).map(it =>
+                        fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
-                        });
+                            body: JSON.stringify({ code: it.stock_code, timeframe: 'daily' })
+                        }).then(res => res.json())
+                    );
 
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}`);
+                    const quotes = await Promise.all(quotePromises);
+
+                    quotes.forEach((quote, idx) => {
+                        if (quote.current_quote) {
+                            watchlistData.quoteMap[items[idx].stock_code] = quote.current_quote;
                         }
-
-                        const data = await response.json();
-
-                        // 直接保存分析结果，避免重复查询
-                        if (data.current_quote) {
-                            watchlistData.quoteMap[item.stock_code] = data.current_quote;
+                        if (quote.analysis_summary) {
+                            watchlistData.quoteMap[items[idx].stock_code + '_summary'] = quote.analysis_summary;
                         }
-                        if (data.analysis_summary) {
-                            watchlistData.quoteMap[item.stock_code + '_summary'] = data.analysis_summary;
-                        }
+                    });
 
-                        return { code: item.stock_code, success: true, data };
-                    } catch (error) {
-                        console.error(`分析${item.stock_code}失败:`, error);
-                        return { code: item.stock_code, success: false, error };
-                    }
-                });
-
-                // 等待当前批次完成
-                const results = await Promise.all(analysisPromises);
-
-                // 统计结果
-                results.forEach(result => {
-                    if (result.success) {
-                        successCount++;
-                    } else {
-                        failCount++;
-                    }
-                });
-
-                // 更新显示
-                applySortAndFilter();
+                    // 更新显示
+                    applySortAndFilter();
+                }
             }
 
             // 完成
@@ -8606,14 +7283,14 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('形态识别配置保存成功', 'success');
+                    alert('✅ 形态识别配置保存成功！');
                     addLog('保存成功', '形态识别配置已更新');
                     loadPatternsConfig();
                 } else {
                     throw new Error('保存失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('保存失败', error.message);
             }
         }
@@ -8698,14 +7375,14 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('时间周期配置保存成功', 'success');
+                    alert('✅ 时间周期配置保存成功！');
                     addLog('保存成功', '时间周期配置已更新');
                     loadTimeframesConfig();
                 } else {
                     throw new Error('保存失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('保存失败', error.message);
             }
         }
@@ -8786,14 +7463,14 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('飞书通知配置保存成功', 'success');
+                    alert('✅ 飞书通知配置保存成功！');
                     addLog('保存成功', '飞书通知配置已更新');
                     loadFeishuConfig();
                 } else {
                     throw new Error('保存失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('保存失败', error.message);
             }
         }
@@ -8805,13 +7482,13 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('测试通知已发送，请检查飞书是否收到消息', 'success');
+                    alert('✅ 测试通知已发送！请检查飞书是否收到消息。');
                     addLog('测试成功', '飞书测试通知已发送');
                 } else {
                     throw new Error('发送失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`测试失败: ${error.message}`, 'error');
+                alert(`❌ 测试失败: ${error.message}`);
                 addLog('测试失败', error.message);
             }
         }
@@ -8891,14 +7568,14 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('风险监控配置保存成功', 'success');
+                    alert('✅ 风险监控配置保存成功！');
                     addLog('保存成功', '风险监控配置已更新');
                     loadRiskConfig();
                 } else {
                     throw new Error('保存失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('保存失败', error.message);
             }
         }
@@ -8906,7 +7583,7 @@
         async function getRealtimeQuote() {
             const code = document.getElementById('realtimeCode').value;
             if (!code) {
-                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
+                alert('请输入股票代码');
                 addLog('错误', '股票代码为空');
                 return;
             }
@@ -8983,7 +7660,7 @@
             const timeframe = document.getElementById('patternTimeframe').value;
 
             if (!code) {
-                WyckoffUtils.ErrorHandler.showToast('请输入股票代码', 'warning');
+                alert('请输入股票代码');
                 addLog('错误', '股票代码为空');
                 return;
             }
@@ -9074,7 +7751,7 @@
                 };
 
                 localStorage.setItem('wyckoff_settings', JSON.stringify(settings));
-                WyckoffUtils.ErrorHandler.showToast('配置已保存', 'success');
+                alert('✅ 配置已保存');
                 addLog('系统配置', '配置已保存到本地');
 
                 // 重新渲染关注列表以应用新的列数设置
@@ -9084,7 +7761,7 @@
 
             } catch (error) {
                 console.error('保存配置失败:', error);
-                WyckoffUtils.ErrorHandler.showToast(`保存配置失败: ${error.message}`, 'error');
+                alert('❌ 保存配置失败: ' + error.message);
             }
         }
 
@@ -9167,7 +7844,7 @@
             if (document.getElementById('setting_tf_monthly')) document.getElementById('setting_tf_monthly').checked = false;
             if (document.getElementById('setting_enable_cache')) document.getElementById('setting_enable_cache').checked = true;
 
-            WyckoffUtils.ErrorHandler.showToast('配置已重置为默认值', 'success');
+            alert('✅ 配置已重置为默认值');
             addLog('系统配置', '配置已重置');
 
             // 重新渲染关注列表
@@ -9253,7 +7930,7 @@
 
                 if (result.success) {
                     addLog('缓存管理', `✅ ${result.message}`);
-                    WyckoffUtils.ErrorHandler.showToast(result.message, 'success');
+                    alert(`✅ ${result.message}`);
                     // 重新加载统计
                     await loadCacheStats();
                 } else {
@@ -9263,7 +7940,7 @@
             } catch (error) {
                 console.error('清除旧版本缓存失败:', error);
                 addLog('缓存管理', '❌ 清除失败: ' + error.message);
-                WyckoffUtils.ErrorHandler.showToast(`清除失败: ${error.message}`, 'error');
+                alert('❌ 清除失败: ' + error.message);
             }
         }
 
@@ -9292,7 +7969,7 @@
 
                 if (result.success) {
                     addLog('缓存管理', `✅ ${result.message}`);
-                    WyckoffUtils.ErrorHandler.showToast(result.message, 'success');
+                    alert(`✅ ${result.message}`);
                     // 重新加载统计
                     await loadCacheStats();
                 } else {
@@ -9302,7 +7979,7 @@
             } catch (error) {
                 console.error('清除所有缓存失败:', error);
                 addLog('缓存管理', '❌ 清除失败: ' + error.message);
-                WyckoffUtils.ErrorHandler.showToast(`清除失败: ${error.message}`, 'error');
+                alert('❌ 清除失败: ' + error.message);
             }
         }
 
@@ -9460,7 +8137,7 @@
             const currentCount = container.querySelectorAll('.priority-select').length;
 
             if (currentCount >= 3) {
-                WyckoffUtils.ErrorHandler.showToast('最多添加3个数据源', 'warning');
+                alert('最多添加3个数据源');
                 return;
             }
 
@@ -9527,14 +8204,14 @@
                     const priorityList = Array.from(selects).map(s => s.value);
 
                     if (priorityList.length === 0) {
-                        WyckoffUtils.ErrorHandler.showToast(`${timeframeNames[timeframe]} 至少需要一个数据源`, 'warning');
+                        alert(`${timeframeNames[timeframe]} 至少需要一个数据源`);
                         return;
                     }
 
                     // 检查是否有重复
                     const unique = new Set(priorityList);
                     if (unique.size !== priorityList.length) {
-                        WyckoffUtils.ErrorHandler.showToast(`${timeframeNames[timeframe]} 存在重复的数据源`, 'warning');
+                        alert(`${timeframeNames[timeframe]} 存在重复的数据源`);
                         return;
                     }
 
@@ -9557,7 +8234,7 @@
                 const allSuccess = results.every(r => r.ok);
 
                 if (allSuccess) {
-                    WyckoffUtils.ErrorHandler.showToast('周期优先级配置已保存', 'success');
+                    alert('✅ 周期优先级配置已保存');
                     addLog('优先级配置', '✅ 配置保存成功');
                     // 重新加载配置
                     await loadDataSourcesConfig();
@@ -9566,7 +8243,7 @@
                 }
 
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('优先级配置', `❌ 保存失败: ${error.message}`);
             }
         }
@@ -9580,14 +8257,14 @@
 
                 if (result.healthy && result.sources && result.sources[sourceName]) {
                     const source = result.sources[sourceName];
-                    WyckoffUtils.ErrorHandler.showToast(`${sourceName} 状态正常，成功率: ${source.success_rate}`, 'success');
+                    alert(`✅ ${sourceName} 状态正常\n成功率: ${source.success_rate}\n可用: ${source.is_available ? '是' : '否'}`);
                     addLog('数据源测试', `✅ ${sourceName} 测试成功`);
                 } else {
-                    WyckoffUtils.ErrorHandler.showToast(`${sourceName} 测试失败`, 'error');
+                    alert(`❌ ${sourceName} 测试失败`);
                     addLog('数据源测试', `❌ ${sourceName} 测试失败`);
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`测试失败: ${error.message}`, 'error');
+                alert(`❌ 测试失败: ${error.message}`);
                 addLog('数据源测试', `❌ ${sourceName} 测试异常: ${error.message}`);
             }
         }
@@ -9611,13 +8288,13 @@
 
                 if (!response.ok) throw new Error('更新失败');
 
-                WyckoffUtils.ErrorHandler.showToast(`${sourceName} 已${newEnabled ? '启用' : '禁用'}`, 'success');
+                alert(`✅ ${sourceName} 已${newEnabled ? '启用' : '禁用'}`);
                 addLog('数据源配置', `✅ ${sourceName} 已${newEnabled ? '启用' : '禁用'}`);
 
                 // 重新加载配置
                 await loadDataSourcesConfig();
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`操作失败: ${error.message}`, 'error');
+                alert(`❌ 操作失败: ${error.message}`);
                 addLog('数据源配置', `❌ 操作失败: ${error.message}`);
             }
         }
@@ -9656,16 +8333,14 @@
                         report += '\n';
                     }
 
-                    // 由于report内容较多，使用addLog记录，使用Toast提示
-                    console.log(report);
-                    WyckoffUtils.ErrorHandler.showToast('测速完成，详情请查看日志', 'success');
-                    addLog('数据源测速', `✅ 测速完成\n${report}`);
+                    alert(report);
+                    addLog('数据源测速', `✅ 测速完成`);
                 } else {
-                    WyckoffUtils.ErrorHandler.showToast(`测速失败: ${result.message || '未知错误'}`, 'error');
+                    alert(`❌ 测速失败: ${result.message || '未知错误'}`);
                     addLog('数据源测速', `❌ 测速失败`);
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`测速异常: ${error.message}`, 'error');
+                alert(`❌ 测速异常: ${error.message}`);
                 addLog('数据源测速', `❌ 测速异常: ${error.message}`);
             }
         }
@@ -9691,16 +8366,9 @@
         });
 
         window.addEventListener('load', () => {
-            console.log('%c=== 页面完全加载 ===', 'color: #10b981; font-weight: bold; font-size: 14px;');
-            console.log('%c版本: 2026-04-03-v2 (修复关注列表数据显示问题)', 'color: #fbbf24; font-weight: bold;');
-            console.log('%c如果看到这条消息，说明已加载最新代码', 'color: #10b981;');
-            addLog('页面加载', '页面完全加载完成 (v2026-04-03-v2)');
-
-            // 页面加载后自动刷新关注列表（延迟1秒避免影响页面加载速度）
-            setTimeout(() => {
-                console.log('页面加载完成，自动刷新关注列表');
-                refreshWatchlist();
-            }, 1000);
+            console.log('页面完全加载');
+            addLog('页面加载', '页面完全加载完成');
+            refreshWatchlist();
         });
 
         window.addEventListener('error', (event) => {
@@ -9726,13 +8394,13 @@
         // 关注列表专用的弹窗函数（接收股票代码）
         function showWatchlistQuoteDetail(stockCode) {
             if (!watchlistData.quotesListMap || !watchlistData.quotesListMap[stockCode]) {
-                WyckoffUtils.ErrorHandler.showToast('数据不存在', 'warning');
+                alert('数据不存在');
                 return;
             }
 
             const quotes = watchlistData.quotesListMap[stockCode];
             if (!quotes || quotes.length === 0) {
-                WyckoffUtils.ErrorHandler.showToast('K线数据不存在', 'warning');
+                alert('K线数据不存在');
                 return;
             }
 
@@ -9753,7 +8421,7 @@
             if (window.currentStockCode && window.currentQuotes) {
                 // 关注列表触发的弹窗，直接使用已设置的数据
                 if (index < 0 || index >= window.currentQuotes.length) {
-                    WyckoffUtils.ErrorHandler.showToast('数据不存在', 'warning');
+                    alert('数据不存在');
                     return;
                 }
             } else if (watchlistData.quotesListMap && Object.keys(watchlistData.quotesListMap).length > 0) {
@@ -9765,12 +8433,12 @@
                     window.currentStockCode = stockCode;
                 } else if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
                     // 如果没有找到关注列表的数据，检查全局数据
-                    WyckoffUtils.ErrorHandler.showToast('数据不存在', 'warning');
+                    alert('数据不存在');
                     return;
                 }
             } else if (!window.currentQuotes || index < 0 || index >= window.currentQuotes.length) {
                 // 日分析页签触发的弹窗
-                WyckoffUtils.ErrorHandler.showToast('数据不存在', 'warning');
+                alert('数据不存在');
                 return;
             }
 
@@ -9877,7 +8545,7 @@
 
             // 数据验证
             if (!q || q.open == null || q.close == null) {
-                WyckoffUtils.ErrorHandler.showToast('数据不完整', 'warning');
+                alert('数据不完整');
                 return;
             }
 
@@ -10575,13 +9243,13 @@
                 });
 
                 if (response.ok) {
-                    WyckoffUtils.ErrorHandler.showToast('基础配置保存成功', 'success');
+                    alert('✅ 基础配置保存成功！');
                     addLog('保存成功', '基础配置已更新');
                 } else {
                     throw new Error('保存失败');
                 }
             } catch (error) {
-                WyckoffUtils.ErrorHandler.showToast(`保存失败: ${error.message}`, 'error');
+                alert(`❌ 保存失败: ${error.message}`);
                 addLog('保存失败', error.message);
             }
         }
@@ -10677,37 +9345,11 @@
             }, true);
         }
 
-        function showTooltip(eventOrElement, text) {
+        function showTooltip(element, text) {
             if (!tooltipElement) return;
 
-            let element, tooltipText;
-
-            // 判断调用方式
-            if (eventOrElement && eventOrElement.target) {
-                // 方式1: 传入事件对象
-                element = eventOrElement.target;
-                tooltipText = element.getAttribute('data-tooltip') || element.textContent || '';
-            } else if (eventOrElement && eventOrElement.getAttribute) {
-                // 方式2: 传入元素对象
-                element = eventOrElement;
-                tooltipText = text || element.getAttribute('data-tooltip') || element.textContent || '';
-            } else {
-                console.warn('[showTooltip] 无效的参数:', eventOrElement);
-                return;
-            }
-
-            if (!element) {
-                console.warn('[showTooltip] 元素为空');
-                return;
-            }
-
-            if (!tooltipText) {
-                console.warn('[showTooltip] 无tooltip文本');
-                return;
-            }
-
             // 设置tooltip内容，支持换行
-            tooltipElement.innerHTML = tooltipText.replace(/\n/g, '<br>');
+            tooltipElement.innerHTML = text.replace(/\n/g, '<br>');
             tooltipElement.style.display = 'block';
 
             // 计算位置
@@ -10795,130 +9437,6 @@
                 }
             }
         });
-
-        // ========== 全局错误处理 ==========
-
-        /**
-         * 错误边界处理器
-         * 捕获并优雅地处理JavaScript错误
-         */
-        window.addEventListener('error', function(event) {
-            console.error('❌ 全局错误:', event.error);
-
-            // 避免重复显示错误提示
-            if (document.getElementById('global-error-boundary')) {
-                return;
-            }
-
-            // 创建错误提示
-            const errorBoundary = document.createElement('div');
-            errorBoundary.id = 'global-error-boundary';
-            errorBoundary.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #ef4444, #dc2626);
-                color: white;
-                padding: 16px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 99999;
-                max-width: 400px;
-                font-size: 14px;
-                line-height: 1.5;
-            `;
-
-            const errorMessage = event.error?.message || '未知错误';
-            const errorStack = event.error?.stack || '';
-
-            errorBoundary.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                    <span style="font-size:24px;">⚠️</span>
-                    <strong style="font-size:16px;">程序错误</strong>
-                </div>
-                <div style="margin-bottom:8px; font-size:13px;">${errorMessage}</div>
-                ${errorStack ? `<details style="margin-top:8px;">
-                    <summary style="cursor:pointer; font-size:12px; opacity:0.8;">查看详细信息</summary>
-                    <pre style="margin-top:8px; padding:8px; background:rgba(0,0,0,0.2); border-radius:4px; font-size:11px; overflow:auto; max-height:100px; white-space:pre-wrap;">${errorStack}</pre>
-                </details>` : ''}
-                <button onclick="this.parentElement.remove()" style="margin-top:12px; padding:6px 12px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:4px; cursor:pointer; font-size:12px;">关闭</button>
-            `;
-
-            document.body.appendChild(errorBoundary);
-
-            // 10秒后自动消失
-            setTimeout(() => {
-                if (errorBoundary.parentElement) {
-                    errorBoundary.remove();
-                }
-            }, 10000);
-        });
-
-        /**
-         * Promise错误处理
-         * 捕获未处理的Promise rejection
-         */
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('❌ 未处理的Promise错误:', event.reason);
-
-            // 避免重复显示错误提示
-            if (document.getElementById('promise-error-boundary')) {
-                return;
-            }
-
-            // 创建错误提示
-            const errorBoundary = document.createElement('div');
-            errorBoundary.id = 'promise-error-boundary';
-            errorBoundary.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #f59e0b, #d97706);
-                color: white;
-                padding: 16px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 99999;
-                max-width: 400px;
-                font-size: 14px;
-                line-height: 1.5;
-            `;
-
-            const errorMessage = event.reason?.message || String(event.reason) || '未知错误';
-
-            errorBoundary.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                    <span style="font-size:24px;">⚠️</span>
-                    <strong style="font-size:16px;">异步操作错误</strong>
-                </div>
-                <div style="margin-bottom:8px; font-size:13px;">${errorMessage}</div>
-                <button onclick="this.parentElement.remove()" style="margin-top:12px; padding:6px 12px; background:rgba(255,255,255,0.2); border:none; color:white; border-radius:4px; cursor:pointer; font-size:12px;">关闭</button>
-            `;
-
-            document.body.appendChild(errorBoundary);
-
-            // 10秒后自动消失
-            setTimeout(() => {
-                if (errorBoundary.parentElement) {
-                    errorBoundary.remove();
-                }
-            }, 10000);
-        });
-
-        // 安全的包装函数 - 用于包装可能出错的函数
-        function safeExecute(fn, fallback = () => {}) {
-            return function(...args) {
-                try {
-                    return fn.apply(this, args);
-                } catch (error) {
-                    console.error('❌ 函数执行错误:', error);
-                    addLog('错误', `${fn.name || '匿名函数'}执行失败: ${error.message}`);
-                    return fallback.apply(this, args);
-                }
-            };
-        }
-
-        console.log('✅ 错误边界处理已启用');
     </script>
 
     <!-- 自定义Tooltip容器 -->

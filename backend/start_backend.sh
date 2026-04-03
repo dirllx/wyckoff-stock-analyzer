@@ -5,4 +5,4 @@ pip3 install loguru sqlalchemy pandas numpy easyquotation akshare fastapi uvicor
 
 # 启动后端
 cd "/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend"
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload

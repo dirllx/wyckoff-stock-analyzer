@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+        }
+        .test-box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🔧 维科夫前端测试页面</h1>
+        <p>这是一个简单的测试页面，用于检查前端服务是否正常工作</p>
+
+        <div>
+            <button onclick="testJavaScript()">测试 JavaScript</button>
+            <button onclick="testBackendAPI()">测试后端 API</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function testJavaScript() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p style="color: green;">✅ JavaScript 正常工作！</p>';
+            console.log('JavaScript 测试成功');
+        }
+
+        async function testBackendAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p style="color: blue;">🔄 正在测试后端连接...</p>';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/health');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    result.innerHTML = '<p style="color: green;">✅ 后端 API 连接成功！</p>' +
+                                     '<p>状态: ' + data.status + '</p>' +
+                                     '<p>数据库: ' + (data.database === 'connected' ? '已连接' : '未连接') + '</p>';
+                } else {
+                    result.innerHTML = '<p style="color: orange;">⚠️ 后端响应异常</p>';
+                }
+            } catch (error) {
+                result.innerHTML = '<p style="color: red;">❌ 后端连接失败: ' + error.message + '</p>';
+                console.error('API 测试失败:', error);
+            }
+        }
+
+        // 页面加载时的初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('测试页面已加载');
+            document.getElementById('result').innerHTML = '<p style="color: #666;">页面已加载，点击按钮开始测试</p>';
+        });
+    </script>
+</body>
+</html>

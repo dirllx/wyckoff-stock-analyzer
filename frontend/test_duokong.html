@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>多空线测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1f2937; color: white; }
+        .result { margin: 10px 0; padding: 10px; background: #374151; border-radius: 5px; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 多空线功能测试</h1>
+    <button onclick="testAPI()">测试API</button>
+    <button onclick="checkConsole()">检查控制台</button>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="result">正在测试API...</div>';
+
+            try {
+                // 测试Quotes API
+                const response = await fetch('http://localhost:8000/api/v1/stocks/688234/quotes?timeframe=daily&limit=5');
+                const data = await response.json();
+
+                const quotes = data.quotes || [];
+                if (quotes.length > 0) {
+                    const latest = quotes[0];
+                    const hasDuokong = latest.duokong_line !== undefined && latest.duokong_line !== null;
+
+                    results.innerHTML = `
+                        <div class="result">
+                            <h3>✅ API响应成功</h3>
+                            <p>股票代码：${data.code}</p>
+                            <p>返回数量：${quotes.length}条</p>
+                            <p>最新日期：${latest.date}</p>
+                            <p>收盘价：${latest.close}</p>
+                            <p>MA10：${latest.ma10}</p>
+                            <p class="${hasDuokong ? 'success' : 'error'}">
+                                多空线：${latest.duokong_line} ${hasDuokong ? '✅' : '❌'}
+                            </p>
+                        </div>
+                        <div class="result">
+                            <h3>📊 所有数据字段：</h3>
+                            <pre>${JSON.stringify(latest, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = '<div class="result error">❌ 未返回任何数据</div>';
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="result error">❌ 错误：${error.message}</div>`;
+            }
+        }
+
+        function checkConsole() {
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="result">
+                    <h3>🔍 如何查看浏览器控制台</h3>
+                    <ol>
+                        <li>按 F12 或 Cmd+Option+I 打开开发者工具</li>
+                        <li>点击 "Console" 标签</li>
+                        <li>查找包含 "多空线" 的日志</li>
+                        <li>应该看到：[多空线] 数据条数: XXX</li>
+                    </ol>
+                </div>
+                <div class="result">
+                    <h3>📝 预期的控制台日志</h3>
+                    <pre>
+[多空线] 数据条数: 500
+[多空线] 第一条: {time: "2024-01-01", value: 75.23}
+[多空线] 最后一条: {time: "2026-04-02", value: 79.38}
+                    </pre>
+                </div>
+            `;
+        }
+
+        // 页面加载时自动测试
+        window.onload = () => {
+            setTimeout(testAPI, 500);
+        };
+    </script>
+</body>
+</html>

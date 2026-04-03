@@ -122,11 +122,11 @@ timeframe_priority:
   - akshare
   - baostock
   monthly:
-  - baostock
   - akshare
+  - baostock
   realtime:
   - easyquotation
   - akshare
   weekly:
-  - baostock
   - akshare
+  - baostock
