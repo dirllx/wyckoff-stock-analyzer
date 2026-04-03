@@ -1027,7 +1027,7 @@ async def get_bulk_stock_quotes(
         if timeframe in ['1', '5', '15', '30', '60']:
             logger.info(f"⚡ 批量更新分钟线数据: {len(codes)}只股票, 周期: {timeframe}")
 
-            # 限制并发更新数量（一次最多5只），避免数据源压力过大
+            # 限制并发更新数量（一次最多3只），避免数据源压力过大，确保稳定性
             from concurrent.futures import ThreadPoolExecutor
             import threading
 
@@ -1042,15 +1042,17 @@ async def get_bulk_stock_quotes(
                     with update_lock:
                         if success:
                             updated_count += 1
+                            logger.info(f"  ✅ {code} 更新成功")
                         else:
                             failed_count += 1
+                            logger.warning(f"  ❌ {code} 更新失败")
                 except Exception as e:
-                    logger.warning(f"⚠️ {code} {timeframe}分钟线更新异常: {e}")
+                    logger.warning(f"  ⚠️ {code} 更新异常: {e}")
                     with update_lock:
                         failed_count += 1
 
-            # 使用线程池并发更新，但限制并发数为5
-            with ThreadPoolExecutor(max_workers=5) as executor:
+            # 使用线程池并发更新，但限制并发数为3（更稳定）
+            with ThreadPoolExecutor(max_workers=3) as executor:
                 executor.map(update_single_stock, codes)
 
             logger.info(f"✅ 批量更新完成: 成功{updated_count}只, 失败{failed_count}只")
@@ -1068,19 +1070,23 @@ async def get_bulk_stock_quotes(
                     })
                     continue
 
-                # ✅ 分钟线数据特殊处理：只返回今天的数据
-                # 对于分钟线（1/5/15/30/60），过滤掉昨天的数据，只保留今天的
+                # ✅ 分钟线数据特殊处理：
+                # 1. 只返回今天的数据
+                # 2. 只返回最新的5条（关注列表只显示5笔）
                 if timeframe in ['1', '5', '15', '30', '60']:
                     from datetime import datetime
                     today = datetime.now().date()
+
                     # 过滤出今天的数据
                     today_quotes = [q for q in quotes if q.date.date() == today]
+
                     if today_quotes:
-                        quotes = today_quotes  # 只使用今天的数据
-                        logger.info(f"✅ {code} {timeframe}分钟线：过滤出今天{len(quotes)}条数据")
+                        # 只返回最新的5条
+                        quotes = today_quotes[-5:] if len(today_quotes) > 5 else today_quotes
+                        logger.info(f"✅ {code} {timeframe}分钟线：今天数据，取最新{len(quotes)}条")
                     else:
-                        # 如果今天没有数据，使用最新的10条数据
-                        quotes = quotes[-10:] if len(quotes) > 10 else quotes
+                        # 如果今天没有数据，使用最新的5条数据
+                        quotes = quotes[-5:] if len(quotes) > 5 else quotes
                         logger.warning(f"⚠️ {code} {timeframe}分钟线：今天无数据，使用最新{len(quotes)}条")
 
                 # 使用简化评分规则（基于MA和成交量），不使用WyckoffAnalyzer（太慢）
