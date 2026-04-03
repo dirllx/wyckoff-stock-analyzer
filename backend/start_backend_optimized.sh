@@ -127,7 +127,7 @@ case "$1" in
         fi
         ;;
     monitor)
-        watch -n 2 'bash '"$0"' status
+        watch -n 2 "bash $0 status"
         ;;
     *)
         echo "用法: $0 {start|stop|restart|status|logs|monitor}"
