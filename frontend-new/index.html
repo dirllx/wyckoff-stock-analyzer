@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>威科夫股票分析系统</title>
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>威科夫股票分析系统</h1>
+    </header>
+    <main>
+      <div id="stock-input">
+        <input type="text" id="stock-code" placeholder="输入股票代码">
+        <button id="analyze-btn">分析</button>
+      </div>
+      <div id="charts">
+        <div id="mainChart"></div>
+        <div id="volumeChart"></div>
+      </div>
+      <div id="klineTable"></div>
+      <div id="watchlist"></div>
+      <div id="analysis"></div>
+    </main>
+    <div id="toast-container"></div>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
