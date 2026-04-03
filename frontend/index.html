@@ -855,6 +855,7 @@
                     <div style="display: flex; gap: 8px;">
                         <button class="btn btn-secondary" onclick="toggleBatchImport()" style="padding: 6px 12px; font-size: 12px;">📥 批量导入</button>
                         <button class="btn btn-primary" onclick="batchAnalyzeWatchlist()" style="padding: 6px 12px; font-size: 12px;">⚡ 批量分析</button>
+                        <button class="btn btn-warning" onclick="clearWatchlistCache()" style="padding: 6px 12px; font-size: 12px; background: linear-gradient(135deg, #f59e0b, #d97706) !important;">🗑️ 清缓存</button>
                         <button class="btn btn-secondary" onclick="refreshWatchlist()" style="padding: 6px 12px; font-size: 12px;">🔄 刷新</button>
                     </div>
                 </div>
@@ -2222,6 +2223,7 @@
             const hasMa120 = uniqueQuotes.some(q => q.ma120 != null);
             const hasMa250 = uniqueQuotes.some(q => q.ma250 != null);
             const hasObv = uniqueQuotes.some(q => q.obv != null);
+            const hasDuokong = uniqueQuotes.some(q => q.duokong_line != null);
 
             // 动态生成表头
             let headerHtml = '<tr>';
@@ -2242,6 +2244,7 @@
             if (hasMa250) headerHtml += '<th>MA250</th>';
             if (hasObv) headerHtml += '<th style="cursor: help;" title="OBV能量潮指标">OBV</th>';
             headerHtml += '<th style="cursor: help;" title="信号强度指标">信号</th>';
+            if (hasDuokong) headerHtml += '<th style="cursor: help;" title="多空线指标">多空线</th>';
             headerHtml += '<th style="cursor: help;" title="威科夫阶段">阶段</th>';
             headerHtml += '</tr>';
             klineTableHead.innerHTML = headerHtml;
@@ -2321,6 +2324,14 @@
 
                 // 信号列 - 保留tooltip
                 rowHtml += `<td style="text-align: center;">${getSignalStrength(q)}</td>`;
+
+                // 多空线列 - 根据收盘价与多空线的关系显示不同颜色
+                if (hasDuokong) {
+                    const duokongColor = q.duokong_line != null && q.close != null
+                        ? (q.close > q.duokong_line ? '#10b981' : '#ffffff')  // 收盘价>多空线显示绿色，否则白色
+                        : '#6b7280';  // 无数据显示灰色
+                    rowHtml += `<td style="text-align: center; color: ${duokongColor}; font-weight: 600;">${q.duokong_line != null ? q.duokong_line.toFixed(2) : '-'}</td>`;
+                }
 
                 // 威科夫阶段列 - 保留tooltip
                 rowHtml += `<td><span class="phase-badge ${phaseClass}" style="cursor: help;" data-tooltip="${phaseTooltip}">${phase === 'U' ? 'U上升' : phase === 'D' ? 'D下降' : phase === 'A' ? 'A吸筹' : phase === 'DS' ? 'DS下跌吸筹' : '震荡'} ${phase === 'U' ? '📈' : phase === 'D' ? '📉' : phase === 'A' ? '🔄' : phase === 'DS' ? '📥' : '⚡'}</span></td>`;
@@ -2635,6 +2646,34 @@
                     ma250Series.setData(ma250Data);
                 }
 
+                // 多空线 - 白色（最醒目，深色背景下的最佳选择）
+                const duokongData = uniqueDates.map(date => {
+                    const q = dateMap.get(date);
+                    return {
+                        time: convertTimeForChart(date, timeframe),
+                        value: q?.duokong_line
+                    };
+                }).filter(d => d.value !== undefined && d.value !== null);
+                console.log(`[多空线] 数据条数: ${duokongData.length}`);
+                if (duokongData.length > 0) {
+                    console.log(`[多空线] 第一条:`, duokongData[0]);
+                    console.log(`[多空线] 最后一条:`, duokongData[duokongData.length - 1]);
+                    const duokongSeries = mainChart.addLineSeries({
+                        color: '#ffffff',  // 纯白色（深色背景下最醒目）
+                        lineWidth: 2.5,  // 稍粗显示，突出重要性
+                        title: '多空线',  // 显示在图例中
+                        priceLineVisible: true,
+                        lastValueVisible: true,
+                        priceScaleId: 'right',
+                        priceFormat: {
+                            type: 'price',
+                            precision: 2,
+                            minMove: 0.01,
+                        },
+                    });
+                    duokongSeries.setData(duokongData);
+                }
+
                 // 添加威科夫阶段标注（优化版：减少标记数量）
                 const phaseMarkers = [];
                 let lastPhase = null;
@@ -2674,6 +2713,61 @@
 
                 if (phaseMarkers.length > 0) {
                     candleSeries.setMarkers(phaseMarkers);
+                }
+
+                // ========== 添加多空线金叉死叉标注 ==========
+                const crossMarkers = [];
+                const datesArray = Array.from(uniqueDates);
+
+                for (let i = 1; i < datesArray.length; i++) {
+                    const currentDate = datesArray[i];
+                    const prevDate = datesArray[i - 1];
+
+                    const currentQ = dateMap.get(currentDate);
+                    const prevQ = dateMap.get(prevDate);
+
+                    if (!currentQ || !prevQ) continue;
+                    if (!currentQ.close || !prevQ.close) continue;
+                    if (!currentQ.duokong_line || !prevQ.duokong_line) continue;
+
+                    // 金叉：价格上穿多空线（买入信号）
+                    // 判断：前一天价格<多空线，当天价格>多空线
+                    const isGoldenCross = prevQ.close < prevQ.duokong_line &&
+                                         currentQ.close > currentQ.duokong_line;
+
+                    // 死叉：价格下穿多空线（卖出信号）
+                    // 判断：前一天价格>多空线，当天价格<多空线
+                    const isDeathCross = prevQ.close > prevQ.duokong_line &&
+                                        currentQ.close < currentQ.duokong_line;
+
+                    if (isGoldenCross) {
+                        crossMarkers.push({
+                            time: convertTimeForChart(currentDate, timeframe),
+                            position: 'belowBar',
+                            color: '#10b981',  // 绿色，买入
+                            shape: 'arrowUp',
+                            text: '金叉',
+                            size: 2
+                        });
+                    }
+
+                    if (isDeathCross) {
+                        crossMarkers.push({
+                            time: convertTimeForChart(currentDate, timeframe),
+                            position: 'aboveBar',
+                            color: '#ef4444',  // 红色，卖出
+                            shape: 'arrowDown',
+                            text: '死叉',
+                            size: 2
+                        });
+                    }
+                }
+
+                if (crossMarkers.length > 0) {
+                    // 合并威科夫标注和多空线标注
+                    const allMarkers = [...phaseMarkers, ...crossMarkers];
+                    candleSeries.setMarkers(allMarkers);
+                    console.log(`[多空线标注] 金叉死叉标记数: ${crossMarkers.length}`);
                 }
 
                 // ========== 添加趋势预测K线 ==========
@@ -4378,66 +4472,66 @@
         /**
          * 计算均线状态
          * @param {Object} quote - K线数据
-         * @returns {Object} - { status: 状态, text: 描述, color: 颜色 }
+         * @returns {Object} - { status: 状态, text: 描述, color: 颜色, category: 分类用于统计 }
          */
         function calculateMAStatus(quote) {
             if (!quote || !quote.ma5 || !quote.ma10 || !quote.ma20) {
-                return { status: 'unknown', text: '数据不足', color: '#9ca3af' };
+                return { status: 'unknown', text: '数据不足', color: '#9ca3af', category: '未知' };
             }
 
             const { close, ma5, ma10, ma20 } = quote;
 
             // 多头排列
             if (close > ma20 && ma5 > ma10 && ma10 > ma20) {
-                // 检查金叉
-                if (ma5 > ma10 && ma10 > ma20) {
-                    return { status: 'bullish_aligned', text: '📈 多头排列', color: '#10b981' };
-                }
-                return { status: 'bullish', text: '看涨', color: '#10b981' };
+                return { status: 'bullish_aligned', text: '📈 多头排列', color: '#10b981', category: '多头排列' };
             }
             // 空头排列
             else if (close < ma20 && ma5 < ma10 && ma10 < ma20) {
-                // 检查死叉
-                if (ma5 < ma10 && ma10 < ma20) {
-                    return { status: 'bearish_aligned', text: '📉 空头排列', color: '#ef4444' };
-                }
-                return { status: 'bearish', text: '看跌', color: '#ef4444' };
+                return { status: 'bearish_aligned', text: '📉 空头排列', color: '#ef4444', category: '空头排列' };
             }
             // 金叉信号
             else if (ma5 > ma10 && ma10 < ma20) {
-                return { status: 'golden_cross', text: '⭐ 金叉', color: '#fbbf24' };
+                return { status: 'golden_cross', text: '⭐ 金叉', color: '#fbbf24', category: '金叉' };
             }
             // 死叉信号
             else if (ma5 < ma10 && ma10 > ma20) {
-                return { status: 'death_cross', text: '💀 死叉', color: '#ef4444' };
+                return { status: 'death_cross', text: '💀 死叉', color: '#ef4444', category: '死叉' };
+            }
+            // 看涨但未形成多头排列
+            else if (close > ma20) {
+                return { status: 'bullish', text: '看涨', color: '#10b981', category: '看涨' };
+            }
+            // 看跌但未形成空头排列
+            else if (close < ma20) {
+                return { status: 'bearish', text: '看跌', color: '#ef4444', category: '看跌' };
             }
             // 震荡
             else {
-                return { status: 'neutral', text: '震荡', color: '#9ca3af' };
+                return { status: 'neutral', text: '震荡', color: '#9ca3af', category: '震荡' };
             }
         }
 
         /**
          * 计算量能状态
          * @param {Object} quote - K线数据
-         * @returns {Object} - { status: 状态, text: 描述, color: 颜色 }
+         * @returns {Object} - { status: 状态, text: 描述, color: 颜色, category: 分类用于统计 }
          */
         function calculateVolumeStatus(quote) {
             if (!quote || !quote.volume || !quote.volume_ma5) {
-                return { status: 'unknown', text: '数据不足', color: '#9ca3af' };
+                return { status: 'unknown', text: '数据不足', color: '#9ca3af', category: '未知', ratio: 0 };
             }
 
             const { volume, volume_ma5 } = quote;
             const ratio = volume / volume_ma5;
 
             if (ratio >= 2.0) {
-                return { status: 'very_high', text: '🔥 异常放量', color: '#ef4444', ratio };
-            } else if (ratio >= 1.5) {
-                return { status: 'high', text: '📈 放量', color: '#fbbf24', ratio };
+                return { status: 'very_high', text: '🔥 异常放量', color: '#ef4444', category: '放量', ratio };
+            } else if (ratio >= 1.2) {
+                return { status: 'high', text: '📈 放量', color: '#fbbf24', category: '放量', ratio };
             } else if (ratio >= 0.8) {
-                return { status: 'normal', text: '正常', color: '#9ca3af', ratio };
+                return { status: 'normal', text: '正常', color: '#9ca3af', category: '平稳', ratio };
             } else {
-                return { status: 'low', text: '📉 缩量', color: '#6b7280', ratio };
+                return { status: 'low', text: '📉 缩量', color: '#6b7280', category: '缩量', ratio };
             }
         }
 
@@ -4845,6 +4939,7 @@
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">价格</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">涨跌</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 50px;">信号</th>
+                                    <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">多空线</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">均线</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 70px;">量能</th>
                                     <th style="text-align: center; padding: 6px 4px; color: #9ca3af; font-weight: 500; font-size: 11px; width: 60px;">阶段</th>
@@ -4901,6 +4996,7 @@
                         <td style="text-align: center; padding: 8px 4px; color: #f9fafb; font-size: 12px; font-weight: 500;">${quote?.close ? quote.close.toFixed(2) : '-'}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${priceChangeColor}; font-weight: 600; font-size: 11px;" data-tooltip="涨跌幅: ${priceChangeText}">${priceChangeText}</td>
                         <td style="text-align: center; padding: 8px 4px;">${getSignalStrength(quote)}</td>
+                        <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${quote?.duokong_line ? (quote.duokong_line < quote.close ? '#10b981' : '#ffffff') : '#6b7280'}; font-weight: 600; font-size: 11px;" data-tooltip="多空线: ${quote?.duokong_line ? quote.duokong_line.toFixed(2) : 'N/A'}">${quote?.duokong_line ? quote.duokong_line.toFixed(2) : '-'}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${maStatus.color}; font-size: 11px;" data-tooltip="${maTooltip}">${maStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${volumeStatus.color}; font-size: 11px;" data-tooltip="${volTooltip}">${volumeStatus.text}</td>
                         <td class="tooltip-cell" style="text-align: center; padding: 8px 4px; color: ${phaseResult.phase === 'U' ? '#10b981' : phaseResult.phase === 'D' ? '#ef4444' : phaseResult.phase === 'A' ? '#f59e0b' : phaseResult.phase === 'DS' ? '#8b5cf6' : '#9ca3af'}; font-weight: 600; font-size: 11px;" data-tooltip="${wyckoffTooltip}">${wyckoffPhase}</td>
@@ -4938,6 +5034,12 @@
             const volumeStatusCount = { '放量': 0, '缩量': 0, '平稳': 0 };
             const volumeStatusDetails = [];
 
+            // 统计价格位置（价格与多空线、MA250的关系）
+            let priceAboveDuokong = 0;  // 价格高于多空线的周期数
+            let priceAboveMa250 = 0;   // 价格高于MA250的周期数
+            let priceAboveBoth = 0;    // 价格同时高于多空线和MA250的周期数
+            const pricePositionDetails = [];
+
             analysisData.forEach(data => {
                 const tfName = timeframeNames[data.timeframe] || data.timeframe;
                 const summary = data.summary;
@@ -4960,7 +5062,7 @@
 
                 // 计算均线状态
                 const maStatus = calculateMAStatus(quote);
-                maStatusCount[maStatus.text] = (maStatusCount[maStatus.text] || 0) + 1;
+                maStatusCount[maStatus.category] = (maStatusCount[maStatus.category] || 0) + 1;
                 maStatusDetails.push({
                     period: tfName,
                     status: maStatus.text,
@@ -4971,13 +5073,32 @@
 
                 // 计算量能状态
                 const volumeStatus = calculateVolumeStatus(quote);
-                volumeStatusCount[volumeStatus.text] = (volumeStatusCount[volumeStatus.text] || 0) + 1;
+                volumeStatusCount[volumeStatus.category] = (volumeStatusCount[volumeStatus.category] || 0) + 1;
                 volumeStatusDetails.push({
                     period: tfName,
                     status: volumeStatus.text,
                     color: volumeStatus.color,
                     quote: quote,
                     ratio: volumeStatus.ratio
+                });
+
+                // 统计价格位置
+                const aboveDuokong = quote && quote.duokong_line && quote.close > quote.duokong_line;
+                const aboveMa250 = quote && quote.ma250 && quote.close > quote.ma250;
+                const aboveBoth = aboveDuokong && aboveMa250;
+
+                if (aboveDuokong) priceAboveDuokong++;
+                if (aboveMa250) priceAboveMa250++;
+                if (aboveBoth) priceAboveBoth++;
+
+                pricePositionDetails.push({
+                    period: tfName,
+                    aboveDuokong: aboveDuokong,
+                    aboveMa250: aboveMa250,
+                    aboveBoth: aboveBoth,
+                    close: quote?.close,
+                    duokong: quote?.duokong_line,
+                    ma250: quote?.ma250
                 });
 
                 if (direction === 'LONG') {
@@ -5078,19 +5199,43 @@
             const phaseSummary = phaseCount['U'] || phaseCount['A'] ? '处于上升或吸筹阶段' :
                                 phaseCount['D'] ? '处于下降阶段' : '震荡整理阶段';
 
+            // 价格位置判断
+            const pricePositionRatio = priceAboveBoth / total;
+            const pricePositionColor = pricePositionRatio >= 0.6 ? '#10b981' : pricePositionRatio >= 0.4 ? '#fbbf24' : '#ef4444';
+            const pricePositionText = pricePositionRatio >= 0.6 ? '强势' : pricePositionRatio >= 0.4 ? '中性' : '弱势';
+
+            // 构建均线统计字符串
+            const maStatsList = [];
+            if (maStatusCount['多头排列']) maStatsList.push(`多头${maStatusCount['多头排列']}`);
+            if (maStatusCount['空头排列']) maStatsList.push(`空头${maStatusCount['空头排列']}`);
+            if (maStatusCount['金叉']) maStatsList.push(`金叉${maStatusCount['金叉']}`);
+            if (maStatusCount['死叉']) maStatsList.push(`死叉${maStatusCount['死叉']}`);
+            if (maStatusCount['看涨']) maStatsList.push(`看涨${maStatusCount['看涨']}`);
+            if (maStatusCount['看跌']) maStatsList.push(`看跌${maStatusCount['看跌']}`);
+            if (maStatusCount['震荡']) maStatsList.push(`震荡${maStatusCount['震荡']}`);
+            const maStatsStr = maStatsList.length > 0 ? maStatsList.join(' ') : '无数据';
+
+            // 构建量能统计字符串
+            const volStatsList = [];
+            if (volumeStatusCount['放量']) volStatsList.push(`放量${volumeStatusCount['放量']}`);
+            if (volumeStatusCount['缩量']) volStatsList.push(`缩量${volumeStatusCount['缩量']}`);
+            if (volumeStatusCount['平稳']) volStatsList.push(`平稳${volumeStatusCount['平稳']}`);
+            const volStatsStr = volStatsList.length > 0 ? volStatsList.join(' ') : '无数据';
+
             html += `
-                            <div style="margin-bottom: 2px;">📊 <strong>均线：</strong>${maSummary}（多头${maStatusCount['多头排列']} 空头${maStatusCount['空头排列']} 纠缠${maStatusCount['纠缠']}）</div>
-                            <div style="margin-bottom: 2px;">📈 <strong>量能：</strong>${volSummary}（放量${volumeStatusCount['放量']} 缩量${volumeStatusCount['缩量']} 平稳${volumeStatusCount['平稳']}）</div>
+                            <div style="margin-bottom: 2px;">📊 <strong>均线：</strong>${maSummary}（${maStatsStr}）</div>
+                            <div style="margin-bottom: 2px;">📈 <strong>量能：</strong>${volSummary}（${volStatsStr}）</div>
                             <div style="margin-bottom: 2px;">🎯 <strong>威科夫：</strong>${phaseSummary}</div>
-                            <div>⚡ <strong>综合判断：</strong>${longRatio >= 0.6 ? '多数周期看涨，积极信号' : shortRatio >= 0.6 ? '多数周期看跌，谨慎观望' : '多空分歧，等待明确信号'}</div>
+                            <div style="margin-bottom: 2px;">💰 <strong>价格位置：</strong><span style="color: ${pricePositionColor}; font-weight: 600;">${pricePositionText}</span>（超多空线${priceAboveDuokong}/${total} 超MA250${priceAboveMa250}/${total} 双超${priceAboveBoth}/${total}）</div>
+                            <div>⚡ <strong>综合判断：</strong>${priceAboveBoth >= 2 ? '✅ 多周期价格站稳关键均线，多头买入信号' : longRatio >= 0.6 ? '多数周期看涨，积极信号' : shortRatio >= 0.6 ? '多数周期看跌，谨慎观望' : '多空分歧，等待明确信号'}</div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // 详细指标分析（移动端单列，桌面端三列）
+            // 详细指标分析（移动端单列，桌面端四列）
             html += `
-                <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(3, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 10px 0'};">
+                <div style="display: grid; grid-template-columns: ${isMobile ? '1fr' : 'repeat(4, 1fr)'}; gap: ${isMobile ? '6px' : '8px'}; margin: ${isMobile ? '12px 0 8px 0' : '16px 0 10px 0'};">
                     <!-- 均线分析 -->
                     <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
                         <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">📊 均线状态</div>
@@ -5146,6 +5291,33 @@
                     <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(0,0,0,0.2); border-radius: 4px;">
                         <span style="color: #9ca3af; font-size: 10px;">${detail.period}:</span>
                         <span style="color: ${phaseColor}; font-weight: 600; font-size: 11px;">${phaseDisplay}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+
+                    <!-- 价格位置 -->
+                    <div style="background: #1f2937; border-radius: ${isMobile ? '4px' : '6px'}; padding: ${isMobile ? '8px' : '10px'}; border: 1px solid #374151;">
+                        <div style="color: #f9fafb; font-size: ${isMobile ? '11px' : '12px'}; font-weight: 600; margin-bottom: ${isMobile ? '4px' : '6px'};">💰 价格位置</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: ${isMobile ? '4px' : '6px'};">
+            `;
+
+            pricePositionDetails.forEach(detail => {
+                const positionColor = detail.aboveBoth ? '#10b981' :
+                                     detail.aboveDuokong || detail.aboveMa250 ? '#fbbf24' : '#ef4444';
+                const positionText = detail.aboveBoth ? '✓双超' :
+                                    detail.aboveDuokong ? '↑多空' :
+                                    detail.aboveMa250 ? '↑250' : '↓均下';
+                const positionTitle = detail.aboveBoth ? '同时高于多空线和MA250' :
+                                    detail.aboveDuokong ? '高于多空线' :
+                                    detail.aboveMa250 ? '高于MA250' : '低于关键均线';
+                html += `
+                    <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(0,0,0,0.2); border-radius: 4px;" title="${positionTitle}">
+                        <span style="color: #9ca3af; font-size: 10px;">${detail.period}:</span>
+                        <span style="color: ${positionColor}; font-weight: 600; font-size: 11px;">${positionText}</span>
                     </div>
                 `;
             });
@@ -5594,6 +5766,33 @@
             });
         }
 
+        // 清除关注列表缓存
+        function clearWatchlistCache() {
+            console.log('🗑️ 开始清除缓存...');
+
+            // 清除所有 watchlist 相关的缓存
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('watchlist')) {
+                    keysToRemove.push(key);
+                }
+            }
+
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                console.log(`✅ 已删除缓存: ${key}`);
+            });
+
+            console.log(`🗑️ 共删除了 ${keysToRemove.length} 个缓存项`);
+
+            // 显示提示
+            alert(`✅ 已清除 ${keysToRemove.length} 个缓存项！\n\n页面将重新加载以获取最新数据。`);
+
+            // 重新加载页面
+            location.reload();
+        }
+
         async function refreshWatchlist() {
             // 防抖：如果已有刷新计划，先取消
             if (refreshTimeout) {
@@ -5651,10 +5850,11 @@
             const startTime = performance.now();
             const logTimestamp = new Date().toLocaleTimeString();
 
+            // 根据当前标签页获取不同类型的数据（在try块外定义，使catch块也能访问）
+            const watchType = currentWatchlistTab;
+            const cacheKey = `watchlist_${watchType}_${currentWatchlistTimeframe}`;
+
             try {
-                // 根据当前标签页获取不同类型的数据
-                const watchType = currentWatchlistTab;
-                const cacheKey = `watchlist_${watchType}_${currentWatchlistTimeframe}`;
                 console.log(`[refreshWatchlist] 正在加载 ${watchType} 类型的关注列表...`);
 
                 const watchlistFetchStart = performance.now();
@@ -5717,7 +5917,8 @@
                     // 存储完整的K线列表
                     if (stock.quotes && stock.quotes.length > 0) {
                         quotesListMap[stock.code] = stock.quotes;
-                        console.log(`[refreshWatchlist] ${stock.code}: ${stock.quotes.length}条数据, 最新日期: ${stock.quotes[0]?.date}, 周期: ${stock.quotes[0]?.timeframe}`);
+                        const latestDate = stock.quotes[stock.quotes.length - 1]?.date;
+                        console.log(`[refreshWatchlist] ${stock.code}: ${stock.quotes.length}条数据, 最新日期: ${latestDate}`);
                     }
                 });
 
@@ -5725,7 +5926,8 @@
                 const quotes = data.items.map(item => {
                     const stockData = bulkData.data?.find(d => d.code === item.stock_code);
                     if (stockData && stockData.quotes && stockData.quotes.length > 0) {
-                        const latestQuote = stockData.quotes[0];
+                        // 批量API返回的数据是从旧到新的，取最后一条作为最新数据
+                        const latestQuote = stockData.quotes[stockData.quotes.length - 1];
                         // 构造简单的analysis_summary，包含评分
                         const analysis_summary = {
                             score: latestQuote.score || 0,
@@ -5869,6 +6071,14 @@
             }
 
             const watchType = currentWatchlistTab;
+
+            // 打印调试信息
+            console.log('[applySortAndFilter] 开始渲染，当前周期:', currentWatchlistTimeframe);
+            if (watchlistData.items.length > 0) {
+                const firstCode = watchlistData.items[0].stock_code;
+                const firstQuote = watchlistData.quoteMap[firstCode];
+                console.log(`[${firstCode}] 当前显示的数据日期:`, firstQuote?.date, '收盘:', firstQuote?.close);
+            }
 
             // 获取筛选条件
             const filterBullish = document.getElementById('filterBullish')?.checked || false;
@@ -6417,7 +6627,7 @@
                 const firstStock = Object.keys(watchlistData.quotesListMap)[0];
                 if (firstStock) {
                     const quotes = watchlistData.quotesListMap[firstStock];
-                    console.log(`[${firstStock}] 数据周期:`, quotes[0]?.timeframe, '数据量:', quotes.length, '最新日期:', quotes[0]?.date);
+                    console.log(`[${firstStock}] 数据周期:`, quotes[0]?.timeframe, '数据量:', quotes.length, '最新日期:', quotes[quotes.length - 1]?.date);
                 }
 
                 const timeframe = currentWatchlistTimeframe;  // 使用全局变量
@@ -6456,9 +6666,16 @@
                             const quotes = quotesListMap[item.stock_code] || [];
                             if (quotes.length > 0) {
                                 const quoteIndex = quotes.length - 1 - currentWatchlistQuoteOffset;
+                                console.log(`[${item.stock_code}] 数据详情:`, {
+                                    总数据量: quotes.length,
+                                    当前偏移: currentWatchlistQuoteOffset,
+                                    计算索引: quoteIndex,
+                                    第一条日期: quotes[0]?.date,
+                                    最后一条日期: quotes[quotes.length - 1]?.date,
+                                    将要使用的数据: quotes[quoteIndex]?.date
+                                });
                                 if (quoteIndex >= 0 && quoteIndex < quotes.length) {
                                     quotesMap[item.stock_code] = quotes[quoteIndex];
-                                    console.log(`[${item.stock_code}] 复用批量数据，索引: ${quoteIndex}, 总数据: ${quotes.length}条`);
                                 }
                             }
 
@@ -6496,22 +6713,23 @@
                         </div>
                     </div>
                     <div class="table-container" style="overflow-x: auto;">
-                        <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: fixed;">
+                        <table class="kline-table" style="font-size: 10px; width: 100%; table-layout: auto;">
                             <thead>
                                 <tr>
-                                    <th style="width: 55px;">代码</th>
-                                    <th style="width: 45px;">名称</th>
-                                    <th style="width: 70px;">日期</th>
-                                    <th style="width: 55px;">收盘</th>
-                                    <th style="width: 50px;">涨跌</th>
-                                    <th style="width: 45px;">量能</th>
-                                    <th style="width: 66px;">MA5</th>
-                                    <th style="width: 66px;">MA10</th>
-                                    <th style="width: 66px;">MA15</th>
-                                    <th style="width: 55px;">威(短)</th>
-                                    <th style="width: 55px;">威(长)</th>
-                                    <th style="width: 70px;">评分</th>
-                                    <th style="width: 45px;">操作</th>
+                                    <th style="min-width: 60px;">代码</th>
+                                    <th style="min-width: 50px;">名称</th>
+                                    <th style="min-width: 70px;">日期</th>
+                                    <th style="min-width: 55px;">收盘</th>
+                                    <th style="min-width: 50px;">涨跌</th>
+                                    <th style="min-width: 45px;">量能</th>
+                                    <th style="min-width: 66px;">MA5</th>
+                                    <th style="min-width: 66px;">MA10</th>
+                                    <th style="min-width: 66px;">MA15</th>
+                                    <th style="min-width: 66px;">多空线</th>
+                                    <th style="min-width: 55px;">威(短)</th>
+                                    <th style="min-width: 55px;">威(长)</th>
+                                    <th style="min-width: 70px;">评分</th>
+                                    <th style="min-width: 45px;">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -6712,6 +6930,15 @@
                         ma15Display = `${quote.ma15.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
                     }
 
+                    // 多空线显示 - 只显示值
+                    let duokongDisplay = '-';
+                    let duokongColor = '#9ca3af';
+                    if (quote && quote.duokong_line) {
+                        duokongDisplay = quote.duokong_line.toFixed(2);
+                        // 多空线小于收盘价时显示绿色（看涨信号）
+                        duokongColor = quote.close > quote.duokong_line ? '#10b981' : '#ef4444';
+                    }
+
                     // MA颜色判断
                     const getMaColor = (maValue) => {
                         if (!quote || !maValue) return '#9ca3af';
@@ -6754,6 +6981,7 @@
                             <td style="color: ${ma5Color}; text-align: center;">${ma5Display}</td>
                             <td style="color: ${ma10Color}; text-align: center;">${ma10Display}</td>
                             <td style="color: ${ma15Color}; text-align: center;">${ma15Display}</td>
+                            <td style="color: ${duokongColor}; text-align: center;">${duokongDisplay}</td>
                             <td style="text-align: center;">
                                 <span style="color: ${shortTermColor}; cursor: help;" data-tooltip="${shortTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${shortTermDisplay}</span>
                             </td>
@@ -9047,8 +9275,10 @@
         });
 
         window.addEventListener('load', () => {
-            console.log('页面完全加载');
-            addLog('页面加载', '页面完全加载完成');
+            console.log('%c=== 页面完全加载 ===', 'color: #10b981; font-weight: bold; font-size: 14px;');
+            console.log('%c版本: 2026-04-03-v2 (修复关注列表数据显示问题)', 'color: #fbbf24; font-weight: bold;');
+            console.log('%c如果看到这条消息，说明已加载最新代码', 'color: #10b981;');
+            addLog('页面加载', '页面完全加载完成 (v2026-04-03-v2)');
 
             // 页面加载后自动刷新关注列表（延迟1秒避免影响页面加载速度）
             setTimeout(() => {

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>测试关注列表数据刷新</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1f2937;
+            color: white;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #374151;
+            border-radius: 5px;
+            border: 1px solid #4b5563;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        .timestamp {
+            color: #fbbf24;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 关注列表数据刷新测试</h1>
+
+    <div class="test-result" style="background: #1e3a8a; border-color: #3b82f6;">
+        <h3 style="margin-top: 0;">📡 连接信息</h3>
+        <p><strong>当前页面地址:</strong> <span id="pageUrl">检测中...</span></p>
+        <p><strong>API地址:</strong> <span id="apiUrl">检测中...</span></p>
+        <p><strong>访问模式:</strong> <span id="accessMode">检测中...</span></p>
+    </div>
+
+    <button onclick="testBulkAPI()">1. 测试批量API</button>
+    <button onclick="testFrontendLogic()">2. 测试前端逻辑</button>
+    <button onclick="checkBrowserCache()">3. 检查浏览器缓存</button>
+
+    <div id="results"></div>
+
+    <div class="timestamp" id="timestamp"></div>
+
+    <script>
+        // 动态检测API地址：支持本地和远程访问
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE = isLocal
+            ? 'http://localhost:8000/api/v1'
+            : `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+
+        console.log('API_BASE:', API_BASE);
+        console.log('当前页面地址:', window.location.href);
+
+        function updateTimestamp() {
+            document.getElementById('timestamp').textContent = '测试时间: ' + new Date().toLocaleString('zh-CN');
+        }
+
+        // 更新连接信息
+        document.getElementById('pageUrl').textContent = window.location.href;
+        document.getElementById('apiUrl').textContent = API_BASE;
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        document.getElementById('accessMode').textContent = isLocal ? '🖥️ 本地访问' : '🌐 远程访问';
+
+        updateTimestamp();
+
+        async function testBulkAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="test-result">正在测试批量API...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/bulk-quotes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codes: ['688234'],
+                        timeframe: '30',
+                        limit: 5
+                    })
+                });
+
+                const data = await response.json();
+                const quotes = data.data[0].quotes;
+
+                if (quotes.length > 0) {
+                    results.innerHTML = `
+                        <div class="test-result">
+                            <h3>✅ 批量API测试成功</h3>
+                            <p>返回 ${quotes.length} 条数据</p>
+                            <p><strong>第一条（索引0）:</strong> ${quotes[0].date}</p>
+                            <p><strong>最后一条（索引${quotes.length - 1}）:</strong> ${quotes[quotes.length - 1].date}</p>
+                            <p class="success">✅ 最新数据是：${quotes[quotes.length - 1].date}</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = '<div class="test-result error">❌ 批量API返回空数据</div>';
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="test-result error">❌ API请求失败: ${error.message}</div>`;
+            }
+        }
+
+        async function testFrontendLogic() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="test-result">正在测试前端逻辑...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/bulk-quotes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codes: ['688234'],
+                        timeframe: '30',
+                        limit: 5
+                    })
+                });
+
+                const data = await response.json();
+                const stockData = data.data[0];
+                const quotes = stockData.quotes;
+
+                // 模拟前端逻辑
+                const latestQuote = quotes[quotes.length - 1];
+
+                results.innerHTML = `
+                    <div class="test-result">
+                        <h3>✅ 前端逻辑测试</h3>
+                        <p>总数据量: ${quotes.length} 条</p>
+                        <p>前端使用索引: ${quotes.length - 1} (quotes.length - 1)</p>
+                        <p><strong>取到的数据:</strong></p>
+                        <ul>
+                            <li>日期: ${latestQuote.date}</li>
+                            <li>收盘: ${latestQuote.close}</li>
+                            <li>多空线: ${latestQuote.duokong_line || 'N/A'}</li>
+                        </ul>
+                        <p class="success">✅ 前端逻辑正确，应该显示 ${latestQuote.date} 的数据</p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="test-result error">❌ 测试失败: ${error.message}</div>`;
+            }
+        }
+
+        function checkBrowserCache() {
+            const results = document.getElementById('results');
+            const scriptTags = document.getElementsByTagName('script');
+            const indexHtml = scriptTags[0]?.src || 'unknown';
+
+            results.innerHTML = `
+                <div class="test-result">
+                    <h3>📋 浏览器缓存检查</h3>
+                    <p><strong>index.html加载路径:</strong> ${indexHtml}</p>
+                    <p><strong>建议操作:</strong></p>
+                    <ol>
+                        <li><strong>硬刷新:</strong> Windows/Linux 按 <code>Ctrl+F5</code>，Mac 按 <code>Cmd+Shift+R</code></li>
+                        <li><strong>清除缓存:</strong> 打开开发者工具(F12) → Application选项卡 → 勾选"Clear site cache"</li>
+                        <li>然后刷新页面</li>
+                    </ol>
+                    <p class="success">💡 提示：如果还是显示4月2日数据，请执行上述操作清除缓存</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

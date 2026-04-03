@@ -164,6 +164,7 @@ class DataStorage:
                 q.ma90 = df.iloc[i]["ma90"]
                 q.ma120 = df.iloc[i]["ma120"]
                 q.ma250 = df.iloc[i]["ma250"]
+                q.duokong_line = df.iloc[i]["duokong_line"]
                 q.volume_ma5 = df.iloc[i]["volume_ma5"]
                 q.obv = df.iloc[i]["obv"]
 
@@ -204,6 +205,10 @@ class DataStorage:
         df["ma90"] = df["close"].rolling(window=90, min_periods=1).mean()
         df["ma120"] = df["close"].rolling(window=120, min_periods=1).mean()
         df["ma250"] = df["close"].rolling(window=250, min_periods=1).mean()
+
+        # 计算多空线：SUM(MA(CLOSE,10),10)/10.110 × 1.011
+        # 对最近10天的MA10求和，然后除以10.110，再乘以1.011
+        df["duokong_line"] = (df["ma10"].rolling(window=10, min_periods=1).sum() / 10.110) * 1.011
 
         # 计算成交量均线
         df["volume_ma5"] = df["volume"].rolling(window=5, min_periods=1).mean()
@@ -367,6 +372,7 @@ class DataStorage:
                         q.ma90 = df.iloc[i]["ma90"]
                         q.ma120 = df.iloc[i]["ma120"]
                         q.ma250 = df.iloc[i]["ma250"]
+                        q.duokong_line = df.iloc[i]["duokong_line"]
                         q.volume_ma5 = df.iloc[i]["volume_ma5"]
                         q.obv = df.iloc[i]["obv"]
 

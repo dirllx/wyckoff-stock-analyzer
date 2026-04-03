@@ -128,6 +128,7 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                     ma90=current_quote_dict.get("ma90"),
                     ma120=current_quote_dict.get("ma120"),
                     ma250=current_quote_dict.get("ma250"),
+                    duokong_line=current_quote_dict.get("duokong_line"),
                     volume_ma5=current_quote_dict.get("volume_ma5"),
                     obv=current_quote_dict.get("obv"),
                     prev_close=prev_close,
@@ -264,6 +265,7 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                             "ma90": q.ma90,
                             "ma120": q.ma120,
                             "ma250": q.ma250,
+                            "duokong_line": q.duokong_line,
                             "volume_ma5": q.volume_ma5,
                             "obv": q.obv
                         }
@@ -293,6 +295,7 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                                 "ma90": q.ma90,
                                 "ma120": q.ma120,
                                 "ma250": q.ma250,
+                                "duokong_line": q.duokong_line,
                                 "volume_ma5": q.volume_ma5,
                                 "obv": q.obv
                             }
@@ -404,6 +407,7 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 "ma90": quotes[-1].ma90,
                 "ma120": quotes[-1].ma120,
                 "ma250": quotes[-1].ma250,
+                "duokong_line": quotes[-1].duokong_line,
                 "volume_ma5": quotes[-1].volume_ma5,
                 "obv": quotes[-1].obv,
                 "prev_close": prev_close,
@@ -439,6 +443,7 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                 ma90=latest_quote.ma90,
                 ma120=latest_quote.ma120,
                 ma250=latest_quote.ma250,
+                duokong_line=latest_quote.duokong_line,
                 volume_ma5=latest_quote.volume_ma5,
                 obv=latest_quote.obv,
                 prev_close=prev_close,
@@ -671,6 +676,7 @@ async def get_stock_quotes(
                         "ma90": q.get("ma90"),
                         "ma120": q.get("ma120"),
                         "ma250": q.get("ma250"),
+                        "duokong_line": q.get("duokong_line"),
                         "volume_ma5": q.get("volume_ma5"),
                         "obv": q.get("obv")
                     }
@@ -705,6 +711,7 @@ async def get_stock_quotes(
                     "ma90": q.ma90,
                     "ma120": q.ma120,
                     "ma250": q.ma250,
+                    "duokong_line": q.duokong_line,
                     "volume_ma5": q.volume_ma5,
                     "obv": q.obv
                 }
@@ -734,6 +741,7 @@ async def get_stock_quotes(
                             "ma90": q.ma90,
                             "ma120": q.ma120,
                             "ma250": q.ma250,
+                            "duokong_line": q.duokong_line,
                             "volume_ma5": q.volume_ma5,
                             "obv": q.obv
                         }
@@ -855,6 +863,7 @@ async def get_stock_quotes(
                             "ma90": q.ma90,
                             "ma120": q.ma120,
                             "ma250": q.ma250,
+                            "duokong_line": q.duokong_line,
                             "volume_ma5": q.volume_ma5,
                             "obv": q.obv
                         }
@@ -1042,7 +1051,7 @@ async def get_bulk_stock_quotes(
                     score = 0
                     # 1. 趋势强度（25%）：基于MA排列
                     trend_score = 0
-                    if q.ma5 and q.ma10 and q.ma20:
+                    if q.close and q.ma5 and q.ma10 and q.ma20:
                         if q.close > q.ma5 > q.ma10 > q.ma20:
                             trend_score = 1  # 多头排列
                         elif q.close < q.ma5 < q.ma10 < q.ma20:
@@ -1059,7 +1068,7 @@ async def get_bulk_stock_quotes(
 
                     # 3. 价格位置（25%）：相对于MA20
                     position_score = 0
-                    if q.ma20:
+                    if q.close and q.ma20:
                         if q.close > q.ma20:
                             position_score = 1
                         elif q.close < q.ma20:
@@ -1094,9 +1103,10 @@ async def get_bulk_stock_quotes(
                         "ma90": q.ma90,
                         "ma120": q.ma120,
                         "ma250": q.ma250,
+                        "duokong_line": q.duokong_line,
                         "volume_ma5": q.volume_ma5,
                         "obv": q.obv,
-                        "prev_close": prev_quote.close if i == len(quotes) - 1 else None,
+                        "prev_close": prev_quote.close if (prev_quote and i == len(quotes) - 1) else None,
                         "change_percent": change_percent if i == len(quotes) - 1 else None,
                         "score": score  # 简化评分
                     })
