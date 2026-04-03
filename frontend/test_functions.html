@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1f2937;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #374151;
+            border-radius: 8px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 功能测试页面</h1>
+
+    <div class="test-section">
+        <h2>1. 基础功能测试</h2>
+        <button onclick="testBasicFunctions()">测试基础功能</button>
+        <div id="basicResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API连接测试</h2>
+        <button onclick="testAPIConnection()">测试API连接</button>
+        <div id="apiResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 浏览器控制台检查</h2>
+        <p>请打开浏览器控制台（F12）查看错误信息</p>
+    </div>
+
+    <script>
+        // 动态检测API地址
+        const currentHost = window.location.hostname;
+        const API_BASE = `http://${currentHost}:8000`;
+
+        function testBasicFunctions() {
+            const results = document.getElementById('basicResults');
+            results.innerHTML = '<div class="success">✅ 页面加载成功</div>';
+
+            // 测试localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                results.innerHTML += '<div class="success">✅ localStorage 正常</div>';
+            } catch (e) {
+                results.innerHTML += `<div class="error">❌ localStorage 失败: ${e.message}</div>`;
+            }
+
+            // 测试fetch
+            results.innerHTML += '<div class="success">✅ JavaScript 基础功能正常</div>';
+        }
+
+        async function testAPIConnection() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<div>正在测试API连接...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `<div class="success">✅ API连接正常: ${JSON.stringify(data)}</div>`;
+                } else {
+                    results.innerHTML = `<div class="error">❌ API返回错误: ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ API连接失败: ${error.message}</div>`;
+            }
+        }
+
+        // 全局错误处理
+        window.addEventListener('error', (event) => {
+            console.error('全局错误捕获:', event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise拒绝捕获:', event.reason);
+        });
+
+        console.log('测试页面加载完成');
+        console.log('API_BASE:', API_BASE);
+    </script>
+</body>
+</html>

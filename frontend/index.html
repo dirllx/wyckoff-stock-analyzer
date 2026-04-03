@@ -1383,9 +1383,13 @@
                 handle(error, context = '操作', showAlert = true) {
                     console.error(`[${context}] 失败:`, error);
 
-                    // 记录到日志
-                    if (window.addLog) {
-                        addLog(context, `失败: ${error.message}`);
+                    // 记录到日志（延迟检查，因为addLog可能还未定义）
+                    if (typeof addLog === 'function') {
+                        try {
+                            addLog(context, `失败: ${error.message}`);
+                        } catch (e) {
+                            // 忽略日志记录错误
+                        }
                     }
 
                     // 显示用户友好的错误提示
@@ -1394,9 +1398,9 @@
 
                         if (error.name === 'AbortError') {
                             message = `${context}超时，请检查网络连接`;
-                        } else if (error.message.includes('HTTP 4')) {
+                        } else if (error.message && error.message.includes('HTTP 4')) {
                             message = `${context}请求错误，请检查输入`;
-                        } else if (error.message.includes('Failed to fetch')) {
+                        } else if (error.message && error.message.includes('Failed to fetch')) {
                             message = `${context}网络错误，请检查后端服务`;
                         } else if (error.message) {
                             message = `${context}: ${error.message}`;
