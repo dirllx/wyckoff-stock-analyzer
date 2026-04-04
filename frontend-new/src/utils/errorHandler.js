@@ -181,4 +181,9 @@ class ErrorHandler {
 // Create singleton instance
 const errorHandler = new ErrorHandler()
 
+// Convenience functions
+export const handleError = (error) => errorHandler.classify(error);
+export const withErrorHandling = (fn, context) => errorHandler.wrap(fn, { context });
+
+export { errorHandler }
 export default errorHandler

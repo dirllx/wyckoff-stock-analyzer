@@ -66,4 +66,6 @@ if (import.meta.env.MODE === 'development') {
   Logger.setLevel('INFO');
 }
 
+// 创建 logger 实例并导出
+export const logger = Logger;
 export default Logger;

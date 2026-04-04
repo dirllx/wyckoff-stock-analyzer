@@ -215,4 +215,6 @@ if (typeof document !== 'undefined') {
 // Create singleton instance
 const toast = new ToastManager()
 
+// Export as both default and named export
+export { toast }
 export default toast

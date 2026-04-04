@@ -1,0 +1,283 @@
+/* ========================================
+   图表容器样式
+   ======================================== */
+
+#charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+@media (min-width: 1024px) {
+  #charts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chart-container {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  min-height: 400px;
+  position: relative;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chart-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chart-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.chart-controls button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.chart-controls button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.chart-controls button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* ========================================
+   ECharts 图表样式
+   ======================================== */
+
+#mainChart,
+#volumeChart {
+  width: 100%;
+  height: 350px;
+}
+
+/* ========================================
+   图表加载状态
+   ======================================== */
+
+.chart-container.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.chart-container.loading .chart-content {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ========================================
+   图表空状态
+   ======================================== */
+
+.chart-container.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.chart-empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.chart-empty-state svg {
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.chart-empty-state p {
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+/* ========================================
+   图表工具提示
+   ======================================== */
+
+.chart-tooltip {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: var(--spacing-sm) !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.chart-tooltip-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.chart-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.chart-tooltip-label {
+  color: var(--text-secondary);
+}
+
+.chart-tooltip-value {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ========================================
+   威科夫相位标记样式
+   ======================================== */
+
+.wyckoff-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.wyckoff-marker:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.wyckoff-marker.accumulation {
+  background-color: #10b981;
+}
+
+.wyckoff-marker.distribution {
+  background-color: #ef4444;
+}
+
+.wyckoff-marker.markup {
+  background-color: #3b82f6;
+}
+
+.wyckoff-marker.markdown {
+  background-color: #f59e0b;
+}
+
+.wyckoff-marker.unknown {
+  background-color: #9ca3af;
+}
+
+/* ========================================
+   图例样式
+   ======================================== */
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.legend-item:hover {
+  opacity: 0.7;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-label {
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   响应式图表
+   ======================================== */
+
+@media (max-width: 768px) {
+  #charts {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .chart-container {
+    min-height: 300px;
+    padding: var(--spacing-sm);
+  }
+
+  #mainChart,
+  #volumeChart {
+    height: 250px;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .chart-controls {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* ========================================
+   图表打印样式
+   ======================================== */
+
+@media print {
+  .chart-container {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .chart-controls {
+    display: none;
+  }
+}
