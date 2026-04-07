@@ -1,6 +1,10 @@
 /**
  * 系统设置组件
  */
+import { settingsApi } from '../api/settings.js';
+import { logger } from '../utils/logger.js';
+import { toast } from '../utils/toast.js';
+
 export class Settings {
   /**
    * 生成设置页面HTML
