@@ -162,13 +162,12 @@ async function analyzeStock(stockCode) {
     const endDate = new Date().toISOString().split('T')[0];
 
     // 并行获取数据和分析
-    const [analysisResult, signalsResult] = await Promise.all([
-      stocksApi.analyze(code, endDate, 'daily'),
-      stocksApi.getSignals(code)
-    ]);
+    const analysisResult = await stocksApi.analyze(code, endDate, 'daily');
+
+    // 分析API已包含signals
+    const signalsResult = analysisResult.signals || [];
 
     logger.info('Analysis completed:', analysisResult);
-    logger.info('Signals retrieved:', signalsResult);
 
     // 更新状态
     updateState({
@@ -234,31 +233,36 @@ function updateAnalysisUI(analysis, signals) {
     return;
   }
 
-  // 构建分析结果 HTML
+  const stock = analysis.stock || {};
+  const quote = analysis.current_quote || {};
+  const signalsList = signals || analysis.signals || [];
+
   let html = '<div class="analysis-result">';
   html += '<h3>分析结果</h3>';
 
-  if (analysis.stock) {
-    html += `<div class="stock-info">`;
-    html += `<p><strong>股票代码:</strong> ${analysis.stock.code}</p>`;
-    html += `<p><strong>股票名称:</strong> ${analysis.stock.name || 'N/A'}</p>`;
-    html += `</div>`;
+  // 股票信息
+  html += '<div class="stock-info">';
+  html += `<p><strong>${stock.name || stock.code || ''}</strong> (${stock.code || ''})</p>`;
+  if (quote.close) {
+    const changeStr = quote.change_percent != null
+      ? `${quote.change_percent >= 0 ? '+' : ''}${quote.change_percent.toFixed(2)}%`
+      : '';
+    const changeColor = quote.change_percent >= 0 ? 'color:#ef5350' : 'color:#26a69a';
+    html += `<p>收盘: <strong>${quote.close}</strong> <span style="${changeColor}">${changeStr}</span></p>`;
   }
+  html += '</div>';
 
-  if (analysis.phase) {
-    html += `<div class="phase-info">`;
-    html += `<p><strong>威科夫相位:</strong> <span class="phase-badge phase-${analysis.phase.toLowerCase()}">${analysis.phase}</span></p>`;
-    html += `</div>`;
-  }
-
-  if (signals && signals.length > 0) {
+  // 威科夫信号
+  if (signalsList.length > 0) {
+    const latest = signalsList[0];
     html += '<div class="signals-info">';
-    html += '<h4>交易信号</h4>';
-    html += '<ul>';
-    signals.forEach(signal => {
-      html += `<li>${signal.type}: ${signal.description}</li>`;
-    });
-    html += '</ul>';
+    html += '<h4>最新信号</h4>';
+    html += `<p class="signal-direction signal-${latest.direction?.toLowerCase() || 'long'}">${latest.direction === 'LONG' ? '看多' : '看空'}</p>`;
+    html += `<p><strong>建议:</strong> ${latest.suggestion || ''}</p>`;
+    html += `<p><strong>评分:</strong> ${latest.score}/10 | <strong>强度:</strong> ${latest.strength}</p>`;
+    if (latest.reason) {
+      html += `<p class="signal-reason">${latest.reason}</p>`;
+    }
     html += '</div>';
   }
 
@@ -458,11 +462,11 @@ function bindEvents() {
         }
       }
 
-      // 加载并渲染信号数据
+      // 渲染信号数据（直接使用分析结果中的signals）
       try {
-        const signalsData = await Signals.loadSignals(code);
+        const signalsData = signals || [];
 
-        if (signalsData && signalsData.length > 0) {
+        if (signalsData.length > 0) {
           logger.info(`Signals loaded: ${signalsData.length} items`);
 
           // 渲染信号列表（最多显示6条）

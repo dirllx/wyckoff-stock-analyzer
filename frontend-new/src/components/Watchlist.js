@@ -298,11 +298,12 @@ export class Watchlist {
     try {
       logger.info('Refreshing watchlist data');
 
-      const data = await watchlistApi.getAll();
+      const result = await watchlistApi.getAll();
+      const items = result?.items || (Array.isArray(result) ? result : []);
 
-      logger.info(`Watchlist refreshed: ${data.length} items`);
+      logger.info(`Watchlist refreshed: ${items.length} items`);
 
-      return data;
+      return items;
     } catch (error) {
       logger.error('Failed to refresh watchlist:', error);
       toast.error('刷新失败，请稍后重试');

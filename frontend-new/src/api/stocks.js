@@ -14,8 +14,8 @@ export const stocksApi = {
 
       const result = await apiClient.get(`/api/v1/stocks/${code}/quotes?${params}`);
 
-      // API返回格式: { data: { quotes: [...] } }
-      const quotes = result?.data?.quotes || [];
+      // API返回格式: { code, timeframe, total, quotes: [...] }
+      const quotes = result?.quotes || [];
 
       Logger.info('Quotes fetched successfully', { count: quotes.length });
 
@@ -44,8 +44,8 @@ export const stocksApi = {
 
       Logger.info('Stock analyzed successfully');
 
-      // 返回完整的结果对象（包含stock, analysis_summary等）
-      return result?.data || result;
+      // 返回完整的结果对象（包含stock, current_quote, signals等）
+      return result;
     } catch (error) {
       Logger.error('Failed to analyze stock', error);
       throw error;
@@ -62,7 +62,7 @@ export const stocksApi = {
       Logger.info('Signals fetched successfully');
 
       // 返回信号数组
-      return result?.data?.signals || result?.data || [];
+      return result?.signals || result || [];
     } catch (error) {
       Logger.error('Failed to fetch signals', error);
       throw error;

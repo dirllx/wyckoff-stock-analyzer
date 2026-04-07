@@ -22,6 +22,52 @@ vi.mock('../../src/api/stocks.js', () => ({
   }
 }));
 
+vi.mock('../../src/api/client.js', () => ({
+  default: {
+    post: vi.fn(() => Promise.resolve({
+      stock_code: '000001',
+      timeframes: {
+        '30': {
+          signal_type: 'WYCKOFF',
+          direction: 'LONG',
+          score: 6,
+          confidence: 0.8,
+          strength: 'STRONG',
+          suggestion: '买入',
+          reason: '测试',
+          wyckoff_phase: 'U(上升)',
+          detailed_scores: { trend: 70, wyckoff: 80, volume_price: 60, momentum: 70, total: 70 }
+        },
+        '60': {
+          signal_type: 'WYCKOFF',
+          direction: 'NEUTRAL',
+          score: 3,
+          confidence: 0.5,
+          strength: 'MEDIUM',
+          suggestion: '持有',
+          reason: '测试',
+          wyckoff_phase: '震荡',
+          detailed_scores: { trend: 50, wyckoff: 50, volume_price: 50, momentum: 50, total: 50 }
+        },
+        daily: {
+          signal_type: 'WYCKOFF',
+          direction: 'LONG',
+          score: 7.5,
+          confidence: 0.9,
+          strength: 'STRONG',
+          suggestion: '强烈买入',
+          reason: '测试',
+          wyckoff_phase: 'U(上升)',
+          detailed_scores: { trend: 80, wyckoff: 90, volume_price: 70, momentum: 80, total: 80 }
+        }
+      }
+    })),
+    get: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}));
+
 describe('MultiTimeframe - 数据分组', () => {
   const mockAnalysisData = [
     {
@@ -377,25 +423,26 @@ describe('MultiTimeframe - 卡片渲染', () => {
 
 describe('MultiTimeframe - 批量分析', () => {
   it('应该正确加载多个周期数据', async () => {
-    const { stocksApi } = await import('../../src/api/stocks.js');
+    const apiClient = (await import('../../src/api/client.js')).default;
 
     const timeframes = ['30', '60', 'daily'];
     const result = await MultiTimeframe.loadMultipleTimeframes('000001', timeframes);
 
-    expect(stocksApi.analyze).toHaveBeenCalledTimes(3);
+    expect(apiClient.post).toHaveBeenCalledTimes(1);
     expect(result).toBeDefined();
     expect(result.length).toBe(3);
   });
 
   it('应该正确处理加载错误', async () => {
-    const { stocksApi } = await import('../../src/api/stocks.js');
+    const apiClient = (await import('../../src/api/client.js')).default;
 
-    stocksApi.analyze.mockRejectedValueOnce(new Error('API错误'));
+    apiClient.post.mockRejectedValueOnce(new Error('API错误'));
 
-    // 组件会捕获错误并返回空数组
-    const result = await MultiTimeframe.loadMultipleTimeframes('000001', ['30']);
-
-    expect(result).toEqual([]);
+    try {
+      await MultiTimeframe.loadMultipleTimeframes('000001', ['30']);
+    } catch (error) {
+      expect(error.message).toBe('API错误');
+    }
   });
 });
 

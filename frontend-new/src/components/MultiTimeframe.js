@@ -4,6 +4,7 @@
  */
 
 import { stocksApi } from '../api/stocks.js';
+import apiClient from '../api/client.js';
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
 
@@ -570,22 +571,14 @@ export class MultiTimeframe {
     try {
       logger.info(`Loading multiple timeframes for ${code}: ${timeframes.join(', ')}`);
 
-      const promises = timeframes.map(timeframe =>
-        stocksApi.analyze(code, null, timeframe).catch(error => {
-          logger.warn(`Failed to load ${timeframe} timeframe:`, error);
-          return null;
-        })
-      );
+      const result = await apiClient.post(`/api/v1/stocks/${code}/analyze-multi`, { timeframes });
 
-      const results = await Promise.all(promises);
-
-      // 过滤掉失败的结果并添加timeframe信息
-      const analysisData = results
-        .filter(result => result !== null)
-        .map((result, index) => ({
-          timeframe: timeframes[index],
-          ...result
-        }));
+      // 转换为组件需要的格式
+      const timeframesData = result?.timeframes || {};
+      const analysisData = Object.entries(timeframesData).map(([tf, data]) => ({
+        timeframe: tf,
+        ...data
+      }));
 
       logger.info(`Loaded ${analysisData.length}/${timeframes.length} timeframes`);
 
