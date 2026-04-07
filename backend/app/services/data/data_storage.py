@@ -84,9 +84,16 @@ class DataStorage:
             saved_count = 0
 
             for _, row in quotes_df.iterrows():
-                if row["date"] in existing_dates:
+                # 确保date是datetime对象
+                date_val = row["date"]
+                if isinstance(date_val, str):
+                    date_val = datetime.strptime(date_val, "%Y-%m-%d")
+                elif hasattr(date_val, 'to_pydatetime'):
+                    date_val = date_val.to_pydatetime()
+
+                if date_val in existing_dates:
                     # 更新现有记录（收集对象，稍后批量提交）
-                    existing = existing_dates[row["date"]]
+                    existing = existing_dates[date_val]
                     existing.open = row.get("open")
                     existing.high = row.get("high")
                     existing.low = row.get("low")
@@ -97,7 +104,7 @@ class DataStorage:
                     # 收集需要添加的新记录
                     quote = StockQuote(
                         stock_id=stock.id,
-                        date=row["date"],
+                        date=date_val,
                         timeframe=timeframe,
                         open=row.get("open"),
                         high=row.get("high"),
@@ -369,7 +376,6 @@ class DataStorage:
                 self.db.commit()
 
                 # 计算均线（分钟线也需要计算均线）
-                import pandas as pd
                 all_quotes = self.db.query(StockQuote).filter(
                     StockQuote.stock_id == stock.id,
                     StockQuote.timeframe == timeframe
