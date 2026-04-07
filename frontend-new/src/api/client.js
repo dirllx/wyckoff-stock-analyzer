@@ -276,7 +276,7 @@ export class ApiClient {
 
 // 导出默认实例（向后兼容）
 const defaultClient = new ApiClient({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api'
+  baseURL: import.meta.env.VITE_API_BASE_URL || ''
 });
 
 export default defaultClient;
