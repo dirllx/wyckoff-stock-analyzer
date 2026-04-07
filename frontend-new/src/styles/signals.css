@@ -1,0 +1,233 @@
+/* ========================================
+   信号展示样式
+   ======================================== */
+
+/* 信号容器 */
+.signals-container {
+  width: 100%;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 信号统计 */
+.signals-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.signals-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.signals-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.signals-stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.signals-stat-long {
+  color: var(--color-success);
+}
+
+.signals-stat-short {
+  color: var(--color-error);
+}
+
+/* 信号网格布局 */
+.signals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+}
+
+/* 信号卡片 */
+.signal-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  position: relative;
+  border-left: 3px solid var(--color-tertiary);
+}
+
+.signal-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* 根据方向设置左边框颜色 */
+.signal-card[data-direction="LONG"] {
+  border-left-color: var(--color-success);
+}
+
+.signal-card[data-direction="SHORT"] {
+  border-left-color: var(--color-error);
+}
+
+.signal-card[data-direction="NEUTRAL"] {
+  border-left-color: var(--color-tertiary);
+}
+
+/* 信号卡片头部 */
+.signal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.signal-card-direction {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.signal-card-score {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+/* 信号卡片元信息 */
+.signal-card-meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.signal-card-date,
+.signal-card-timeframe {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 信号卡片原因 */
+.signal-card-reason {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding: var(--spacing-sm);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-sm);
+}
+
+/* 空状态 */
+.signals-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-tertiary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+}
+
+.signals-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.signals-empty-text {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.signals-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .signals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .signals-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .signal-card {
+    padding: var(--spacing-sm);
+  }
+
+  .signal-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .signal-card-meta {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+}
+
+/* 动画效果 */
+@keyframes signalPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.signal-card.new-signal {
+  animation: signalPulse 2s ease-in-out infinite;
+}
+
+/* 加载状态 */
+.signals-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.signals-loading::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  margin-left: var(--spacing-sm);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

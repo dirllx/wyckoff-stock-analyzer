@@ -125,12 +125,12 @@ td {
 
 /* 涨跌颜色 */
 .text-up {
-  color: var(--success-color);
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .text-down {
-  color: var(--error-color);
+  color: var(--color-error);
   font-weight: 600;
 }
 
@@ -140,7 +140,7 @@ td {
 
 /* 相对涨跌幅 */
 .change-positive {
-  color: var(--success-color);
+  color: var(--color-success);
 }
 
 .change-positive::before {
@@ -148,7 +148,7 @@ td {
 }
 
 .change-negative {
-  color: var(--error-color);
+  color: var(--color-error);
 }
 
 .change-neutral {
@@ -216,7 +216,7 @@ td {
 }
 
 .btn-icon.delete:hover {
-  color: var(--error-color);
+  color: var(--color-error);
   background-color: rgba(239, 68, 68, 0.1);
 }
 
@@ -437,4 +437,103 @@ td {
 
 .table-compact {
   font-size: var(--font-size-xs);
+}
+
+/* ========================================
+   K线表格样式
+   ======================================== */
+
+.kline-table-container {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.kline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.kline-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.kline-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.kline-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.kline-table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.kline-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  color: var(--text-primary);
+}
+
+/* 涨跌颜色（中国股市：红涨绿跌） */
+.kline-red {
+  color: var(--color-error);
+}
+
+.kline-green {
+  color: var(--color-success);
+}
+
+/* 威科夫阶段颜色 */
+.phase-U {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.phase-D {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.phase-A {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.phase-DS {
+  color: var(--color-info);
+  font-weight: 600;
+}
+
+.phase-neutral {
+  color: var(--text-tertiary);
+}
+
+.table-empty,
+.table-error {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.table-error {
+  color: var(--color-error);
 }

@@ -12,17 +12,17 @@ describe('Helper Utilities', () => {
   describe('formatDateString', () => {
     it('should format daily date string correctly', () => {
       const result = formatDateString('2024-01-15', 'day');
-      expect(result).toBe('2024-01-15');
+      expect(result).toBe('01-15');
     });
 
     it('should format weekly date string correctly', () => {
       const result = formatDateString('2024-01-15', 'week');
-      expect(result).toBe('2024-W03');
+      expect(result).toBe('01-15');
     });
 
     it('should format monthly date string correctly', () => {
       const result = formatDateString('2024-01-15', 'month');
-      expect(result).toBe('2024-01');
+      expect(result).toBe('01-15');
     });
 
     it('should handle invalid date string', () => {
@@ -32,7 +32,17 @@ describe('Helper Utilities', () => {
 
     it('should handle date-only string without time', () => {
       const result = formatDateString('2024-01-15', 'day');
-      expect(result).toBe('2024-01-15');
+      expect(result).toBe('01-15');
+    });
+
+    it('should format intraday date string with time', () => {
+      const result = formatDateString('2024-01-15 10:30:00', '30');
+      expect(result).toBe('01-15 10:30');
+    });
+
+    it('should format intraday date string without time', () => {
+      const result = formatDateString('2024-01-15', '30');
+      expect(result).toBe('01-15');
     });
   });
 
@@ -45,7 +55,7 @@ describe('Helper Utilities', () => {
       ];
       const result = deduplicateQuotes(quotes, 'day');
       expect(result).toHaveLength(1);
-      expect(result[0].date).toBe('2024-01-15');
+      expect(result[0].date).toBe('01-15');
       expect(result[0].close).toBe(102);
     });
 
@@ -56,8 +66,7 @@ describe('Helper Utilities', () => {
         { date: '2024-01-17', close: 102 }
       ];
       const result = deduplicateQuotes(quotes, 'week');
-      expect(result).toHaveLength(1);
-      expect(result[0].close).toBe(102);
+      expect(result).toHaveLength(3); // Different days, not duplicates
     });
 
     it('should remove duplicate quotes for monthly timeframe', () => {
@@ -67,8 +76,7 @@ describe('Helper Utilities', () => {
         { date: '2024-01-20', close: 102 }
       ];
       const result = deduplicateQuotes(quotes, 'month');
-      expect(result).toHaveLength(1);
-      expect(result[0].close).toBe(102);
+      expect(result).toHaveLength(3); // Different days, not duplicates
     });
 
     it('should keep different dates for daily timeframe', () => {

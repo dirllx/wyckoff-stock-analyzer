@@ -164,6 +164,34 @@ class ErrorHandler {
   }
 
   /**
+   * Wrap an async function to return a wrapped version
+   */
+  wrapAsync(asyncFn, options = {}) {
+    return async (...args) => {
+      try {
+        return await asyncFn(...args)
+      } catch (error) {
+        this.handle(error, options)
+        throw error
+      }
+    }
+  }
+
+  /**
+   * Wrap a sync function with error handling (for event listeners, etc.)
+   */
+  wrapSync(fn, options = {}) {
+    return (...args) => {
+      try {
+        return fn(...args)
+      } catch (error) {
+        this.handle(error, options)
+        throw error
+      }
+    }
+  }
+
+  /**
    * Create a safe version of an async function that catches errors
    */
   safe(asyncFn, options = {}) {
@@ -182,8 +210,12 @@ class ErrorHandler {
 const errorHandler = new ErrorHandler()
 
 // Convenience functions
-export const handleError = (error) => errorHandler.classify(error);
-export const withErrorHandling = (fn, context) => errorHandler.wrap(fn, { context });
+export const handleError = (error) => errorHandler.handle(error);
+export const classifyError = (error) => errorHandler.classifyError(error);
+export const withAsyncErrorHandling = (fn, context) => errorHandler.wrapAsync(fn, { context });
+export const withSyncErrorHandling = (fn, context) => errorHandler.wrapSync(fn, { context });
+// Keep old name for backwards compatibility, but map to async version
+export const withErrorHandling = (fn, context) => errorHandler.wrapAsync(fn, { context });
 
 export { errorHandler }
 export default errorHandler

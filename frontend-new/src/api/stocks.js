@@ -14,9 +14,12 @@ export const stocksApi = {
 
       const result = await apiClient.get(`/api/v1/stocks/${code}/quotes?${params}`);
 
-      Logger.info('Quotes fetched successfully', { count: result?.length || 0 });
+      // API返回格式: { data: { quotes: [...] } }
+      const quotes = result?.data?.quotes || [];
 
-      return result;
+      Logger.info('Quotes fetched successfully', { count: quotes.length });
+
+      return quotes;
     } catch (error) {
       Logger.error('Failed to fetch quotes', error);
       throw error;
@@ -28,13 +31,21 @@ export const stocksApi = {
     try {
       Logger.debug('Analyzing stock', { code, endDate, timeframe });
 
-      const params = endDate ? { end_date: endDate } : {};
+      const data = {
+        code,
+        timeframe
+      };
 
-      const result = await apiClient.post(`/api/v1/stocks/${code}/analyze`, params);
+      if (endDate) {
+        data.end_date = endDate;
+      }
+
+      const result = await apiClient.post('/api/v1/stocks/analyze', data);
 
       Logger.info('Stock analyzed successfully');
 
-      return result;
+      // 返回完整的结果对象（包含stock, analysis_summary等）
+      return result?.data || result;
     } catch (error) {
       Logger.error('Failed to analyze stock', error);
       throw error;
@@ -50,7 +61,8 @@ export const stocksApi = {
 
       Logger.info('Signals fetched successfully');
 
-      return result;
+      // 返回信号数组
+      return result?.data?.signals || result?.data || [];
     } catch (error) {
       Logger.error('Failed to fetch signals', error);
       throw error;

@@ -4,12 +4,12 @@
 
 :root {
   /* 主题色 */
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --info-color: #6366f1;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #6366f1;
 
   /* 背景色 */
   --bg-primary: #ffffff;
@@ -142,11 +142,28 @@ header {
   border-bottom: 1px solid var(--border-color);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 header h1 {
   margin: 0;
   color: var(--primary-color);
+}
+
+.header-settings-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius);
+  transition: background 0.2s;
+}
+
+.header-settings-btn:hover {
+  background: var(--color-surface-secondary);
 }
 
 main {
@@ -244,17 +261,17 @@ main {
 }
 
 .btn-success {
-  background-color: var(--success-color);
+  background-color: var(--color-success);
   color: white;
 }
 
 .btn-warning {
-  background-color: var(--warning-color);
+  background-color: var(--color-warning);
   color: white;
 }
 
 .btn-error {
-  background-color: var(--error-color);
+  background-color: var(--color-error);
   color: white;
 }
 

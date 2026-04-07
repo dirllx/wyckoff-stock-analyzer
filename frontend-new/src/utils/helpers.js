@@ -5,48 +5,46 @@
 
 /**
  * Formats a date string based on the timeframe
- * @param {string} dateStr - The date string to format
- * @param {string} timeframe - The timeframe ('day', 'week', 'month')
+ * Matches the original frontend implementation
+ * @param {string} dateStr - The date string to format (e.g., "2024-01-15" or "2024-01-15 10:30:00")
+ * @param {string} timeframe - The timeframe ('daily', 'weekly', 'monthly', '60m', '30m', etc.)
  * @returns {string} The formatted date string
  */
 export function formatDateString(dateStr, timeframe) {
   if (!dateStr) return '';
 
-  try {
-    const date = new Date(dateStr);
+  // dateStr 格式可能是 "2024-01-15 10:30:00" 或 "2024-01-15"
+  const parts = dateStr.split(' ');
+  const datePart = parts[0]; // "2024-01-15"
+  const timePart = parts[1]; // "10:30:00" 如果有的话
 
-    // Check if date is invalid
-    if (isNaN(date.getTime())) {
-      return dateStr;
-    }
+  if (!datePart) return '';
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+  // 分割日期部分
+  const dateComponents = datePart.split('-');
+  if (dateComponents.length >= 3) {
+    const year = dateComponents[0];
+    const month = dateComponents[1];
+    const day = dateComponents[2];
 
-    switch (timeframe) {
-      case 'week':
-        // Get ISO week number
-        const weekDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const dayNum = weekDate.getDay() || 7; // Make Sunday 7 instead of 0
-        weekDate.setDate(weekDate.getDate() - dayNum + 1); // Set to Monday
-        const weekNumber = getWeekNumber(date);
-        return `${year}-W${String(weekNumber).padStart(2, '0')}`;
-
-      case 'month':
-        return `${year}-${month}`;
-
-      case 'day':
-      default:
-        // If the input is just a date without time, return as-is
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          return dateStr;
+    // 分钟线（30分钟、60分钟）显示日期和时间
+    if (timeframe === '30' || timeframe === '30m' || timeframe === '60' || timeframe === '60m') {
+      if (timePart) {
+        const timeComponents = timePart.split(':');
+        if (timeComponents.length >= 2) {
+          const hour = timeComponents[0];
+          const minute = timeComponents[1];
+          return `${month}-${day} ${hour}:${minute}`;
         }
-        return `${year}-${month}-${day}`;
+      }
+      return `${month}-${day}`;
     }
-  } catch (error) {
-    return dateStr;
+
+    // 日线、周线、月线只显示 MM-DD
+    return `${month}-${day}`;
   }
+
+  return datePart;
 }
 
 /**

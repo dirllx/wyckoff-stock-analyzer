@@ -7,12 +7,24 @@
   <link rel="stylesheet" href="/src/styles/main.css">
   <link rel="stylesheet" href="/src/styles/chart.css">
   <link rel="stylesheet" href="/src/styles/table.css">
+  <link rel="stylesheet" href="/src/styles/watchlist.css">
+  <link rel="stylesheet" href="/src/styles/signals.css">
+  <link rel="stylesheet" href="/src/styles/multiTimeframe.css">
+  <link rel="stylesheet" href="/src/styles/prediction.css">
+  <link rel="stylesheet" href="/src/styles/settings.css">
+  <link rel="stylesheet" href="/src/styles/health.css">
+  <link rel="stylesheet" href="/src/styles/patterns.css">
+  <link rel="stylesheet" href="/src/styles/notifications.css">
+  <link rel="stylesheet" href="/src/styles/riskManagement.css">
   <link rel="stylesheet" href="/src/styles/themes.css">
 </head>
 <body>
   <div id="app">
     <header>
       <h1>威科夫股票分析系统</h1>
+      <button id="settings-btn" class="header-settings-btn" title="设置">
+        ⚙️
+      </button>
     </header>
     <main>
       <div id="stock-input">
@@ -24,7 +36,15 @@
         <div id="volumeChart"></div>
       </div>
       <div id="klineTable"></div>
+      <div id="multiTimeframe"></div>
+      <div id="prediction"></div>
+      <div id="signals"></div>
       <div id="watchlist"></div>
+      <div id="settings"></div>
+      <div id="health"></div>
+      <div id="patterns"></div>
+      <div id="notifications"></div>
+      <div id="risk"></div>
       <div id="analysis"></div>
     </main>
     <div id="toast-container"></div>

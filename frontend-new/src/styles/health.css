@@ -1,0 +1,404 @@
+/**
+ * 系统健康检查样式
+ */
+
+.health-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.health-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.health-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.health-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.health-btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.health-btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.health-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.health-btn-secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+.health-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.health-section {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+}
+
+.health-section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* 系统状态概览 */
+.health-status-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.health-status-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 2px solid transparent;
+}
+
+.health-status-card.status-healthy {
+  border-color: var(--color-success);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+.health-status-card.status-degraded {
+  border-color: var(--color-warning);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(245, 158, 11, 0.1) 100%);
+}
+
+.health-status-card.status-unhealthy {
+  border-color: var(--color-error);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+.health-status-card.status-unknown {
+  border-color: var(--text-tertiary);
+  background: var(--bg-primary);
+}
+
+.health-status-icon {
+  font-size: 2rem;
+}
+
+.health-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.health-status-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.health-status-value {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.health-info-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.health-info-value {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 服务状态网格 */
+.health-services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.health-service-card {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.health-service-card.service-healthy {
+  border-color: var(--color-success);
+}
+
+.health-service-card.service-degraded {
+  border-color: var(--color-warning);
+}
+
+.health-service-card.service-unhealthy {
+  border-color: var(--color-error);
+}
+
+.health-service-card.service-unknown {
+  border-color: var(--text-tertiary);
+}
+
+.health-service-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.health-service-icon {
+  font-size: 1.5rem;
+}
+
+.health-service-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.health-service-name {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-service-status {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.health-service-response-time {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color);
+}
+
+/* 测试状态概览 */
+.health-test-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.health-test-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.health-test-card.health-test-pass {
+  border-color: var(--color-success);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+.health-test-card.health-test-fail {
+  border-color: var(--color-error);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+.health-test-icon {
+  font-size: 1.5rem;
+}
+
+.health-test-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.health-test-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.health-test-value {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-test-meta {
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* 测试结果列表 */
+.health-test-results {
+  margin-top: var(--spacing-lg);
+}
+
+.health-test-results h4 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.health-test-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.health-test-result {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border-left: 4px solid transparent;
+}
+
+.health-test-result.test-pass {
+  border-left-color: var(--color-success);
+}
+
+.health-test-result.test-fail {
+  border-left-color: var(--color-error);
+}
+
+.health-test-result-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.health-test-result-icon {
+  font-size: 1rem;
+}
+
+.health-test-result-name {
+  flex: 1;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.health-test-result-duration {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.health-test-result-error {
+  padding: var(--spacing-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-top: var(--spacing-xs);
+}
+
+/* 空状态 */
+.health-empty,
+.health-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+  text-align: center;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.health-empty-icon,
+.health-error-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.health-empty-title,
+.health-error-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .health-container {
+    padding: var(--spacing-md);
+  }
+
+  .health-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .health-actions {
+    width: 100%;
+  }
+
+  .health-btn {
+    flex: 1;
+  }
+
+  .health-status-overview,
+  .health-services-grid,
+  .health-test-overview {
+    grid-template-columns: 1fr;
+  }
+}

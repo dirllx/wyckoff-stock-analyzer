@@ -281,3 +281,62 @@
     display: none;
   }
 }
+
+/* ========================================
+   ECharts 图表样式
+   ======================================== */
+
+#mainChart,
+#volumeChart {
+  width: 100%;
+  height: 400px;
+}
+
+#mainChart {
+  height: 500px;
+}
+
+/* ECharts tooltip 样式自定义 */
+.echarts-tooltip {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: var(--spacing-sm) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* ECharts dataZoom 样式 */
+.echarts-dataZoom {
+  border-color: var(--border-color) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.echarts-dataZoom-slider {
+  background-color: var(--color-primary) !important;
+}
+
+/* 图表加载状态 */
+.chart-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: var(--text-tertiary);
+  gap: var(--spacing-md);
+}
+
+.chart-empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}

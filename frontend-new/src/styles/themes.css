@@ -9,12 +9,12 @@
 :root,
 [data-theme="light"] {
   /* 主题色 */
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  --info-color: #6366f1;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #6366f1;
 
   /* 背景色 */
   --bg-primary: #ffffff;
@@ -42,12 +42,12 @@
 
 [data-theme="dark"] {
   /* 主题色 - 深色模式下稍微调亮 */
-  --primary-color: #60a5fa;
-  --primary-hover: #3b82f6;
-  --success-color: #34d399;
-  --warning-color: #fbbf24;
-  --error-color: #f87171;
-  --info-color: #818cf8;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #818cf8;
 
   /* 背景色 */
   --bg-primary: #111827;
@@ -147,12 +147,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --primary-color: #60a5fa;
-    --primary-hover: #3b82f6;
-    --success-color: #34d399;
-    --warning-color: #fbbf24;
-    --error-color: #f87171;
-    --info-color: #818cf8;
+    --color-primary: #60a5fa;
+    --color-primary-hover: #3b82f6;
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-error: #f87171;
+    --color-info: #818cf8;
 
     --bg-primary: #111827;
     --bg-secondary: #1f2937;
@@ -267,9 +267,9 @@
 }
 
 .theme-option.active {
-  border-color: var(--primary-color);
+  border-color: var(--color-primary);
   background-color: rgba(59, 130, 246, 0.1);
-  color: var(--primary-color);
+  color: var(--color-primary);
 }
 
 /* ========================================

@@ -1,0 +1,362 @@
+/* ========================================
+   多周期分析样式
+   ======================================== */
+
+/* 多周期分析容器 */
+.mtf-container {
+  width: 100%;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 阶段卡片网格 */
+.mtf-phase-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* 阶段卡片 */
+.mtf-phase-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  transition: all var(--transition-base);
+}
+
+.mtf-phase-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* 阶段卡片头部 */
+.mtf-phase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.mtf-phase-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mtf-phase-score {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+/* 阶段趋势 */
+.mtf-phase-trend {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 阶段详情 */
+.mtf-phase-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.mtf-phase-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.mtf-detail-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.mtf-detail-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 阶段建议 */
+.mtf-phase-suggestion {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xs);
+  text-align: center;
+  padding: var(--spacing-xs);
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+/* 阶段描述 */
+.mtf-phase-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: var(--spacing-xs);
+}
+
+/* 综合建议卡片 */
+.mtf-suggestion-card {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.mtf-suggestion-header {
+  margin-bottom: var(--spacing-sm);
+}
+
+.mtf-suggestion-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mtf-suggestion-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.mtf-suggestion-direction {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  text-align: center;
+  padding: var(--spacing-md);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.mtf-suggestion-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.mtf-suggestion-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+}
+
+.mtf-metric-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.mtf-metric-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 详情区域 */
+.mtf-details-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+/* 详情区块 */
+.mtf-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.mtf-detail-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.mtf-detail-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+/* 详情卡片 */
+.mtf-detail-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  transition: all var(--transition-base);
+}
+
+.mtf-detail-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.mtf-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.mtf-detail-timeframe {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mtf-detail-score {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+}
+
+.mtf-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.mtf-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+/* 空状态 */
+.mtf-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-tertiary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+}
+
+.mtf-empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.mtf-empty-text {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.mtf-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .mtf-phase-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .mtf-suggestion-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .mtf-detail-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .mtf-phase-card {
+    padding: var(--spacing-sm);
+  }
+
+  .mtf-suggestion-direction {
+    font-size: var(--font-size-lg);
+    padding: var(--spacing-sm);
+  }
+}
+
+/* 加载状态 */
+.mtf-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.mtf-loading::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  margin-left: var(--spacing-sm);
+  animation: mtf-spin 1s linear infinite;
+}
+
+@keyframes mtf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 动画效果 */
+@keyframes mtf-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mtf-container {
+  animation: mtf-fadeIn 0.3s ease-out;
+}
+
+/* 高亮效果 */
+.mtf-highlight {
+  animation: mtf-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mtf-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}

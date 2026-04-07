@@ -9,7 +9,7 @@ export const watchlistApi = {
    * @returns {Promise<Array>} 关注列表
    */
   async getAll() {
-    return await client.get('/api/watchlist');
+    return await client.get('/api/v1/watchlist');
   },
 
   /**
@@ -18,7 +18,7 @@ export const watchlistApi = {
    * @returns {Promise<Object>} 更新后的关注列表
    */
   async add(code) {
-    return await client.post('/api/watchlist', { code });
+    return await client.post('/api/v1/watchlist', { code });
   },
 
   /**
@@ -27,7 +27,7 @@ export const watchlistApi = {
    * @returns {Promise<Object>} 更新后的关注列表
    */
   async remove(code) {
-    return await client.delete(`/api/watchlist/${code}`);
+    return await client.delete(`/api/v1/watchlist/${code}`);
   },
 
   /**
@@ -36,7 +36,7 @@ export const watchlistApi = {
    * @returns {Promise<Object>} 更新后的关注列表
    */
   async update(items) {
-    return await client.put('/api/watchlist', { items });
+    return await client.put('/api/v1/watchlist', { items });
   },
 
   /**
@@ -46,7 +46,7 @@ export const watchlistApi = {
    * @returns {Promise<Object>} 更新后的关注列表
    */
   async move(code, direction) {
-    return await client.post(`/api/watchlist/${code}/move`, { direction });
+    return await client.post(`/api/v1/watchlist/${code}/move`, { direction });
   }
 };
 

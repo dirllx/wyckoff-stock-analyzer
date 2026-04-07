@@ -304,6 +304,7 @@ export const Events = {
   WATCHLIST_ADD: 'watchlist:add',
   WATCHLIST_REMOVE: 'watchlist:remove',
   WATCHLIST_UPDATE: 'watchlist:update',
+  WATCHLIST_CHANGED: 'watchlist:changed',
 
   // 图表事件
   CHART_READY: 'chart:ready',
