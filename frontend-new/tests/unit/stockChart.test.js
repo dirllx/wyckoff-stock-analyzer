@@ -3,9 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { StockChart } from '../../src/components/StockChart.js';
 
-// Mock echarts
+// Mock echarts - 必须在 import StockChart 之前
 const mockChartInstance = {
   setOption: vi.fn(),
   resize: vi.fn(),
@@ -16,10 +15,10 @@ const mockChartInstance = {
 };
 
 vi.mock('echarts', () => ({
-  default: {
-    init: vi.fn(() => mockChartInstance)
-  }
+  init: vi.fn(() => mockChartInstance)
 }));
+
+import { StockChart } from '../../src/components/StockChart.js';
 
 describe('StockChart - 数据转换', () => {
   it('应该正确转换K线数据为ECharts格式', () => {
@@ -152,30 +151,20 @@ describe('StockChart - 配置生成', () => {
 
 describe('StockChart - 图表初始化', () => {
   let mockContainer;
-  let mockChart;
 
   beforeEach(() => {
-    // 重置mock
-    mockChart = {
-      setOption: vi.fn(),
-      resize: vi.fn(),
-      dispose: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-      getOption: vi.fn()
-    };
+    // 重置mock函数调用记录
+    mockChartInstance.setOption.mockClear();
+    mockChartInstance.resize.mockClear();
+    mockChartInstance.dispose.mockClear();
+    mockChartInstance.on.mockClear();
+    mockChartInstance.off.mockClear();
+    mockChartInstance.getOption.mockClear();
 
     mockContainer = {
       clientWidth: 800,
       clientHeight: 400
     };
-
-    // 重置echarts.init mock
-    vi.doMock('echarts', () => ({
-      default: {
-        init: vi.fn(() => mockChart)
-      }
-    }));
   });
 
   afterEach(() => {
@@ -190,8 +179,8 @@ describe('StockChart - 图表初始化', () => {
     const chart = StockChart.initMainChart(mockContainer, quotes, 'daily');
 
     expect(chart).toBeDefined();
-    expect(chart).toBe(mockChart);
-    expect(mockChart.setOption).toHaveBeenCalled();
+    expect(chart).toBe(mockChartInstance);
+    expect(mockChartInstance.setOption).toHaveBeenCalled();
   });
 
   it('应该初始化成交量图', () => {
@@ -202,8 +191,8 @@ describe('StockChart - 图表初始化', () => {
     const chart = StockChart.initVolumeChart(mockContainer, quotes, 'daily');
 
     expect(chart).toBeDefined();
-    expect(chart).toBe(mockChart);
-    expect(mockChart.setOption).toHaveBeenCalled();
+    expect(chart).toBe(mockChartInstance);
+    expect(mockChartInstance.setOption).toHaveBeenCalled();
   });
 
   it('应该处理空数据', () => {
@@ -211,7 +200,7 @@ describe('StockChart - 图表初始化', () => {
 
     expect(chart).toBeDefined();
     // 应该显示空状态
-    expect(mockChart.setOption).toHaveBeenCalledWith(
+    expect(mockChartInstance.setOption).toHaveBeenCalledWith(
       expect.objectContaining({
         title: expect.objectContaining({
           text: '暂无数据'
