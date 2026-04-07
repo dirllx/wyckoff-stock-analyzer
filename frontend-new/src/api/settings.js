@@ -9,7 +9,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 所有配置
    */
   async getAll() {
-    return await client.get('/api/v1/settings/');
+    return await client.get('/api/v1/settings');
   },
 
   /**
@@ -37,7 +37,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 保存结果
    */
   async saveAll(settings) {
-    return await client.post('/api/v1/settings/', settings);
+    return await client.post('/api/v1/settings', settings);
   },
 
   /**

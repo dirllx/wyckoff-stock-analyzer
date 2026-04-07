@@ -9,7 +9,7 @@ export const healthApi = {
    * @returns {Promise<Object>} 健康状态对象
    */
   async getHealthStatus() {
-    return await client.get('/api/v1/health/');
+    return await client.get('/api/v1/health');
   },
 
   /**
