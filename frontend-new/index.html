@@ -20,33 +20,72 @@
 </head>
 <body>
   <div id="app">
-    <header>
+    <header class="app-header">
       <h1>威科夫股票分析系统</h1>
-      <button id="settings-btn" class="header-settings-btn" title="设置">
-        ⚙️
-      </button>
+      <div class="header-actions">
+        <button id="theme-toggle" class="header-btn" title="切换主题">🌙</button>
+        <button id="settings-btn" class="header-btn" title="设置">⚙️</button>
+      </div>
     </header>
-    <main>
-      <div id="stock-input">
-        <input type="text" id="stock-code" placeholder="输入股票代码">
-        <button id="analyze-btn">分析</button>
-      </div>
-      <div id="charts">
-        <div id="mainChart"></div>
-        <div id="volumeChart"></div>
-      </div>
-      <div id="klineTable"></div>
-      <div id="multiTimeframe"></div>
-      <div id="prediction"></div>
-      <div id="signals"></div>
-      <div id="watchlist"></div>
-      <div id="settings"></div>
-      <div id="health"></div>
-      <div id="patterns"></div>
-      <div id="notifications"></div>
-      <div id="risk"></div>
-      <div id="analysis"></div>
+
+    <!-- 股票输入区域 -->
+    <div class="stock-input-bar">
+      <input type="text" id="stock-code" placeholder="输入股票代码（如 000001）" autocomplete="off">
+      <button id="analyze-btn" class="btn-primary">分析</button>
+      <button id="add-watchlist-btn" class="btn-secondary" title="加入自选">+ 自选</button>
+    </div>
+
+    <!-- 标签页导航 -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="analysis">日分析</button>
+      <button class="tab-btn" data-tab="multi">多周期</button>
+      <button class="tab-btn" data-tab="watchlist">我的关注</button>
+      <button class="tab-btn" data-tab="settings">系统配置</button>
+      <button class="tab-btn" data-tab="health">测试状态</button>
+    </nav>
+
+    <!-- 标签页内容 -->
+    <main class="tab-content">
+      <!-- 日分析标签页 -->
+      <section id="tab-analysis" class="tab-panel active">
+        <div class="analysis-layout">
+          <div class="chart-area">
+            <div id="mainChart" class="chart-container"></div>
+            <div id="volumeChart" class="chart-container chart-small"></div>
+          </div>
+          <div class="data-area">
+            <div id="analysis" class="analysis-summary"></div>
+            <div id="signals" class="signals-panel"></div>
+            <div id="prediction" class="prediction-panel"></div>
+            <div id="patterns" class="patterns-panel"></div>
+          </div>
+        </div>
+        <div id="klineTable" class="kline-table-area"></div>
+      </section>
+
+      <!-- 多周期标签页 -->
+      <section id="tab-multi" class="tab-panel">
+        <div id="multiTimeframe" class="multi-timeframe-panel"></div>
+      </section>
+
+      <!-- 我的关注标签页 -->
+      <section id="tab-watchlist" class="tab-panel">
+        <div id="watchlist" class="watchlist-panel"></div>
+      </section>
+
+      <!-- 系统配置标签页 -->
+      <section id="tab-settings" class="tab-panel">
+        <div id="settings" class="settings-panel"></div>
+        <div id="notifications" class="notifications-panel"></div>
+        <div id="risk" class="risk-panel"></div>
+      </section>
+
+      <!-- 测试状态标签页 -->
+      <section id="tab-health" class="tab-panel">
+        <div id="health" class="health-panel"></div>
+      </section>
     </main>
+
     <div id="toast-container"></div>
   </div>
   <script type="module" src="/src/main.js"></script>

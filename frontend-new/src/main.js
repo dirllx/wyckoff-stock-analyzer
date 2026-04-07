@@ -61,6 +61,7 @@ window.addEventListener('unhandledrejection', (event) => {
 const DOM = {
   stockInput: null,
   analyzeBtn: null,
+  addWatchlistBtn: null,
   mainChart: null,
   volumeChart: null,
   klineTable: null,
@@ -74,7 +75,9 @@ const DOM = {
   healthDiv: null,
   patternsDiv: null,
   notificationsDiv: null,
-  riskDiv: null
+  riskDiv: null,
+  themeToggle: null,
+  tabNav: null
 };
 
 /**
@@ -83,6 +86,7 @@ const DOM = {
 function initDOM() {
   DOM.stockInput = document.getElementById('stock-code');
   DOM.analyzeBtn = document.getElementById('analyze-btn');
+  DOM.addWatchlistBtn = document.getElementById('add-watchlist-btn');
   DOM.mainChart = document.getElementById('mainChart');
   DOM.volumeChart = document.getElementById('volumeChart');
   DOM.klineTable = document.getElementById('klineTable');
@@ -97,6 +101,8 @@ function initDOM() {
   DOM.patternsDiv = document.getElementById('patterns');
   DOM.notificationsDiv = document.getElementById('notifications');
   DOM.riskDiv = document.getElementById('risk');
+  DOM.themeToggle = document.getElementById('theme-toggle');
+  DOM.tabNav = document.querySelector('.tab-nav');
 
   logger.debug('DOM elements initialized');
 }
@@ -569,6 +575,29 @@ function bindEvents() {
   });
 
   // 监听错误事件
+
+  // 标签页切换
+  if (DOM.tabNav) {
+    DOM.tabNav.addEventListener('click', (event) => {
+      const btn = event.target.closest('.tab-btn');
+      if (!btn) return;
+
+      const tabName = btn.dataset.tab;
+      switchTab(tabName);
+    });
+  }
+
+  // 主题切换
+  if (DOM.themeToggle) {
+    DOM.themeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // 加入自选按钮
+  if (DOM.addWatchlistBtn) {
+    DOM.addWatchlistBtn.addEventListener('click', withErrorHandling(async () => {
+      await addCurrentToWatchlist();
+    }, 'Add to Watchlist'));
+  }
   eventBus.on(Events.ERROR_OCCURRED, ({ error, context }) => {
     logger.error(`Error event received from ${context}:`, error);
   });
@@ -587,9 +616,7 @@ function bindEvents() {
       try {
         const settings = await Settings.load();
         Settings.render('settings', settings);
-
-        // 滚动到设置区域
-        DOM.settingsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        switchTab('settings');
       } catch (error) {
         logger.error('Failed to load settings:', error);
         globalErrorHandler(error, 'Settings Load');
@@ -598,6 +625,30 @@ function bindEvents() {
   }
 
   logger.debug('Event listeners bound');
+}
+
+// ========================================
+// 标签页管理
+// ========================================
+
+/**
+ * 切换标签页
+ * @param {string} tabName - 标签页名称
+ */
+function switchTab(tabName) {
+  // 更新标签按钮状态
+  const buttons = DOM.tabNav.querySelectorAll('.tab-btn');
+  buttons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+
+  // 更新面板显示
+  const panels = document.querySelectorAll('.tab-panel');
+  panels.forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+  });
+
+  logger.info(`Switched to tab: ${tabName}`);
 }
 
 // ========================================
