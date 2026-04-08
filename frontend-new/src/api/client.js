@@ -26,7 +26,7 @@ export class ApiClient {
    */
   constructor(config = {}) {
     this.baseURL = config.baseURL || '';
-    this.timeout = config.timeout || 30000;
+    this.timeout = config.timeout || 120000;
     this.maxRetries = config.maxRetries || 3;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
