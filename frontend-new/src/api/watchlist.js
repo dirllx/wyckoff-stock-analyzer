@@ -46,7 +46,7 @@ export const watchlistApi = {
    * @returns {Promise<Object>} 更新后的关注列表
    */
   async move(code, direction) {
-    return await client.post(`/api/v1/watchlist/${code}/move`, { direction });
+    return await client.post('/api/v1/watchlist/move', { code, direction });
   }
 };
 

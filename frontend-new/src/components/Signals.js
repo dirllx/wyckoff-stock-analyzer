@@ -364,7 +364,7 @@ export class Signals {
     const shortCount = data.filter(s => s.direction === 'SHORT').length;
     const neutralCount = data.filter(s => s.direction === 'NEUTRAL').length;
 
-    const scores = data.map(s => s.score);
+    const scores = data.map(s => s.score || 0);
     const averageScore = scores.reduce((sum, score) => sum + score, 0) / total;
     const maxScore = Math.max(...scores);
     const minScore = Math.min(...scores);

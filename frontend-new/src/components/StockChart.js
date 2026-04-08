@@ -92,10 +92,11 @@ export class StockChart {
     ];
 
     // 添加MA线
+    const maNames = ['MA5', 'MA10', 'MA20', 'MA30', 'MA60'];
     maDataList.forEach((maData, index) => {
       if (maData && maData.length > 0) {
         series.push({
-          name: `MA${5 * (index + 1)}`,
+          name: maNames[index] || `MA${index + 1}`,
           type: 'line',
           data: maData,
           smooth: true,
