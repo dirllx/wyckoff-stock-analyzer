@@ -79,18 +79,19 @@ export class MultiTimeframe {
     const wyckoffSignals = [];
 
     phaseData.forEach(data => {
-      const summary = data.summary || {};
-      const score = summary.score || 0;
+      // 兼容嵌套summary和扁平结构
+      const src = data.summary || data;
+      const score = src.score || 0;
       totalScore += score;
 
       // 统计方向
-      const direction = summary.direction || 'NEUTRAL';
+      const direction = src.direction || 'NEUTRAL';
       if (direction === 'LONG') bullishCount++;
       if (direction === 'SHORT') bearishCount++;
 
       // 统计MA信号
-      if (summary.ma_trend && Array.isArray(summary.ma_trend)) {
-        summary.ma_trend.forEach(trend => {
+      if (src.ma_trend && Array.isArray(src.ma_trend)) {
+        src.ma_trend.forEach(trend => {
           if (trend.type && trend.type.includes('多头')) maBullish++;
           if (trend.type && trend.type.includes('空头')) maBearish++;
           if (trend.type && trend.type.includes('金叉')) maBullish++;
@@ -99,13 +100,13 @@ export class MultiTimeframe {
       }
 
       // 收集成交量信号
-      if (summary.volume_signal) {
-        volumeSignals.push(summary.volume_signal);
+      if (src.volume_signal) {
+        volumeSignals.push(src.volume_signal);
       }
 
       // 收集威科夫信号
-      if (summary.wyckoff_phase) {
-        wyckoffSignals.push(summary.wyckoff_phase);
+      if (src.wyckoff_phase) {
+        wyckoffSignals.push(src.wyckoff_phase);
       }
     });
 
