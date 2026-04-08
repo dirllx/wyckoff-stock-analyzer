@@ -4,6 +4,7 @@
  */
 
 import { PredictionTemplate } from './PredictionTemplate.js';
+import { logger } from '../utils/logger.js';
 
 export class Prediction {
   /** 计算MA趋势因子 */
@@ -460,7 +461,7 @@ export class Prediction {
   static render(containerId, predictions) {
     const container = document.getElementById(containerId);
     if (!container) {
-      console.error(`Prediction: Container ${containerId} not found`);
+      logger.error(`Prediction: Container ${containerId} not found`);
       return;
     }
 

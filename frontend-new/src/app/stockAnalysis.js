@@ -110,6 +110,7 @@ async function analyzeStock(stockCode, globalErrorHandler) {
  * @param {Object} signals - 信号结果
  */
 function updateAnalysisUI(analysis, signals) {
+  if (!analysis) return;
   if (!DOM.analysisDiv) {
     logger.warn('Analysis container not found');
     return;
