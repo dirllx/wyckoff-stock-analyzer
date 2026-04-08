@@ -10,7 +10,7 @@ from typing import Optional, List
 from app.database import get_db
 from app.services.config_service import ConfigService
 
-router = APIRouter(prefix="/api/v1/settings", tags=["用户配置"])
+router = APIRouter(prefix="/settings", tags=["用户配置"])
 
 
 # ===================== 配置数据模型 =====================

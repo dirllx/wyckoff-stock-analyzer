@@ -8,7 +8,7 @@ from app.database import get_db
 from app.services.risk_service import RiskMonitorService
 from app.models.database import UserPosition
 
-router = APIRouter(prefix="/api/v1", tags=["风险监控"])
+router = APIRouter(tags=["风险监控"])
 
 
 @router.post("/positions/{position_id}/risk-check")

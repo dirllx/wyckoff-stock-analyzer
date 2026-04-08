@@ -15,7 +15,7 @@ from app.repositories.stock_repository import StockRepository
 from app.utils.converters import dict_to_stock_quotes
 import pandas as pd
 
-router = APIRouter(prefix="/api/v1/stocks", tags=["形态识别"])
+router = APIRouter(prefix="/stocks", tags=["形态识别"])
 
 
 @router.post(

@@ -8,7 +8,7 @@ from app.database import get_db
 from app.services.config_service import ConfigService
 from app.models.config import PatternConfig, TimeframeConfig, FeishuConfig, RiskMonitorConfig
 
-router = APIRouter(prefix="/api/v1/config", tags=["配置管理"])
+router = APIRouter(prefix="/config", tags=["配置管理"])
 
 
 @router.get("")

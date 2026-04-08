@@ -6,7 +6,7 @@ from loguru import logger
 
 from app.services.realtime_quote import get_realtime_service
 
-router = APIRouter(prefix="/api/v1/realtime", tags=["实时行情"])
+router = APIRouter(prefix="/realtime", tags=["实时行情"])
 
 
 @router.get("/quote/{code}")

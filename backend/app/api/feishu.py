@@ -9,7 +9,7 @@ from app.database import get_db
 from app.services.feishu_service import FeishuNotificationService
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api/v1/feishu", tags=["飞书通知"])
+router = APIRouter(prefix="/feishu", tags=["飞书通知"])
 
 
 class TestMessageRequest(BaseModel):
