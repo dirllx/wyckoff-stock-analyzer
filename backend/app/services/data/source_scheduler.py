@@ -154,8 +154,12 @@ class SourceScheduler:
             "scheduling": {"strategy": "priority", "auto_fallback": True},
             "timeframe_priority": {
                 "daily": ["akshare", "baostock"],
-                "weekly": ["baostock", "akshare"],
-                "monthly": ["baostock", "akshare"]
+                "weekly": ["akshare", "baostock"],
+                "monthly": ["akshare", "baostock"],
+                "30": ["akshare", "baostock"],
+                "60": ["akshare", "baostock"],
+                "15": ["akshare", "baostock"],
+                "5": ["akshare", "baostock"]
             }
         }
 
