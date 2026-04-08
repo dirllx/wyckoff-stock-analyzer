@@ -8,22 +8,23 @@ import { toast } from './utils/toast.js';
 import { handleError, withErrorHandling, withSyncErrorHandling } from './utils/errorHandler.js';
 import { stocksApi } from './api/stocks.js';
 import { AppConfig, AppState, eventBus, Events, updateState } from './config.js';
-import { KlineTable } from './components/KlineTable.js';
-import { StockChart } from './components/StockChart.js';
-import { Watchlist } from './components/Watchlist.js';
-import { Signals } from './components/Signals.js';
-import { MultiTimeframe } from './components/MultiTimeframe.js';
-import { Prediction } from './components/Prediction.js';
-import { Settings } from './components/Settings.js';
-import { Health } from './components/Health.js';
-import { Patterns } from './components/Patterns.js';
-import { Notifications } from './components/Notifications.js';
-import { RiskManagement } from './components/RiskManagement.js';
-import { settingsApi } from './api/settings.js';
-import { healthApi } from './api/health.js';
-import { patternsApi } from './api/patterns.js';
-import { notificationsApi } from './api/notifications.js';
-import { riskApi } from './api/risk.js';
+
+// Lazy-loaded component getters (loaded on first use)
+const Signals = () => import('./components/Signals.js').then(m => m.Signals);
+const MultiTimeframe = () => import('./components/MultiTimeframe.js').then(m => m.MultiTimeframe);
+const Prediction = () => import('./components/Prediction.js').then(m => m.Prediction);
+const Settings = () => import('./components/Settings.js').then(m => m.Settings);
+const Health = () => import('./components/Health.js').then(m => m.Health);
+const Notifications = () => import('./components/Notifications.js').then(m => m.Notifications);
+const RiskManagement = () => import('./components/RiskManagement.js').then(m => m.RiskManagement);
+const healthApi = () => import('./api/health.js').then(m => m.healthApi);
+
+// 应用模块
+import { initDOM, validateDOM } from './app/dom.js';
+import { analyzeStock } from './app/stockAnalysis.js';
+import { loadWatchlist, addCurrentToWatchlist, batchAnalyzeWatchlist } from './app/watchlistManager.js';
+import { handleStockAnalyzed } from './app/rendering.js';
+import { switchTab, initTheme, toggleTheme } from './app/ui.js';
 
 // ========================================
 // 全局错误处理
@@ -55,555 +56,41 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // ========================================
-// DOM 元素引用
-// ========================================
-
-const DOM = {
-  stockInput: null,
-  analyzeBtn: null,
-  addWatchlistBtn: null,
-  mainChart: null,
-  volumeChart: null,
-  klineTable: null,
-  analysisDiv: null,
-  watchlistDiv: null,
-  signalsDiv: null,
-  multiTimeframeDiv: null,
-  predictionDiv: null,
-  settingsDiv: null,
-  settingsBtn: null,
-  healthDiv: null,
-  patternsDiv: null,
-  notificationsDiv: null,
-  riskDiv: null,
-  themeToggle: null,
-  tabNav: null
-};
-
-/**
- * 初始化 DOM 引用
- */
-function initDOM() {
-  DOM.stockInput = document.getElementById('stock-code');
-  DOM.analyzeBtn = document.getElementById('analyze-btn');
-  DOM.addWatchlistBtn = document.getElementById('add-watchlist-btn');
-  DOM.mainChart = document.getElementById('mainChart');
-  DOM.volumeChart = document.getElementById('volumeChart');
-  DOM.klineTable = document.getElementById('klineTable');
-  DOM.analysisDiv = document.getElementById('analysis');
-  DOM.watchlistDiv = document.getElementById('watchlist');
-  DOM.signalsDiv = document.getElementById('signals');
-  DOM.multiTimeframeDiv = document.getElementById('multiTimeframe');
-  DOM.predictionDiv = document.getElementById('prediction');
-  DOM.settingsDiv = document.getElementById('settings');
-  DOM.settingsBtn = document.getElementById('settings-btn');
-  DOM.healthDiv = document.getElementById('health');
-  DOM.patternsDiv = document.getElementById('patterns');
-  DOM.notificationsDiv = document.getElementById('notifications');
-  DOM.riskDiv = document.getElementById('risk');
-  DOM.themeToggle = document.getElementById('theme-toggle');
-  DOM.tabNav = document.querySelector('.tab-nav');
-
-  logger.debug('DOM elements initialized');
-}
-
-/**
- * 验证 DOM 元素
- */
-function validateDOM() {
-  const missing = [];
-
-  if (!DOM.stockInput) missing.push('stock-code input');
-  if (!DOM.analyzeBtn) missing.push('analyze-btn button');
-  if (!DOM.mainChart) missing.push('mainChart container');
-  if (!DOM.volumeChart) missing.push('volumeChart container');
-
-  if (missing.length > 0) {
-    throw new Error(`Missing DOM elements: ${missing.join(', ')}`);
-  }
-
-  logger.debug('DOM validation passed');
-}
-
-// ========================================
-// 股票分析功能
-// ========================================
-
-/**
- * 分析股票
- * @param {string} stockCode - 股票代码
- */
-async function analyzeStock(stockCode) {
-  if (!stockCode || !stockCode.trim()) {
-    toast.warning('请输入股票代码');
-    return;
-  }
-
-  const code = stockCode.trim().toUpperCase();
-
-  logger.info(`Analyzing stock: ${code}`);
-
-  try {
-    // 更新加载状态
-    updateState({
-      loading: { ...AppState.loading, stock: true, analysis: true },
-      error: { ...AppState.error, stock: null, analysis: null }
-    });
-
-    // 触发加载开始事件
-    eventBus.emit(Events.STOCK_LOAD_START, { code });
-
-    // 禁用输入和按钮
-    DOM.stockInput.disabled = true;
-    DOM.analyzeBtn.disabled = true;
-    DOM.analyzeBtn.textContent = '分析中...';
-
-    // 获取今天的日期作为结束日期
-    const endDate = new Date().toISOString().split('T')[0];
-
-    // 并行获取数据和分析
-    const analysisResult = await stocksApi.analyze(code, endDate, 'daily');
-
-    // 分析API已包含signals
-    const signalsResult = analysisResult.signals || [];
-
-    logger.info('Analysis completed:', analysisResult);
-
-    // 更新状态
-    updateState({
-      currentStock: {
-        ...AppState.currentStock,
-        code,
-        name: analysisResult.stock?.name || code,
-        timeframe: 'daily',
-        analysis: analysisResult,
-        signals: signalsResult
-      },
-      loading: { ...AppState.loading, stock: false, analysis: false }
-    });
-
-    // 触发分析完成事件
-    eventBus.emit(Events.STOCK_ANALYZED, {
-      code,
-      analysis: analysisResult,
-      signals: signalsResult
-    });
-
-    // 显示成功消息
-    toast.success(`分析完成: ${code}`);
-
-    // 更新 UI
-    updateAnalysisUI(analysisResult, signalsResult);
-
-  } catch (error) {
-    logger.error(`Failed to analyze stock ${code}:`, error);
-
-    // 更新错误状态
-    updateState({
-      error: {
-        ...AppState.error,
-        stock: error.message,
-        analysis: error.message
-      },
-      loading: { ...AppState.loading, stock: false, analysis: false }
-    });
-
-    // 触发错误事件
-    eventBus.emit(Events.STOCK_LOAD_ERROR, { code, error });
-
-    // 显示错误消息（由全局错误处理）
-    globalErrorHandler(error, `Stock Analysis (${code})`);
-
-  } finally {
-    // 恢复输入和按钮
-    DOM.stockInput.disabled = false;
-    DOM.analyzeBtn.disabled = false;
-    DOM.analyzeBtn.textContent = '分析';
-  }
-}
-
-/**
- * 更新分析结果 UI
- * @param {Object} analysis - 分析结果
- * @param {Object} signals - 信号结果
- */
-function updateAnalysisUI(analysis, signals) {
-  if (!DOM.analysisDiv) {
-    logger.warn('Analysis container not found');
-    return;
-  }
-
-  const stock = analysis.stock || {};
-  const quote = analysis.current_quote || {};
-  const signalsList = signals || analysis.signals || [];
-
-  let html = '<div class="analysis-result">';
-  html += '<h3>分析结果</h3>';
-
-  // 股票信息
-  html += '<div class="stock-info">';
-  html += `<p><strong>${stock.name || stock.code || ''}</strong> (${stock.code || ''})</p>`;
-  if (quote.close) {
-    const changeStr = quote.change_percent != null
-      ? `${quote.change_percent >= 0 ? '+' : ''}${quote.change_percent.toFixed(2)}%`
-      : '';
-    const changeColor = quote.change_percent >= 0 ? 'color:#ef5350' : 'color:#26a69a';
-    html += `<p>收盘: <strong>${quote.close}</strong> <span style="${changeColor}">${changeStr}</span></p>`;
-  }
-  html += '</div>';
-
-  // 威科夫信号
-  if (signalsList.length > 0) {
-    const latest = signalsList[0];
-    html += '<div class="signals-info">';
-    html += '<h4>最新信号</h4>';
-    html += `<p class="signal-direction signal-${latest.direction?.toLowerCase() || 'long'}">${latest.direction === 'LONG' ? '看多' : '看空'}</p>`;
-    html += `<p><strong>建议:</strong> ${latest.suggestion || ''}</p>`;
-    html += `<p><strong>评分:</strong> ${latest.score}/10 | <strong>强度:</strong> ${latest.strength}</p>`;
-    if (latest.reason) {
-      html += `<p class="signal-reason">${latest.reason}</p>`;
-    }
-    html += '</div>';
-  }
-
-  html += '</div>';
-
-  DOM.analysisDiv.innerHTML = html;
-
-  logger.debug('Analysis UI updated');
-}
-
-// ========================================
-// 自选股功能
-// ========================================
-
-/**
- * 加载自选股列表
- */
-async function loadWatchlist() {
-  try {
-    logger.info('Loading watchlist...');
-
-    const watchlistData = await Watchlist.refresh();
-
-    // 渲染自选股
-    if (DOM.watchlistDiv) {
-      let html = '<div class="watchlist-header">';
-      html += '<h3>我的关注</h3>';
-      html += '<div class="watchlist-actions">';
-      html += `<button class="btn-secondary" id="wl-refresh">刷新</button>`;
-      html += `<button class="btn-secondary" id="wl-batch">批量分析</button>`;
-      html += `<span class="watchlist-count">${watchlistData.length} 只</span>`;
-      html += '</div></div>';
-      html += Watchlist.render(watchlistData);
-      DOM.watchlistDiv.innerHTML = html;
-
-      // 绑定自选股卡片事件
-      bindWatchlistEvents();
-
-      logger.info(`Watchlist loaded: ${watchlistData.length} items`);
-    }
-  } catch (error) {
-    logger.error('Failed to load watchlist:', error);
-
-    if (DOM.watchlistDiv) {
-      DOM.watchlistDiv.innerHTML = Watchlist.generateEmptyState();
-    }
-
-    globalErrorHandler(error, 'Watchlist Load');
-  }
-}
-
-/**
- * 绑定自选股相关事件
- */
-function bindWatchlistEvents() {
-  // 删除按钮事件
-  const removeButtons = DOM.watchlistDiv.querySelectorAll('.watchlist-card-remove');
-  removeButtons.forEach(button => {
-    button.addEventListener('click', withErrorHandling(async (event) => {
-      const code = event.target.dataset.code;
-      if (code) {
-        await Watchlist.removeFromWatchlist(code);
-        await loadWatchlist(); // 重新加载
-      }
-    }, 'Remove from Watchlist'));
-  });
-
-  // 分析按钮事件
-  const analyzeButtons = DOM.watchlistDiv.querySelectorAll('[data-action="analyze"]');
-  analyzeButtons.forEach(button => {
-    button.addEventListener('click', withErrorHandling(async (event) => {
-      const code = event.target.dataset.code;
-      if (code) {
-        // 填入股票代码并分析
-        DOM.stockInput.value = code;
-        await analyzeStock(code);
-      }
-    }, 'Analyze from Watchlist'));
-  });
-
-  // 卡片点击事件（跳转到分析）
-  const cards = DOM.watchlistDiv.querySelectorAll('.watchlist-card');
-  cards.forEach(card => {
-    card.addEventListener('click', withErrorHandling(async (event) => {
-      // 如果点击的是按钮，不触发卡片点击
-      if (event.target.tagName === 'BUTTON') {
-        return;
-      }
-
-      const code = card.dataset.code;
-      if (code) {
-        DOM.stockInput.value = code;
-        await analyzeStock(code);
-      }
-    }, 'Watchlist Card Click'));
-  });
-
-  // 刷新按钮
-  const refreshBtn = document.getElementById('wl-refresh');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => loadWatchlist());
-  }
-
-  // 批量分析按钮
-  const batchBtn = document.getElementById('wl-batch');
-  if (batchBtn) {
-    batchBtn.addEventListener('click', () => batchAnalyzeWatchlist());
-  }
-
-  logger.debug('Watchlist events bound');
-}
-
-/**
- * 添加当前股票到自选股
- */
-async function addCurrentToWatchlist() {
-  const currentCode = AppState.currentStock.code;
-  if (!currentCode) {
-    toast.warning('请先分析一只股票');
-    return;
-  }
-
-  await Watchlist.addToWatchlist(currentCode);
-  await loadWatchlist(); // 重新加载
-}
-
-/**
- * 批量分析自选股
- */
-async function batchAnalyzeWatchlist() {
-  try {
-    const watchlistData = await Watchlist.refresh();
-
-    if (watchlistData.length === 0) {
-      toast.warning('自选股列表为空');
-      return;
-    }
-
-    logger.info(`Batch analyzing ${watchlistData.length} stocks...`);
-
-    await Watchlist.batchAnalyze(watchlistData);
-
-    toast.success(`批量分析完成，共 ${watchlistData.length} 只股票`);
-  } catch (error) {
-    logger.error('Failed to batch analyze watchlist:', error);
-    globalErrorHandler(error, 'Batch Analyze Watchlist');
-  }
-}
-
-// ========================================
 // 事件绑定
 // ========================================
+
+/**
+ * 包装 analyzeStock，自动注入 globalErrorHandler
+ */
+function doAnalyzeStock(stockCode) {
+  return analyzeStock(stockCode, globalErrorHandler);
+}
 
 /**
  * 绑定事件监听器
  */
 function bindEvents() {
   // 分析按钮点击事件
-  DOM.analyzeBtn.addEventListener('click', withErrorHandling(async (event) => {
-    const stockCode = DOM.stockInput.value;
-    await analyzeStock(stockCode);
+  document.getElementById('analyze-btn').addEventListener('click', withErrorHandling(async (event) => {
+    const stockCode = document.getElementById('stock-code').value;
+    await doAnalyzeStock(stockCode);
   }, 'Analyze Button'));
 
   // 股票输入框回车事件
-  DOM.stockInput.addEventListener('keypress', withSyncErrorHandling((event) => {
+  document.getElementById('stock-code').addEventListener('keypress', withSyncErrorHandling((event) => {
     if (event.key === 'Enter') {
-      const stockCode = DOM.stockInput.value;
-      analyzeStock(stockCode);
+      const stockCode = document.getElementById('stock-code').value;
+      doAnalyzeStock(stockCode);
     }
   }, 'Stock Input'));
 
   // 监听股票分析完成事件
-  eventBus.on(Events.STOCK_ANALYZED, async ({ code, analysis, signals }) => {
-    logger.info(`Stock analyzed event received: ${code}`);
-
-    let quotes = null; // 移到外部定义，以便后续访问
-
-    try {
-      // 获取K线数据
-      quotes = await stocksApi.getQuotes(code, 'daily', 100);
-
-      if (quotes && quotes.length > 0) {
-        logger.info(`Quotes loaded: ${quotes.length} items`);
-
-        // 渲染K线表格
-        const tableHTML = KlineTable.render(quotes, 'daily');
-
-        // 插入到DOM
-        if (DOM.klineTable) {
-          DOM.klineTable.innerHTML = tableHTML;
-          logger.info('K线表格渲染完成');
-        }
-
-        // 渲染图表
-        if (DOM.mainChart) {
-          const mainChartInstance = StockChart.initMainChart(DOM.mainChart, quotes, 'daily');
-          // 保存图表实例到AppState以便后续销毁
-          if (mainChartInstance) {
-            AppState.charts.main = mainChartInstance;
-            logger.info('主图表渲染完成');
-          }
-        }
-
-        if (DOM.volumeChart) {
-          const volumeChartInstance = StockChart.initVolumeChart(DOM.volumeChart, quotes, 'daily');
-          // 保存图表实例到AppState以便后续销毁
-          if (volumeChartInstance) {
-            AppState.charts.volume = volumeChartInstance;
-            logger.info('成交量图渲染完成');
-          }
-        }
-      } else {
-        logger.warn('No quotes data available');
-        if (DOM.klineTable) {
-          DOM.klineTable.innerHTML = '<div class="table-empty">暂无数据</div>';
-        }
-      }
-
-      // 渲染信号数据（直接使用分析结果中的signals）
-      try {
-        const signalsData = signals || [];
-
-        if (signalsData.length > 0) {
-          logger.info(`Signals loaded: ${signalsData.length} items`);
-
-          // 渲染信号列表（最多显示6条）
-          const signalsHTML = Signals.render(signalsData, { showStats: true, maxCount: 6 });
-
-          // 插入到DOM
-          if (DOM.signalsDiv) {
-            DOM.signalsDiv.innerHTML = signalsHTML;
-            logger.info('信号列表渲染完成');
-          }
-        } else {
-          logger.warn('No signals data available');
-          if (DOM.signalsDiv) {
-            DOM.signalsDiv.innerHTML = Signals.generateEmptyState();
-          }
-        }
-      } catch (error) {
-        logger.error('Failed to load or render signals:', error);
-        if (DOM.signalsDiv) {
-          DOM.signalsDiv.innerHTML = '<div class="signals-error">信号加载失败</div>';
-        }
-      }
-
-      // 加载并渲染多周期分析数据
-      try {
-        const timeframes = ['30', '60', 'daily', 'weekly', 'monthly'];
-        const multiTimeframeData = await MultiTimeframe.loadMultipleTimeframes(code, timeframes);
-
-        if (multiTimeframeData && multiTimeframeData.length > 0) {
-          logger.info(`Multi-timeframe data loaded: ${multiTimeframeData.length} timeframes`);
-
-          // 渲染多周期分析
-          const mtfHTML = MultiTimeframe.render(multiTimeframeData);
-
-          // 插入到DOM
-          if (DOM.multiTimeframeDiv) {
-            DOM.multiTimeframeDiv.innerHTML = mtfHTML;
-            logger.info('多周期分析渲染完成');
-          }
-        } else {
-          logger.warn('No multi-timeframe data available');
-          if (DOM.multiTimeframeDiv) {
-            DOM.multiTimeframeDiv.innerHTML = MultiTimeframe.generateEmptyStateHTML();
-          }
-        }
-      } catch (error) {
-        logger.error('Failed to load or render multi-timeframe analysis:', error);
-        if (DOM.multiTimeframeDiv) {
-          DOM.multiTimeframeDiv.innerHTML = '<div class="mtf-error">多周期分析加载失败</div>';
-        }
-      }
-
-      // 渲染K线预测数据（基于信号评分生成简易预测）
-      try {
-        if (quotes && quotes.length > 0 && signals && signals.length > 0) {
-          logger.info('Generating K-line predictions...');
-          const latestSignal = signals[0];
-          const summary = {
-            score: latestSignal.score || 5,
-            direction: latestSignal.direction || 'NEUTRAL',
-            phase: latestSignal.wyckoff_phase || '震荡'
-          };
-          const predictions = Prediction.predictFutureCandles(quotes, summary);
-
-          if (predictions && predictions.length > 0) {
-            logger.info(`Predictions generated: ${predictions.length} days`);
-
-            // 渲染预测
-            Prediction.render('prediction', predictions);
-            logger.info('K线预测渲染完成');
-          } else {
-            logger.warn('No predictions generated');
-            if (DOM.predictionDiv) {
-              DOM.predictionDiv.innerHTML = Prediction.generateEmptyStateHTML();
-            }
-          }
-        } else {
-          logger.warn('Insufficient data for prediction');
-          if (DOM.predictionDiv) {
-            DOM.predictionDiv.innerHTML = Prediction.generateEmptyStateHTML();
-          }
-        }
-      } catch (error) {
-        logger.error('Failed to generate or render predictions:', error);
-        if (DOM.predictionDiv) {
-          DOM.predictionDiv.innerHTML = '<div class="prediction-error">预测生成失败</div>';
-        }
-      }
-
-      // 加载并渲染形态识别数据
-      try {
-        if (code) {
-          logger.info('Loading pattern recognition data...');
-
-          // 渲染形态识别
-          await Patterns.render('patterns', code);
-
-          logger.info('Pattern recognition rendered');
-        }
-      } catch (error) {
-        logger.error('Failed to load or render patterns:', error);
-        if (DOM.patternsDiv) {
-          DOM.patternsDiv.innerHTML = '<div class="patterns-error">形态识别加载失败</div>';
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to load or render quotes:', error);
-      if (DOM.klineTable) {
-        DOM.klineTable.innerHTML = '<div class="table-error">数据加载失败</div>';
-      }
-    }
-  });
-
-  // 监听错误事件
+  eventBus.on(Events.STOCK_ANALYZED, handleStockAnalyzed);
 
   // 标签页切换
-  if (DOM.tabNav) {
-    DOM.tabNav.addEventListener('click', (event) => {
+  const tabNav = document.querySelector('.tab-nav');
+  if (tabNav) {
+    tabNav.addEventListener('click', (event) => {
       const btn = event.target.closest('.tab-btn');
       if (!btn) return;
 
@@ -613,16 +100,20 @@ function bindEvents() {
   }
 
   // 主题切换
-  if (DOM.themeToggle) {
-    DOM.themeToggle.addEventListener('click', toggleTheme);
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
   }
 
   // 加入自选按钮
-  if (DOM.addWatchlistBtn) {
-    DOM.addWatchlistBtn.addEventListener('click', withErrorHandling(async () => {
-      await addCurrentToWatchlist();
+  const addWatchlistBtn = document.getElementById('add-watchlist-btn');
+  if (addWatchlistBtn) {
+    addWatchlistBtn.addEventListener('click', withErrorHandling(async () => {
+      await addCurrentToWatchlist(globalErrorHandler, doAnalyzeStock);
     }, 'Add to Watchlist'));
   }
+
+  // 监听错误事件
   eventBus.on(Events.ERROR_OCCURRED, ({ error, context }) => {
     logger.error(`Error event received from ${context}:`, error);
   });
@@ -630,17 +121,19 @@ function bindEvents() {
   // 监听自选股变更事件
   eventBus.on('WATCHLIST_CHANGED', async () => {
     logger.info('Watchlist changed event received');
-    await loadWatchlist();
+    await loadWatchlist(globalErrorHandler, doAnalyzeStock);
   });
 
   // 设置按钮点击事件
-  if (DOM.settingsBtn) {
-    DOM.settingsBtn.addEventListener('click', withErrorHandling(async () => {
+  const settingsBtn = document.getElementById('settings-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', withErrorHandling(async () => {
       logger.info('Settings button clicked');
 
       try {
-        const settings = await Settings.load();
-        Settings.render('settings', settings);
+        const S = await Settings();
+        const settings = await S.load();
+        S.render('settings', settings);
         switchTab('settings');
       } catch (error) {
         logger.error('Failed to load settings:', error);
@@ -650,64 +143,6 @@ function bindEvents() {
   }
 
   logger.debug('Event listeners bound');
-}
-
-// ========================================
-// 标签页管理
-// ========================================
-
-/**
- * 切换标签页
- * @param {string} tabName - 标签页名称
- */
-function switchTab(tabName) {
-  // 更新标签按钮状态
-  const buttons = DOM.tabNav.querySelectorAll('.tab-btn');
-  buttons.forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabName);
-  });
-
-  // 更新面板显示
-  const panels = document.querySelectorAll('.tab-panel');
-  panels.forEach(panel => {
-    panel.classList.toggle('active', panel.id === `tab-${tabName}`);
-  });
-
-  logger.info(`Switched to tab: ${tabName}`);
-}
-
-// ========================================
-// 主题管理
-// ========================================
-
-/**
- * 初始化主题
- */
-function initTheme() {
-  const theme = AppState.theme;
-  document.documentElement.setAttribute('data-theme', theme);
-
-  logger.info(`Theme initialized: ${theme}`);
-}
-
-/**
- * 切换主题
- */
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-  document.documentElement.setAttribute('data-theme', newTheme);
-  AppState.theme = newTheme;
-
-  // 保存到 localStorage
-  localStorage.setItem(AppConfig.UI.THEME.STORAGE_KEY, newTheme);
-
-  // 触发主题变更事件
-  eventBus.emit(Events.THEME_CHANGE, { theme: newTheme });
-
-  logger.info(`Theme changed to: ${newTheme}`);
-  toast.success(`已切换到${newTheme === 'dark' ? '深色' : '浅色'}模式`);
 }
 
 // ========================================
@@ -732,66 +167,74 @@ async function initApp() {
     bindEvents();
 
     // 加载自选股列表
-    await loadWatchlist();
+    await loadWatchlist(globalErrorHandler, doAnalyzeStock);
 
     // 加载系统设置
     try {
-      const settings = await Settings.load();
-      Settings.render('settings', settings);
+      const S = await Settings();
+      const settings = await S.load();
+      S.render('settings', settings);
       logger.info('Settings loaded successfully');
     } catch (error) {
       logger.warn('Failed to load settings, using defaults:', error);
-      // 使用默认设置渲染
-      const defaultSettings = Settings.getDefaultSettings();
-      Settings.render('settings', defaultSettings);
+      const S = await Settings();
+      const defaultSettings = S.getDefaultSettings();
+      S.render('settings', defaultSettings);
     }
 
     // 加载健康检查状态
     try {
+      const HA = await healthApi();
       const [healthData, testData] = await Promise.all([
-        healthApi.getHealthStatus(),
-        healthApi.getTestStatus()
+        HA.getHealthStatus(),
+        HA.getTestStatus()
       ]);
-      Health.render('health', healthData, testData);
+      const H = await Health();
+      H.render('health', healthData, testData);
       logger.info('Health status loaded successfully');
     } catch (error) {
       logger.warn('Failed to load health status:', error);
-      // 显示错误状态
-      if (DOM.healthDiv) {
-        DOM.healthDiv.innerHTML = Health.generateErrorHTML(error.message);
-        Health.bindEvents();
+      const healthDiv = document.getElementById('health');
+      if (healthDiv) {
+        const H = await Health();
+        healthDiv.innerHTML = H.generateErrorHTML(error.message);
+        H.bindEvents();
       }
     }
 
     // 加载飞书通知配置
     try {
-      await Notifications.render('notifications');
+      const N = await Notifications();
+      await N.render('notifications');
       logger.info('Notifications loaded successfully');
     } catch (error) {
       logger.warn('Failed to load notifications:', error);
-      // 显示错误状态
-      if (DOM.notificationsDiv) {
-        DOM.notificationsDiv.innerHTML = Notifications.generateErrorHTML(error.message);
-        Notifications.bindEvents();
+      const notificationsDiv = document.getElementById('notifications');
+      if (notificationsDiv) {
+        const N = await Notifications();
+        notificationsDiv.innerHTML = N.generateErrorHTML(error.message);
+        N.bindEvents();
       }
     }
 
     // 加载风险管理配置
     try {
-      await RiskManagement.render('risk');
+      const RM = await RiskManagement();
+      await RM.render('risk');
       logger.info('RiskManagement loaded successfully');
     } catch (error) {
       logger.warn('Failed to load risk management:', error);
-      // 显示错误状态
-      if (DOM.riskDiv) {
-        DOM.riskDiv.innerHTML = RiskManagement.generateErrorHTML(error.message);
-        RiskManagement.bindEvents();
+      const riskDiv = document.getElementById('risk');
+      if (riskDiv) {
+        const RM = await RiskManagement();
+        riskDiv.innerHTML = RM.generateErrorHTML(error.message);
+        RM.bindEvents();
       }
     }
 
     // 设置默认股票代码（如果有）
     if (AppConfig.DEFAULTS.STOCK.CODE) {
-      DOM.stockInput.value = AppConfig.DEFAULTS.STOCK.CODE;
+      document.getElementById('stock-code').value = AppConfig.DEFAULTS.STOCK.CODE;
     }
 
     logger.info('Application initialized successfully');
@@ -825,14 +268,14 @@ function startApp() {
 
 if (AppConfig.DEBUG) {
   window.WyckoffApp = {
-    analyzeStock,
+    analyzeStock: doAnalyzeStock,
     toggleTheme,
-    loadWatchlist,
-    addCurrentToWatchlist,
-    batchAnalyzeWatchlist,
-    loadSignals: (code) => Signals.loadSignals(code),
-    loadMultiTimeframe: (code) => MultiTimeframe.loadMultipleTimeframes(code),
-    loadPrediction: (quotes, summary) => Prediction.predictFutureCandles(quotes, summary),
+    loadWatchlist: () => loadWatchlist(globalErrorHandler, doAnalyzeStock),
+    addCurrentToWatchlist: () => addCurrentToWatchlist(globalErrorHandler, doAnalyzeStock),
+    batchAnalyzeWatchlist: () => batchAnalyzeWatchlist(globalErrorHandler),
+    loadSignals: async (code) => (await Signals()).loadSignals(code),
+    loadMultiTimeframe: async (code) => (await MultiTimeframe()).loadMultipleTimeframes(code),
+    loadPrediction: async (quotes, summary) => (await Prediction()).predictFutureCandles(quotes, summary),
     eventBus,
     AppState,
     AppConfig,
@@ -850,11 +293,11 @@ startApp();
 
 // 导出主要函数供测试使用
 export {
-  analyzeStock,
+  doAnalyzeStock as analyzeStock,
   toggleTheme,
-  loadWatchlist,
-  addCurrentToWatchlist,
-  batchAnalyzeWatchlist,
+  loadWatchlist as _loadWatchlist,
+  addCurrentToWatchlist as _addCurrentToWatchlist,
+  batchAnalyzeWatchlist as _batchAnalyzeWatchlist,
   initApp,
   startApp
 };

@@ -158,12 +158,12 @@ header h1 {
   font-size: 24px;
   cursor: pointer;
   padding: var(--spacing-xs);
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-md);
   transition: background 0.2s;
 }
 
 .header-settings-btn:hover {
-  background: var(--color-surface-secondary);
+  background: var(--bg-secondary);
 }
 
 main {

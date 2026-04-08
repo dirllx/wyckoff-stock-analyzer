@@ -232,7 +232,7 @@ export class Settings {
   static render(containerId, settings) {
     const container = document.getElementById(containerId);
     if (!container) {
-      console.error(`Settings: Container ${containerId} not found`);
+      logger.error(`Settings: Container ${containerId} not found`);
       return;
     }
 
@@ -331,7 +331,7 @@ export class Settings {
         window.location.reload();
       }, 1000);
     } catch (error) {
-      console.error('保存设置失败:', error);
+      logger.error('保存设置失败:', error);
       toast.error('保存设置失败');
     }
   }
@@ -358,7 +358,7 @@ export class Settings {
         window.location.reload();
       }, 1000);
     } catch (error) {
-      console.error('重置设置失败:', error);
+      logger.error('重置设置失败:', error);
       toast.error('重置设置失败');
     }
   }
@@ -371,7 +371,7 @@ export class Settings {
       const settings = await settingsApi.getAll();
       return settings;
     } catch (error) {
-      console.error('加载设置失败:', error);
+      logger.error('加载设置失败:', error);
       // 返回默认设置
       return this.getDefaultSettings();
     }

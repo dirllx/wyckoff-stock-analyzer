@@ -6,8 +6,8 @@
   max-width: 1000px;
   margin: 0 auto;
   padding: var(--spacing-lg);
-  background: var(--color-surface);
-  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -17,13 +17,13 @@
   align-items: center;
   padding-bottom: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settings-title {
   font-size: var(--font-size-xl);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -35,7 +35,7 @@
 .settings-btn {
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
@@ -48,17 +48,17 @@
 }
 
 .settings-btn-primary:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-hover);
 }
 
 .settings-btn-secondary {
-  background: var(--color-surface-secondary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .settings-btn-secondary:hover {
-  background: var(--color-surface-hover);
+  background: var(--bg-tertiary);
 }
 
 .settings-content {
@@ -68,15 +68,15 @@
 }
 
 .settings-section {
-  background: var(--color-surface-secondary);
-  border-radius: var(--border-radius);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
   padding: var(--spacing-lg);
 }
 
 .settings-section-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0 0 var(--spacing-md) 0;
 }
 
@@ -95,16 +95,16 @@
 .settings-label {
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .settings-input,
 .settings-select {
   padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-size: var(--font-size-base);
   transition: border-color 0.2s;
 }
@@ -116,7 +116,7 @@
 }
 
 .settings-input::placeholder {
-  color: var(--color-text-tertiary);
+  color: var(--text-tertiary);
 }
 
 .settings-checkbox-group {
@@ -130,15 +130,15 @@
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .settings-checkbox:hover {
-  background: var(--color-surface-hover);
+  background: var(--bg-tertiary);
   border-color: var(--color-primary);
 }
 
@@ -148,7 +148,7 @@
 
 .settings-checkbox span {
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   user-select: none;
 }
 
@@ -168,11 +168,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xxl);
+  padding: var(--spacing-xl);
   text-align: center;
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
 }
 
 .settings-empty-icon {
@@ -184,7 +184,7 @@
 .settings-empty-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0;
 }
 

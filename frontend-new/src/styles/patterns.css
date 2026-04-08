@@ -397,7 +397,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xxl);
+  padding: var(--spacing-xl);
   text-align: center;
   background: var(--bg-tertiary);
   border-radius: var(--radius-md);
