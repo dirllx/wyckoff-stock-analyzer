@@ -71,7 +71,7 @@ export class Watchlist {
       'D': 'var(--color-success)',    // 下降 - 绿色
       'A': 'var(--color-warning)',    // 吸筹 - 橙色
       'DS': 'var(--color-info)',      // 下跌吸筹 - 蓝色
-      '震荡': 'var(--color-tertiary)' // 震荡 - 灰色
+      '震荡': 'var(--text-tertiary)'  // 震荡 - 灰色
     };
     return colors[phase] || colors['震荡'];
   }
@@ -95,7 +95,7 @@ export class Watchlist {
       '买入': 'var(--color-error)',     // 买入 - 红色
       '卖出': 'var(--color-success)',   // 卖出 - 绿色
       '持有': 'var(--color-warning)',   // 持有 - 橙色
-      '观望': 'var(--color-tertiary)'   // 观望 - 灰色
+      '观望': 'var(--text-tertiary)'    // 观望 - 灰色
     };
     return colors[signal] || colors['观望'];
   }
@@ -273,16 +273,28 @@ export class Watchlist {
     try {
       logger.info(`Batch analyzing watchlist: ${watchlistData.length} stocks`);
 
-      const requests = watchlistData.map(item => ({
-        code: item.stock_code,
-        timeframe: 'daily'
-      }));
+      // 逐个分析（后端无批量端点）
+      const results = [];
+      let successCount = 0;
 
-      const result = await stocksApi.batchAnalyze(requests);
+      for (const item of watchlistData) {
+        try {
+          const result = await stocksApi.analyze(item.stock_code, null, 'daily');
+          results.push({ code: item.stock_code, result, success: true });
+          successCount++;
+        } catch (error) {
+          logger.warn(`Failed to analyze ${item.stock_code}:`, error);
+          results.push({ code: item.stock_code, error: error.message, success: false });
+        }
+      }
 
-      toast.success(`批量分析完成，共 ${watchlistData.length} 只股票`);
+      if (successCount === watchlistData.length) {
+        toast.success(`批量分析完成，全部 ${successCount} 只股票`);
+      } else {
+        toast.warning(`批量分析完成，${successCount}/${watchlistData.length} 只成功`);
+      }
 
-      return result;
+      return { results, total: watchlistData.length, success: successCount };
     } catch (error) {
       logger.error('Failed to batch analyze watchlist:', error);
       toast.error('批量分析失败，请稍后重试');

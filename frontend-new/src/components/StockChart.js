@@ -258,6 +258,12 @@ export class StockChart {
     }
 
     try {
+      // 销毁已有图表实例，避免内存泄漏
+      const existingInstance = echarts.getInstanceByDom(container);
+      if (existingInstance) {
+        existingInstance.dispose();
+      }
+
       const chart = echarts.init(container);
 
       if (!quotes || quotes.length === 0) {
@@ -313,6 +319,12 @@ export class StockChart {
     }
 
     try {
+      // 销毁已有图表实例，避免内存泄漏
+      const existingInstance = echarts.getInstanceByDom(container);
+      if (existingInstance) {
+        existingInstance.dispose();
+      }
+
       const chart = echarts.init(container);
 
       if (!quotes || quotes.length === 0) {

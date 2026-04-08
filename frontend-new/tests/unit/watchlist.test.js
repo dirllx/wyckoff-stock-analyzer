@@ -77,7 +77,7 @@ describe('Watchlist - 数据转换', () => {
     expect(Watchlist.getSignalColor('买入')).toBe('var(--color-error)'); // 红色
     expect(Watchlist.getSignalColor('卖出')).toBe('var(--color-success)'); // 绿色
     expect(Watchlist.getSignalColor('持有')).toBe('var(--color-warning)'); // 橙色
-    expect(Watchlist.getSignalColor('观望')).toBe('var(--color-tertiary)'); // 灰色
+    expect(Watchlist.getSignalColor('观望')).toBe('var(--text-tertiary)'); // 灰色
   });
 });
 
@@ -194,7 +194,7 @@ describe('Watchlist - 操作功能', () => {
     // 增加超时时间到10000ms
     await Watchlist.batchAnalyze(watchlistData);
 
-    expect(stocksApi.batchAnalyze).toHaveBeenCalled();
+    expect(stocksApi.analyze).toHaveBeenCalled();
   }, 10000);
 });
 

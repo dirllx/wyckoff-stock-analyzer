@@ -15,7 +15,8 @@ const mockChartInstance = {
 };
 
 vi.mock('echarts', () => ({
-  init: vi.fn(() => mockChartInstance)
+  init: vi.fn(() => mockChartInstance),
+  getInstanceByDom: vi.fn(() => null)
 }));
 
 import { StockChart } from '../../src/components/StockChart.js';
