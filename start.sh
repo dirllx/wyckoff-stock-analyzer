@@ -2,7 +2,9 @@
 
 echo "🚀 启动威科夫股票分析系统（新版）..."
 
-cd "$(dirname "$0")/backend"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+cd "$SCRIPT_DIR/backend"
 
 echo "🛑 停止新版旧进程..."
 # 只停止新版端口（8080/3001），不影响老版（8000/3000）
@@ -22,7 +24,7 @@ echo "   后端PID: $BACKEND_PID"
 sleep 3
 
 echo "🌐 启动新版前端 (端口3001)..."
-cd "$(dirname "$0")/frontend-new"
+cd "$SCRIPT_DIR/frontend-new"
 npm run dev > /tmp/frontend_3001.log 2>&1 &
 FRONTEND_PID=$!
 echo "   前端PID: $FRONTEND_PID"
