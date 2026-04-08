@@ -254,17 +254,16 @@ export class Patterns {
     }
 
     try {
-      // 并行获取形态数据
-      const [patterns, history, stats] = await Promise.all([
+      // 识别形态并获取历史（后端无stats端点）
+      const [patterns, history] = await Promise.all([
         patternsApi.getPatterns(code),
-        patternsApi.getPatternHistory(code, { limit: 20 }),
-        patternsApi.getPatternStats(code)
+        patternsApi.getPatternHistory(code, { limit: 20 })
       ]);
 
       const data = {
-        current_patterns: patterns || [],
-        pattern_history: history.items || [],
-        pattern_stats: stats || {}
+        current_patterns: patterns?.patterns || patterns || [],
+        pattern_history: history?.items || [],
+        pattern_stats: {}
       };
 
       container.innerHTML = this.generatePatternsHTML(data);

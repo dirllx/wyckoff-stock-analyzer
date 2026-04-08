@@ -5,12 +5,12 @@ import client from './client.js';
 
 export const patternsApi = {
   /**
-   * 获取股票的形态列表
+   * 获取股票的形态列表（触发识别）
    * @param {string} code - 股票代码
-   * @returns {Promise<Array>} 形态列表
+   * @returns {Promise<Object>} 识别结果
    */
   async getPatterns(code) {
-    return await client.get(`/api/v1/patterns/${code}`);
+    return await client.post(`/api/v1/stocks/${code}/patterns`);
   },
 
   /**
@@ -26,26 +26,24 @@ export const patternsApi = {
     if (options.pattern_type) params.append('pattern_type', options.pattern_type);
 
     const queryString = params.toString();
-    return await client.get(`/api/v1/patterns/${code}/history${queryString ? `?${queryString}` : ''}`);
+    return await client.get(`/api/v1/stocks/${code}/patterns/history${queryString ? `?${queryString}` : ''}`);
   },
 
   /**
-   * 识别形态
+   * 识别形态（同getPatterns，POST触发识别）
    * @param {string} code - 股票代码
    * @param {Object} options - 识别选项
    * @returns {Promise<Object>} 识别结果
    */
   async recognizePatterns(code, options = {}) {
-    const data = { code, ...options };
-    return await client.post('/api/v1/patterns/recognize', data);
+    return await client.post(`/api/v1/stocks/${code}/patterns`, options);
   },
 
   /**
-   * 获取形态统计
-   * @param {string} code - 股票代码
-   * @returns {Promise<Object>} 形态统计
+   * 获取支持的形态类型
+   * @returns {Promise<Array>} 形态类型列表
    */
-  async getPatternStats(code) {
-    return await client.get(`/api/v1/patterns/${code}/stats`);
+  async getPatternTypes() {
+    return await client.get('/api/v1/stocks/patterns/list');
   }
 };
