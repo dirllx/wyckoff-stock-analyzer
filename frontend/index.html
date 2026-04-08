@@ -1709,11 +1709,13 @@
         // 动态检测 API 地址
         // ============================================================
 
-        // 动态检测 API 地址：根据当前访问地址自动构建后端 API 地址
-        // 如果通过 100.96.99.33:3000 访问，则 API_BASE = 100.96.99.33:8000
-        // 如果通过 192.168.1.80:3000 访问，则 API_BASE = 192.168.1.80:8000
+        // 动态检测 API 地址
+        // Docker 环境（Nginx 代理）：API_BASE = '' （相对路径，走 Nginx /api 代理）
+        // 本地开发：API_BASE = http://${currentHost}:8000
         const currentHost = window.location.hostname;
-        const API_BASE = `http://${currentHost}:8000`;
+        const API_BASE = window.location.port === '3000' && window.location.protocol === 'http:'
+            ? `http://${currentHost}:8000`  // 本地直连后端: Nginx 代理 /api → backend:8000
+            : `http://${currentHost}:8000`;  // 本地开发: 直连后端
 
         // 显示 API 配置信息
         console.log('='.repeat(60));
@@ -5358,6 +5360,18 @@
                 const tfName = timeframeNames[data.timeframe] || data.timeframe;
                 const summary = data.summary;
                 const quote = data.quote;
+
+                // quote为null时显示获取失败的行
+                if (!quote) {
+                    html += `
+                        <tr style="border-bottom: 1px solid #374151;">
+                            <td style="text-align: center; padding: 8px 4px; color: #f9fafb; font-weight: 600; font-size: 11px;">${tfName}</td>
+                            <td colspan="9" style="text-align: center; padding: 8px 4px; color: #ef4444; font-size: 11px;">数据获取失败${summary?.reason ? '：' + summary.reason : ''}</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
                 const direction = summary.direction || 'NEUTRAL';
                 const score = summary.score || 0;
 
