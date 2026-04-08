@@ -559,3 +559,62 @@ main {
     max-width: none;
   }
 }
+
+/* ========================================
+   分析结果面板
+   ======================================== */
+
+.analysis-result {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.analysis-result h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+.analysis-result .stock-info p {
+  margin: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+}
+
+.analysis-result .stock-info strong {
+  color: var(--color-primary);
+}
+
+.analysis-result .signals-info {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.analysis-result .signals-info h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.signal-direction {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.signal-long { background: #dcfce7; color: #166534; }
+.signal-short { background: #fee2e2; color: #991b1b; }
+.signal-neutral { background: #f3f4f6; color: #4b5563; }
+
+.signal-reason {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-xs);
+  line-height: 1.5;
+}

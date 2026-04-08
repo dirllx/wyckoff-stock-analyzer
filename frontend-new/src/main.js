@@ -288,7 +288,14 @@ async function loadWatchlist() {
 
     // 渲染自选股
     if (DOM.watchlistDiv) {
-      const html = Watchlist.render(watchlistData);
+      let html = '<div class="watchlist-header">';
+      html += '<h3>我的关注</h3>';
+      html += '<div class="watchlist-actions">';
+      html += `<button class="btn-secondary" id="wl-refresh">刷新</button>`;
+      html += `<button class="btn-secondary" id="wl-batch">批量分析</button>`;
+      html += `<span class="watchlist-count">${watchlistData.length} 只</span>`;
+      html += '</div></div>';
+      html += Watchlist.render(watchlistData);
       DOM.watchlistDiv.innerHTML = html;
 
       // 绑定自选股卡片事件
@@ -352,6 +359,18 @@ function bindWatchlistEvents() {
       }
     }, 'Watchlist Card Click'));
   });
+
+  // 刷新按钮
+  const refreshBtn = document.getElementById('wl-refresh');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => loadWatchlist());
+  }
+
+  // 批量分析按钮
+  const batchBtn = document.getElementById('wl-batch');
+  if (batchBtn) {
+    batchBtn.addEventListener('click', () => batchAnalyzeWatchlist());
+  }
 
   logger.debug('Watchlist events bound');
 }
@@ -519,14 +538,16 @@ function bindEvents() {
         }
       }
 
-      // 加载并渲染K线预测数据
+      // 渲染K线预测数据（基于信号评分生成简易预测）
       try {
-        // 需要K线数据和摘要来生成预测
-        const summary = analysis.summary;
-        if (quotes && quotes.length > 0 && summary) {
+        if (quotes && quotes.length > 0 && signals && signals.length > 0) {
           logger.info('Generating K-line predictions...');
-
-          // 生成预测数据
+          const latestSignal = signals[0];
+          const summary = {
+            score: latestSignal.score || 5,
+            direction: latestSignal.direction || 'NEUTRAL',
+            phase: latestSignal.wyckoff_phase || '震荡'
+          };
           const predictions = Prediction.predictFutureCandles(quotes, summary);
 
           if (predictions && predictions.length > 0) {

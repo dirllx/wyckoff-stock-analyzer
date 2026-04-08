@@ -115,6 +115,33 @@
   color: var(--text-tertiary);
 }
 
+/* 关注列表头部 */
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.watchlist-header h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.watchlist-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.watchlist-count {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .watchlist-grid {
