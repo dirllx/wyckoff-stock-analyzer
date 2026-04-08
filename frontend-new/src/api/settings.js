@@ -9,7 +9,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 所有配置
    */
   async getAll() {
-    return await client.get('/api/v1/settings');
+    return await client.get('/api/v1/settings/');
   },
 
   /**
@@ -18,7 +18,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 配置对象
    */
   async getCategory(category) {
-    return await client.get(`/api/v1/settings/${category}`);
+    return await client.get(`/api/v1/settings/${category}/`);
   },
 
   /**
@@ -28,7 +28,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 更新后的配置
    */
   async updateCategory(category, settings) {
-    return await client.put(`/api/v1/settings/${category}`, settings);
+    return await client.put(`/api/v1/settings/${category}/`, settings);
   },
 
   /**
@@ -37,7 +37,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 保存结果
    */
   async saveAll(settings) {
-    return await client.post('/api/v1/settings', settings);
+    return await client.post('/api/v1/settings/', settings);
   },
 
   /**
@@ -45,7 +45,7 @@ export const settingsApi = {
    * @returns {Promise<Object>} 默认配置
    */
   async reset() {
-    return await client.post('/api/v1/settings/reset');
+    return await client.post('/api/v1/settings/reset/');
   }
 };
 
