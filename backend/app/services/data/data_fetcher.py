@@ -2,6 +2,16 @@
 数据获取服务 - 使用akshare获取A股和港股数据
 支持网络重试机制，提高数据获取成功率
 """
+import os
+# 绕过系统代理，直连东方财富等数据源API
+os.environ["NO_PROXY"] = "*"
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
+os.environ.pop("http_proxy", None)
+os.environ.pop("https_proxy", None)
+os.environ.pop("ALL_PROXY", None)
+os.environ.pop("all_proxy", None)
+
 import akshare as ak
 import pandas as pd
 from datetime import datetime, timedelta

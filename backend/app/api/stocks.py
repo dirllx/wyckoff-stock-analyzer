@@ -664,46 +664,75 @@ async def get_stock_quotes(
         # ========== Redis缓存：先检查缓存 ==========
         cached_quotes = get_cached_stock_data(code, timeframe)
         if cached_quotes:
-            # 缓存中的数据是升序（旧→新），需要取最后limit条（最新的数据）
-            return_quotes = cached_quotes[-limit:] if len(cached_quotes) > limit else cached_quotes
-            logger.info(f"✅ 从缓存返回K线数据: {code} {timeframe} ({len(return_quotes)}条，缓存共{len(cached_quotes)}条)")
-            return {
-                "code": code,
-                "timeframe": timeframe,
-                "total": len(return_quotes),
-                "from_cache": True,
-                "quotes": [
-                    {
-                        "date": q["date"],
-                        "open": q["open"],
-                        "high": q["high"],
-                        "low": q["low"],
-                        "close": q["close"],
-                        "volume": q["volume"],
-                        "ma5": q.get("ma5"),
-                        "ma10": q.get("ma10"),
-                        "ma15": q.get("ma15"),
-                        "ma20": q.get("ma20"),
-                        "ma30": q.get("ma30"),
-                        "ma60": q.get("ma60"),
-                        "ma90": q.get("ma90"),
-                        "ma120": q.get("ma120"),
-                        "ma250": q.get("ma250"),
-                        "duokong_line": q.get("duokong_line"),
-                        "volume_ma5": q.get("volume_ma5"),
-                        "obv": q.get("obv")
-                    }
-                    for q in return_quotes
-                ]
-            }
+            # 日线/周线/月线：检查缓存是否包含当天数据
+            # 如果已过收盘时间(15:00)但缓存最新数据不是今天，说明需要更新
+            use_cache = True
+            if timeframe in ("daily", "weekly", "monthly"):
+                now = datetime.now()
+                trading_close = now.replace(hour=15, minute=0, second=0, microsecond=0)
+                if now >= trading_close and cached_quotes:
+                    last_date_str = cached_quotes[-1].get("date", "")
+                    today_str = now.strftime("%Y-%m-%d")
+                    if last_date_str[:10] < today_str:
+                        use_cache = False
+                        logger.info(f"🔄 缓存数据过期: {code} {timeframe} 最新={last_date_str[:10]}, 今天={today_str}，重新获取")
 
-        # ========== 缓存未命中，检查数据库 ==========
-        logger.info(f"缓存未命中，检查数据库: {code} {timeframe}")
+            if use_cache:
+                # 缓存中的数据是升序（旧→新），需要取最后limit条（最新的数据）
+                return_quotes = cached_quotes[-limit:] if len(cached_quotes) > limit else cached_quotes
+                logger.info(f"✅ 从缓存返回K线数据: {code} {timeframe} ({len(return_quotes)}条，缓存共{len(cached_quotes)}条)")
+                return {
+                    "code": code,
+                    "timeframe": timeframe,
+                    "total": len(return_quotes),
+                    "from_cache": True,
+                    "quotes": [
+                        {
+                            "date": q["date"],
+                            "open": q["open"],
+                            "high": q["high"],
+                            "low": q["low"],
+                            "close": q["close"],
+                            "volume": q["volume"],
+                            "ma5": q.get("ma5"),
+                            "ma10": q.get("ma10"),
+                            "ma15": q.get("ma15"),
+                            "ma20": q.get("ma20"),
+                            "ma30": q.get("ma30"),
+                            "ma60": q.get("ma60"),
+                            "ma90": q.get("ma90"),
+                            "ma120": q.get("ma120"),
+                            "ma250": q.get("ma250"),
+                            "duokong_line": q.get("duokong_line"),
+                            "volume_ma5": q.get("volume_ma5"),
+                            "obv": q.get("obv")
+                        }
+                        for q in return_quotes
+                    ]
+                }
+
+        # ========== 缓存未命中或过期，检查数据库 ==========
+        logger.info(f"缓存未命中或过期，检查数据库: {code} {timeframe}")
+
+        # 日线/周线/月线：检查数据库数据是否包含当天，没有则通过调度器更新
+        need_scheduler_update = False
+        if timeframe in ("daily", "weekly", "monthly"):
+            now = datetime.now()
+            trading_close = now.replace(hour=15, minute=0, second=0, microsecond=0)
+            if now >= trading_close:
+                # 已过收盘时间，检查数据库最新日期
+                latest_quotes = storage.get_quotes(code, timeframe, limit=1)
+                if latest_quotes:
+                    latest_date = latest_quotes[0].date.strftime("%Y-%m-%d")
+                    today_str = now.strftime("%Y-%m-%d")
+                    if latest_date < today_str:
+                        need_scheduler_update = True
+                        logger.info(f"🔄 数据库数据过期: {code} {timeframe} 最新={latest_date}, 今天={today_str}，通过调度器更新")
 
         # 先检查数据库是否有数据
         quotes = storage.get_quotes(code, timeframe, limit=limit)
 
-        if quotes and len(quotes) > 0:
+        if quotes and len(quotes) > 0 and not need_scheduler_update:
             logger.info(f"✅ 从数据库读取K线数据: {code} {timeframe} ({len(quotes)}条)")
 
             # 转换为字典格式（用于返回）
@@ -781,8 +810,11 @@ async def get_stock_quotes(
                 "quotes": quotes_dict
             }
 
-        # ========== 数据库没有数据，使用调度器获取 ==========
-        logger.info(f"数据库无数据，使用调度器获取: {code} {timeframe}")
+        # ========== 数据库无数据或数据过期，使用调度器获取 ==========
+        if need_scheduler_update:
+            logger.info(f"数据过期，通过调度器更新: {code} {timeframe}")
+        else:
+            logger.info(f"数据库无数据，使用调度器获取: {code} {timeframe}")
 
         try:
             # 使用多数据源调度器获取数据

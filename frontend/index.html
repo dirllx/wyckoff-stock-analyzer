@@ -4713,15 +4713,15 @@
             // 初始化关注列表周期选择器（根据开市/收市设置默认周期）
             initWatchlistTimeframe();
 
-            // 后台更新股票名称（静默执行，不阻塞页面）
-            setTimeout(async () => {
-                try {
-                    await fetch(`${API_BASE}/api/v1/watchlist/update`);
-                    console.log('✓ 股票名称已更新');
-                } catch (error) {
-                    console.warn('更新股票名称失败:', error);
-                }
-            }, 2000); // 延迟2秒执行，避免影响页面加载
+            // 后台更新股票名称（启动时跳过，避免批量请求打崩后端）
+            // setTimeout(async () => {
+            //     try {
+            //         await fetch(`${API_BASE}/api/v1/watchlist/update`);
+            //         console.log('✓ 股票名称已更新');
+            //     } catch (error) {
+            //         console.warn('更新股票名称失败:', error);
+            //     }
+            // }, 2000);
         });
 
         async function analyzeMultiTimeframe() {
