@@ -24,7 +24,7 @@ import { initDOM, validateDOM } from './app/dom.js';
 import { analyzeStock } from './app/stockAnalysis.js';
 import { loadWatchlist, addCurrentToWatchlist, batchAnalyzeWatchlist } from './app/watchlistManager.js';
 import { handleStockAnalyzed } from './app/rendering.js';
-import { switchTab, initTheme, toggleTheme } from './app/ui.js';
+import { switchTab, initTheme, toggleTheme, MinimalMode } from './app/ui.js';
 
 // ========================================
 // 全局错误处理
@@ -105,6 +105,14 @@ function bindEvents() {
     themeToggle.addEventListener('click', toggleTheme);
   }
 
+  // 极简模式切换
+  const minimalModeToggle = document.getElementById('minimal-mode-toggle');
+  if (minimalModeToggle) {
+    minimalModeToggle.addEventListener('click', withSyncErrorHandling(() => {
+      MinimalMode.toggle();
+    }, 'Toggle Minimal Mode'));
+  }
+
   // 加入自选按钮
   const addWatchlistBtn = document.getElementById('add-watchlist-btn');
   if (addWatchlistBtn) {
@@ -162,6 +170,9 @@ async function initApp() {
 
     // 初始化主题
     initTheme();
+
+    // 初始化极简模式
+    MinimalMode.init();
 
     // 绑定事件
     bindEvents();
@@ -270,6 +281,7 @@ if (AppConfig.DEBUG) {
   window.WyckoffApp = {
     analyzeStock: doAnalyzeStock,
     toggleTheme,
+    MinimalMode,
     loadWatchlist: () => loadWatchlist(globalErrorHandler, doAnalyzeStock),
     addCurrentToWatchlist: () => addCurrentToWatchlist(globalErrorHandler, doAnalyzeStock),
     batchAnalyzeWatchlist: () => batchAnalyzeWatchlist(globalErrorHandler),

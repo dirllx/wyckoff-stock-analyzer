@@ -1,12 +1,71 @@
 /**
  * UI 管理模块
- * 负责标签页切换和主题管理
+ * 负责标签页切换、主题管理和极简模式
  */
 
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
 import { AppConfig, AppState, Events, eventBus } from '../config.js';
 import { DOM } from './dom.js';
+
+/**
+ * 极简模式状态
+ */
+const MinimalMode = {
+  isEnabled: false,
+  STORAGE_KEY: 'minimal_mode',
+
+  /**
+   * 初始化极简模式
+   */
+  init() {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved === 'true') {
+      this.enable(false); // false = don't show toast
+    }
+  },
+
+  /**
+   * 启用极简模式
+   */
+  enable(showToast = true) {
+    document.body.classList.add('minimal-mode');
+    document.getElementById('minimal-style').disabled = false;
+    this.isEnabled = true;
+    localStorage.setItem(this.STORAGE_KEY, 'true');
+
+    if (showToast) {
+      toast.success('已启用极简模式');
+    }
+    logger.info('Minimal mode enabled');
+  },
+
+  /**
+   * 禁用极简模式
+   */
+  disable(showToast = true) {
+    document.body.classList.remove('minimal-mode');
+    document.getElementById('minimal-style').disabled = true;
+    this.isEnabled = false;
+    localStorage.setItem(this.STORAGE_KEY, 'false');
+
+    if (showToast) {
+      toast.success('已切换到标准模式');
+    }
+    logger.info('Minimal mode disabled');
+  },
+
+  /**
+   * 切换极简模式
+   */
+  toggle() {
+    if (this.isEnabled) {
+      this.disable();
+    } else {
+      this.enable();
+    }
+  }
+};
 
 /**
  * 切换标签页
@@ -58,4 +117,4 @@ function toggleTheme() {
   toast.success(`已切换到${newTheme === 'dark' ? '深色' : '浅色'}模式`);
 }
 
-export { switchTab, initTheme, toggleTheme };
+export { switchTab, initTheme, toggleTheme, MinimalMode };

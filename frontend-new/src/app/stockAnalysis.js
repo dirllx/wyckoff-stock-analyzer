@@ -11,6 +11,81 @@ import { AppState, updateState, Events, eventBus } from '../config.js';
 import { DOM } from './dom.js';
 
 /**
+ * 生成加载状态HTML
+ * @param {string} message - 加载消息
+ * @param {string} subtext - 副文本
+ * @returns {string} 加载状态HTML
+ */
+function generateLoadingHTML(message = '分析中...', subtext = '正在获取股票数据') {
+  return `
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p class="loading-text">${message}</p>
+      <p class="loading-subtext">${subtext}</p>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 生成极简模式结果卡片HTML
+ * @param {Object} analysis - 分析结果
+ * @param {Array} signals - 信号数据
+ * @returns {string} 结果卡片HTML
+ */
+function generateMinimalResultCard(analysis, signals) {
+  const stock = analysis?.stock || {};
+  const quote = analysis?.current_quote || {};
+  const latestSignal = signals?.[0];
+
+  if (!stock.code) {
+    return '<div class="empty-state"><p class="empty-title">暂无数据</p></div>';
+  }
+
+  const signalClass = latestSignal?.direction?.toLowerCase() || 'neutral';
+  const signalText = {
+    'long': '做多',
+    'short': '做空',
+    'neutral': '中性'
+  }[signalClass] || '中性';
+
+  const changePercent = quote.change_percent ?? 0;
+  const changeStr = changePercent >= 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
+  const changeColor = changePercent >= 0 ? 'var(--success)' : 'var(--danger)';
+
+  return `
+    <div class="result-card">
+      <div class="result-header">
+        <h2 class="result-title">${stock.name || stock.code}</h2>
+        <p class="result-code">${stock.code}</p>
+      </div>
+
+      <div class="result-signal ${signalClass}">
+        <span class="signal-icon">${signalClass === 'long' ? '📈' : signalClass === 'short' ? '📉' : '➡️'}</span>
+        <span>${signalText}</span>
+      </div>
+
+      <div class="result-metrics">
+        <div class="result-metric">
+          <div class="result-metric-value" style="color: ${changeColor}">${changeStr}</div>
+          <div class="result-metric-label">涨跌幅</div>
+        </div>
+        <div class="result-metric">
+          <div class="result-metric-value">${latestSignal?.score ?? '-'}</div>
+          <div class="result-metric-label">信号评分</div>
+        </div>
+        <div class="result-metric">
+          <div class="result-metric-value">${quote.close ?? '-'}</div>
+          <div class="result-metric-label">收盘价</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * 分析股票
  * @param {string} stockCode - 股票代码
  * @param {Function} globalErrorHandler - 全局错误处理器
@@ -35,10 +110,16 @@ async function analyzeStock(stockCode, globalErrorHandler) {
     // 触发加载开始事件
     eventBus.emit(Events.STOCK_LOAD_START, { code });
 
+    // 显示加载状态
+    if (DOM.analysisDiv) {
+      DOM.analysisDiv.innerHTML = generateLoadingHTML('分析中...', `正在分析 ${code}`);
+    }
+
     // 禁用输入和按钮
     DOM.stockInput.disabled = true;
     DOM.analyzeBtn.disabled = true;
-    DOM.analyzeBtn.textContent = '分析中...';
+    DOM.analyzeBtn.innerHTML = '<span class="btn-icon">⟳</span> 分析中...';
+    DOM.analyzeBtn.classList.add('loading');
 
     // 获取今天的日期作为结束日期
     const endDate = new Date().toISOString().split('T')[0];
@@ -100,7 +181,8 @@ async function analyzeStock(stockCode, globalErrorHandler) {
     // 恢复输入和按钮
     DOM.stockInput.disabled = false;
     DOM.analyzeBtn.disabled = false;
-    DOM.analyzeBtn.textContent = '分析';
+    DOM.analyzeBtn.innerHTML = '<span class="btn-icon">🔍</span> 分析';
+    DOM.analyzeBtn.classList.remove('loading');
   }
 }
 
@@ -116,6 +198,26 @@ function updateAnalysisUI(analysis, signals) {
     return;
   }
 
+  // 检查是否为极简模式
+  const isMinimalMode = document.body.classList.contains('minimal-mode');
+
+  if (isMinimalMode) {
+    // 使用极简模式样式
+    DOM.analysisDiv.innerHTML = generateMinimalResultCard(analysis, signals);
+  } else {
+    // 使用标准模式样式
+    renderStandardAnalysisUI(analysis, signals);
+  }
+
+  logger.debug('Analysis UI updated');
+}
+
+/**
+ * 渲染标准模式分析 UI
+ * @param {Object} analysis - 分析结果
+ * @param {Object} signals - 信号结果
+ */
+function renderStandardAnalysisUI(analysis, signals) {
   const stock = analysis.stock || {};
   const quote = analysis.current_quote || {};
   const signalsList = signals || analysis.signals || [];
@@ -152,8 +254,6 @@ function updateAnalysisUI(analysis, signals) {
   html += '</div>';
 
   DOM.analysisDiv.innerHTML = html;
-
-  logger.debug('Analysis UI updated');
 }
 
 export { analyzeStock, updateAnalysisUI };
