@@ -1,10 +1,33 @@
 """
 数据转换工具函数
 """
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 import pandas as pd
 from app.models.database import StockQuote
+
+
+def _safe_float(value, default: Optional[float] = None) -> Optional[float]:
+    """
+    安全地将值转换为float
+
+    Args:
+        value: 要转换的值
+        default: 默认值（当转换失败时使用）
+
+    Returns:
+        float值或None
+    """
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return default
+    return default
 
 
 def dataframe_to_dict(df: pd.DataFrame) -> List[dict]:
@@ -83,22 +106,23 @@ def dict_to_stock_quotes(
                 stock_id=stock_id,
                 timeframe=timeframe,
                 date=date,
-                open=q_dict.get("open"),
-                high=q_dict.get("high"),
-                low=q_dict.get("low"),
-                close=q_dict.get("close"),
-                volume=q_dict.get("volume"),
-                ma5=q_dict.get("ma5"),
-                ma10=q_dict.get("ma10"),
-                ma15=q_dict.get("ma15"),
-                ma20=q_dict.get("ma20"),
-                ma30=q_dict.get("ma30"),
-                ma60=q_dict.get("ma60"),
-                ma90=q_dict.get("ma90"),
-                ma120=q_dict.get("ma120"),
-                ma250=q_dict.get("ma250"),
-                volume_ma5=q_dict.get("volume_ma5"),
-                obv=q_dict.get("obv")
+                open=_safe_float(q_dict.get("open")),
+                high=_safe_float(q_dict.get("high")),
+                low=_safe_float(q_dict.get("low")),
+                close=_safe_float(q_dict.get("close")),
+                volume=_safe_float(q_dict.get("volume"), default=0),
+                amount=_safe_float(q_dict.get("amount")),
+                ma5=_safe_float(q_dict.get("ma5")),
+                ma10=_safe_float(q_dict.get("ma10")),
+                ma15=_safe_float(q_dict.get("ma15")),
+                ma20=_safe_float(q_dict.get("ma20")),
+                ma30=_safe_float(q_dict.get("ma30")),
+                ma60=_safe_float(q_dict.get("ma60")),
+                ma90=_safe_float(q_dict.get("ma90")),
+                ma120=_safe_float(q_dict.get("ma120")),
+                ma250=_safe_float(q_dict.get("ma250")),
+                volume_ma5=_safe_float(q_dict.get("volume_ma5")),
+                obv=_safe_float(q_dict.get("obv"))
             )
             quotes.append(quote)
         except Exception as e:

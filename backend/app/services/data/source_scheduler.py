@@ -15,6 +15,8 @@ from collections import defaultdict
 from app.services.data.data_fetcher import DataFetcher
 from app.services.data.baostock_fetcher import BaostockFetcher
 from app.services.data.easyquotation_fetcher import EasyquotationFetcher
+from app.services.data.ashare_fetcher import AshareFetcher
+from app.services.data.mcp_fetcher import MCPFetcher
 
 
 def measure_time(func):
@@ -110,9 +112,11 @@ class SourceScheduler:
 
         # 初始化数据源
         self.sources: Dict[str, Any] = {
-            "akshare": DataFetcher(),
-            "baostock": BaostockFetcher(),
-            "easyquotation": EasyquotationFetcher(source="sina"),  # 实时行情数据源
+            "mcp": MCPFetcher(),                  # a-share-mcp数据源，基于Baostock，高质量数据
+            "ashare": AshareFetcher(),           # Sina/腾讯API，无需登录，速度快
+            "baostock": BaostockFetcher(),       # 备用数据源
+            "akshare": DataFetcher(),            # 东方财富，可能被代理拦截
+            "easyquotation": EasyquotationFetcher(source="sina"),  # 实时行情
         }
 
         # 初始化统计
@@ -148,18 +152,20 @@ class SourceScheduler:
         return {
             "global": {"auto_speed_test": False},
             "sources": {
-                "akshare": {"enabled": True, "priority": 1},
-                "baostock": {"enabled": True, "priority": 2}
+                "ashare": {"enabled": True, "priority": 1},
+                "mcp": {"enabled": True, "priority": 2},
+                "baostock": {"enabled": True, "priority": 3},
+                "akshare": {"enabled": True, "priority": 4}
             },
             "scheduling": {"strategy": "priority", "auto_fallback": True},
             "timeframe_priority": {
-                "daily": ["akshare", "baostock"],
-                "weekly": ["akshare", "baostock"],
-                "monthly": ["akshare", "baostock"],
-                "30": ["akshare", "baostock"],
-                "60": ["akshare", "baostock"],
-                "15": ["akshare", "baostock"],
-                "5": ["akshare", "baostock"]
+                "daily": ["ashare", "mcp", "baostock", "akshare"],
+                "weekly": ["ashare", "mcp", "baostock", "akshare"],
+                "monthly": ["ashare", "mcp", "baostock", "akshare"],
+                "30": ["ashare", "mcp", "baostock", "akshare"],
+                "60": ["ashare", "mcp", "baostock", "akshare"],
+                "15": ["ashare", "mcp", "baostock", "akshare"],
+                "5": ["ashare", "mcp", "baostock", "akshare"]
             }
         }
 
@@ -254,7 +260,15 @@ class SourceScheduler:
                 logger.info(f"尝试使用 {source_name} 获取数据...")
 
                 # 调用数据源（同步方法，不需要await）
-                if source_name == "akshare":
+                if source_name == "mcp":
+                    data, elapsed = self._fetch_from_mcp(
+                        source, code, timeframe, start_date, end_date
+                    )
+                elif source_name == "ashare":
+                    data, elapsed = self._fetch_from_ashare(
+                        source, code, timeframe, start_date, end_date
+                    )
+                elif source_name == "akshare":
                     data, elapsed = self._fetch_from_akshare(
                         source, code, timeframe, start_date, end_date
                     )
@@ -292,6 +306,48 @@ class SourceScheduler:
 
         # 所有数据源都失败
         raise Exception(f"所有数据源获取失败，最后错误: {last_error}")
+
+    def _fetch_from_ashare(
+        self,
+        fetcher: AshareFetcher,
+        code: str,
+        timeframe: str,
+        start_date: str,
+        end_date: str
+    ) -> tuple[List[Dict], float]:
+        """从Ashare获取数据（同步方法）"""
+        start = time.time()
+
+        data = fetcher.get_stock_quotes(
+            code=code,
+            timeframe=timeframe,
+            start_date=start_date,
+            end_date=end_date or datetime.now().strftime("%Y-%m-%d")
+        )
+
+        elapsed = (time.time() - start) * 1000
+        return data, elapsed
+
+    def _fetch_from_mcp(
+        self,
+        fetcher: MCPFetcher,
+        code: str,
+        timeframe: str,
+        start_date: str,
+        end_date: str
+    ) -> tuple[List[Dict], float]:
+        """从MCP获取数据（同步方法）"""
+        start = time.time()
+
+        data = fetcher.get_stock_quotes(
+            code=code,
+            timeframe=timeframe,
+            start_date=start_date,
+            end_date=end_date or datetime.now().strftime("%Y-%m-%d")
+        )
+
+        elapsed = (time.time() - start) * 1000
+        return data, elapsed
 
     def _fetch_from_akshare(
         self,
