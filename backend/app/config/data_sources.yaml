@@ -7,7 +7,7 @@ alerts:
   failure_rate_threshold: 0.5
   response_time_threshold: 3000
 global:
-  auto_speed_test: true
+  auto_speed_test: false
   enable_stats: true
   speed_test_interval: 3600
   speed_test_timeout: 10
@@ -19,134 +19,6 @@ scheduling:
   max_fallback_attempts: 0
   strategy: priority
 sources:
-  ashare:
-    enabled: true
-    name: ashare
-    priority: 1
-    retry_count: 2
-    retry_delay: 0.5
-    stats:
-      avg_response_time: 0
-      failed_requests: 0
-      last_failure_time: null
-      last_success_time: null
-      successful_requests: 0
-      total_requests: 0
-    supported_timeframes:
-    - daily
-    - weekly
-    - monthly
-    - '5'
-    - '15'
-    - '30'
-    - '60'
-    timeframe_config:
-      daily:
-        priority: 1
-        timeout: 10
-      monthly:
-        priority: 1
-        timeout: 10
-      weekly:
-        priority: 1
-        timeout: 10
-      '5':
-        priority: 1
-        timeout: 10
-      '15':
-        priority: 1
-        timeout: 10
-      '30':
-        priority: 1
-        timeout: 10
-      '60':
-        priority: 1
-        timeout: 10
-    timeout: 10
-  mcp:
-    enabled: true
-    name: mcp
-    priority: 2
-    retry_count: 2
-    retry_delay: 0.5
-    stats:
-      avg_response_time: 0
-      failed_requests: 0
-      last_failure_time: null
-      last_success_time: null
-      successful_requests: 0
-      total_requests: 0
-    supported_timeframes:
-    - daily
-    - weekly
-    - monthly
-    - '5'
-    - '15'
-    - '30'
-    - '60'
-    timeframe_config:
-      daily:
-        priority: 2
-        timeout: 15
-      weekly:
-        priority: 2
-        timeout: 15
-      monthly:
-        priority: 2
-        timeout: 15
-      '5':
-        priority: 2
-        timeout: 15
-      '15':
-        priority: 2
-        timeout: 15
-      '30':
-        priority: 2
-        timeout: 15
-      '60':
-        priority: 2
-        timeout: 15
-    timeout: 15
-    retry_count: 2
-    retry_delay: 0.5
-    stats:
-      avg_response_time: 0
-      failed_requests: 0
-      last_failure_time: null
-      last_success_time: null
-      successful_requests: 0
-      total_requests: 0
-    supported_timeframes:
-    - daily
-    - weekly
-    - monthly
-    - '5'
-    - '15'
-    - '30'
-    - '60'
-    timeframe_config:
-      daily:
-        priority: 1
-        timeout: 10
-      monthly:
-        priority: 1
-        timeout: 10
-      weekly:
-        priority: 1
-        timeout: 10
-      '5':
-        priority: 1
-        timeout: 10
-      '15':
-        priority: 1
-        timeout: 10
-      '30':
-        priority: 1
-        timeout: 10
-      '60':
-        priority: 1
-        timeout: 10
-    timeout: 10
   akshare:
     enabled: true
     name: akshare
@@ -180,8 +52,52 @@ sources:
         priority: 3
         timeout: 45
     timeout: 30
-  baostock:
+  ashare:
     enabled: true
+    name: ashare
+    priority: 1
+    retry_count: 2
+    retry_delay: 0.5
+    stats:
+      avg_response_time: 0
+      failed_requests: 0
+      last_failure_time: null
+      last_success_time: null
+      successful_requests: 0
+      total_requests: 0
+    supported_timeframes:
+    - daily
+    - weekly
+    - monthly
+    - '5'
+    - '15'
+    - '30'
+    - '60'
+    timeframe_config:
+      '15':
+        priority: 1
+        timeout: 10
+      '30':
+        priority: 1
+        timeout: 10
+      '5':
+        priority: 1
+        timeout: 10
+      '60':
+        priority: 1
+        timeout: 10
+      daily:
+        priority: 1
+        timeout: 10
+      monthly:
+        priority: 1
+        timeout: 10
+      weekly:
+        priority: 1
+        timeout: 10
+    timeout: 10
+  baostock:
+    enabled: false
     name: baostock
     priority: 3
     retry_count: 2
@@ -212,7 +128,7 @@ sources:
         timeout: 15
     timeout: 20
   easyquotation:
-    enabled: true
+    enabled: false
     name: easyquotation
     priority: 3
     realtime_only: true
@@ -228,6 +144,50 @@ sources:
     supported_timeframes:
     - realtime
     timeout: 10
+  mcp:
+    enabled: true
+    name: mcp
+    priority: 2
+    retry_count: 2
+    retry_delay: 0.5
+    stats:
+      avg_response_time: 0
+      failed_requests: 0
+      last_failure_time: null
+      last_success_time: null
+      successful_requests: 0
+      total_requests: 0
+    supported_timeframes:
+    - daily
+    - weekly
+    - monthly
+    - '5'
+    - '15'
+    - '30'
+    - '60'
+    timeframe_config:
+      '15':
+        priority: 1
+        timeout: 10
+      '30':
+        priority: 1
+        timeout: 10
+      '5':
+        priority: 1
+        timeout: 10
+      '60':
+        priority: 1
+        timeout: 10
+      daily:
+        priority: 1
+        timeout: 10
+      monthly:
+        priority: 1
+        timeout: 10
+      weekly:
+        priority: 1
+        timeout: 10
+    timeout: 10
 speed_test:
   enabled: true
   interval: 3600
@@ -240,17 +200,17 @@ speed_test:
   - monthly
   timeout: 10
 timeframe_priority:
-  '5':
-  - ashare
-  - mcp
-  - baostock
-  - akshare
   '15':
   - ashare
   - mcp
   - baostock
   - akshare
   '30':
+  - ashare
+  - mcp
+  - baostock
+  - akshare
+  '5':
   - ashare
   - mcp
   - baostock
