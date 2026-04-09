@@ -50,3 +50,15 @@ Thumbs.db
 *.png
 *.md
 ../
+# MCP服务器（独立仓库）
+a-share-mcp-server/
+# 数据库备份
+backend/wyckoff.db.backup*
+backend/wyckoff.db.*-shm
+backend/wyckoff.db.*-wal
+backend/wyckoff.db.broken*
+backend/wyckoff.db.corrupted
+# 环境变量备份
+backend/.env.*
+# 测试覆盖率
+backend/.coverage
