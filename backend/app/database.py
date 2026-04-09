@@ -1,5 +1,6 @@
 """
 数据库连接配置
+支持SQLite和PostgreSQL
 """
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,11 +15,22 @@ from app.config import settings
 # 加载环境变量
 load_dotenv()
 
-# 数据库配置 - 优先使用SQLite
+# 数据库配置 - 支持PostgreSQL和SQLite
 if not os.getenv("DATABASE_URL"):
-    # 使用项目根目录下的数据库（绝对路径）
-    DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../wyckoff.db"))
-    DATABASE_URL = f"sqlite:///{DB_PATH}"
+    # 默认使用PostgreSQL
+    POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+    POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+    POSTGRES_DB = os.getenv("POSTGRES_DB", "wyckoff_db")
+
+    if POSTGRES_PASSWORD:
+        DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    else:
+        # 如果没有设置PostgreSQL密码，回退到SQLite
+        DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../wyckoff.db"))
+        DATABASE_URL = f"sqlite:///{DB_PATH}"
+        print(f"⚠️ 未配置PostgreSQL，使用SQLite: {DB_PATH}")
 else:
     # 直接使用环境变量（避免Settings缓存问题）
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -31,6 +43,7 @@ engine = create_engine(
     pool_pre_ping=True,  # 检查连接有效性
     pool_size=5,        # 连接池大小
     max_overflow=10,    # 最大溢出连接
+    echo=False,         # 不打印SQL语句
 )
 
 # 创建会话工厂
