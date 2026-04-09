@@ -2,8 +2,17 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>威科夫股票分析系统</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>威科夫股票分析系统 - 专业版</title>
+
+  <!-- 增强版样式 -->
+  <link rel="stylesheet" href="/src/styles/enhanced.css">
+  <link rel="stylesheet" href="/src/styles/enhanced-extra.css">
+  <link rel="stylesheet" href="/src/styles/animations.css">
+  <link rel="stylesheet" href="/src/styles/mobile-enhanced.css">
+  <link rel="stylesheet" href="/src/styles/watchlist-enhanced.css">
+
+  <!-- 原有样式 -->
   <link rel="stylesheet" href="/src/styles/main.css">
   <link rel="stylesheet" href="/src/styles/layout.css">
   <link rel="stylesheet" href="/src/styles/chart.css">
@@ -23,28 +32,138 @@
 </head>
 <body>
   <div id="app">
+    <!-- 顶部健康状态栏 -->
+    <div class="health-status-bar" id="healthStatusBar">
+      <div class="health-indicator">
+        <span class="health-dot healthy" id="health-api"></span>
+        <span class="health-label">API</span>
+        <span class="health-divider"></span>
+        <span class="health-dot healthy" id="health-data"></span>
+        <span class="health-label">数据</span>
+        <span class="health-divider"></span>
+        <span class="health-dot healthy" id="health-cache"></span>
+        <span class="health-label">缓存</span>
+      </div>
+    </div>
+
+    <!-- 主头部 -->
     <header class="app-header">
-      <h1>威科夫股票分析系统</h1>
+      <div class="header-left">
+        <h1 class="text-gradient">威科夫分析</h1>
+        <span class="header-badge">专业版</span>
+      </div>
       <div class="header-actions">
-        <button id="theme-toggle" class="header-btn" title="切换主题">🌙</button>
-        <button id="settings-btn" class="header-btn" title="设置">⚙️</button>
+        <button class="header-btn" id="refresh-btn" title="刷新数据">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button class="header-btn" id="theme-toggle" title="切换主题">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button class="header-btn" id="settings-btn" title="设置">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
     <!-- 股票输入区域 -->
     <div class="stock-input-bar">
-      <input type="text" id="stock-code" placeholder="输入股票代码（如 000001）" autocomplete="off">
-      <button id="analyze-btn" class="btn-primary">分析</button>
-      <button id="add-watchlist-btn" class="btn-secondary" title="加入自选">+ 自选</button>
+      <div class="input-wrapper">
+        <input type="text" id="stock-code" placeholder="输入股票代码（如 000001）" autocomplete="off">
+        <span class="input-hint">支持 A股、港股代码</span>
+      </div>
+      <button id="analyze-btn" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        分析
+      </button>
+      <button id="add-watchlist-btn" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        自选
+      </button>
+    </div>
+
+    <!-- 快捷操作栏 -->
+    <div class="quick-actions">
+      <button class="quick-action-btn active" data-timeframe="daily">
+        <span class="timeframe-icon">📊</span>
+        <span>日线</span>
+      </button>
+      <button class="quick-action-btn" data-timeframe="weekly">
+        <span class="timeframe-icon">📈</span>
+        <span>周线</span>
+      </button>
+      <button class="quick-action-btn" data-timeframe="monthly">
+        <span class="timeframe-icon">📉</span>
+        <span>月线</span>
+      </button>
+      <div class="quick-actions-divider"></div>
+      <button class="quick-action-btn" id="quick-watchlist" data-action="watchlist">
+        <span class="timeframe-icon">⭐</span>
+        <span>我的关注</span>
+        <span class="badge" id="watchlist-count">0</span>
+      </button>
     </div>
 
     <!-- 标签页导航 -->
     <nav class="tab-nav">
-      <button class="tab-btn active" data-tab="analysis">日分析</button>
-      <button class="tab-btn" data-tab="multi">多周期</button>
-      <button class="tab-btn" data-tab="watchlist">我的关注</button>
-      <button class="tab-btn" data-tab="settings">系统配置</button>
-      <button class="tab-btn" data-tab="health">测试状态</button>
+      <button class="tab-btn active" data-tab="analysis">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+          <path d="M3 3v18h18"></path>
+          <path d="M18 17V9"></path>
+          <path d="M13 17V5"></path>
+          <path d="M8 17v-3"></path>
+        </svg>
+        日分析
+      </button>
+      <button class="tab-btn" data-tab="multi">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        多周期
+      </button>
+      <button class="tab-btn" data-tab="watchlist">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        我的关注
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+        </svg>
+        系统配置
+      </button>
+      <button class="tab-btn" data-tab="health">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+        测试状态
+      </button>
     </nav>
 
     <!-- 标签页内容 -->
@@ -52,17 +171,85 @@
       <!-- 日分析标签页 -->
       <section id="tab-analysis" class="tab-panel active">
         <div class="analysis-layout">
+          <!-- 左侧图表区域 -->
           <div class="chart-area">
+            <div class="chart-header">
+              <h2 class="chart-title">K线图表</h2>
+              <div class="chart-controls">
+                <button class="chart-control-btn active" data-view="chart">图表</button>
+                <button class="chart-control-btn" data-view="table">表格</button>
+              </div>
+            </div>
             <div id="mainChart" class="chart-container"></div>
             <div id="volumeChart" class="chart-container chart-small"></div>
           </div>
+
+          <!-- 右侧数据面板 -->
           <div class="data-area">
-            <div id="analysis" class="analysis-summary"></div>
-            <div id="signals" class="signals-panel"></div>
-            <div id="prediction" class="prediction-panel"></div>
-            <div id="patterns" class="patterns-panel"></div>
+            <!-- 分析摘要卡片 -->
+            <div class="data-card" id="analysis">
+              <div class="data-card-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="data-card-title">分析摘要</span>
+              </div>
+              <div class="data-card-content">
+                <p class="loading-text">请输入股票代码开始分析...</p>
+              </div>
+            </div>
+
+            <!-- 信号面板 -->
+            <div class="data-card" id="signals">
+              <div class="data-card-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span class="data-card-title">交易信号</span>
+              </div>
+              <div class="data-card-content">
+                <p class="loading-text">暂无信号数据</p>
+              </div>
+            </div>
+
+            <!-- 预测面板 -->
+            <div class="data-card" id="prediction">
+              <div class="data-card-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+                  <path d="M2 12h20M2 12l5-5m-5 5l5 5"></path>
+                </svg>
+                <span class="data-card-title">趋势预测</span>
+                <span class="data-card-badge">AI</span>
+              </div>
+              <div class="data-card-content">
+                <p class="loading-text">分析后显示预测结果</p>
+              </div>
+            </div>
+
+            <!-- 形态识别 -->
+            <div class="data-card" id="patterns">
+              <div class="data-card-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-icon">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <span class="data-card-title">形态识别</span>
+              </div>
+              <div class="data-card-content">
+                <p class="loading-text">暂无形态数据</p>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- K线表格区域 -->
         <div id="klineTable" class="kline-table-area"></div>
       </section>
 
@@ -88,6 +275,19 @@
         <div id="health" class="health-panel"></div>
       </section>
     </main>
+
+    <!-- 底部状态栏 -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span class="footer-text">威科夫股票分析系统 v2.0</span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-status" id="connection-status">
+          <span class="status-dot online"></span>
+          已连接
+        </span>
+      </div>
+    </footer>
 
     <div id="toast-container"></div>
   </div>

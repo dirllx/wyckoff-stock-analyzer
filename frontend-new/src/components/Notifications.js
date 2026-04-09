@@ -186,6 +186,19 @@ export class Notifications {
   }
 
   /**
+   * 生成后端未实现的提示HTML
+   */
+  static generateUnavailableHTML() {
+    return `
+      <div class="notifications-empty">
+        <div class="notifications-empty-icon">📡</div>
+        <div class="notifications-empty-text">通知功能暂未开放</div>
+        <div class="notifications-empty-hint">后端服务尚未实现此功能，敬请期待</div>
+      </div>
+    `;
+  }
+
+  /**
    * 渲染飞书通知
    * @param {string} containerId - 容器ID
    */
@@ -203,9 +216,16 @@ export class Notifications {
         notificationsApi.getNotificationHistory({ limit: 20 })
       ]);
 
+      // 后端未实现时显示暂未开放提示
+      if (config === null && history === null) {
+        container.innerHTML = this.generateUnavailableHTML();
+        this.bindEvents();
+        return;
+      }
+
       const data = {
         config: config || {},
-        notification_history: history.items || []
+        notification_history: (history && history.items) || []
       };
 
       container.innerHTML = this.generateNotificationsHTML(data);

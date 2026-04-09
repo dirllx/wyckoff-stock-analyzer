@@ -3,6 +3,8 @@
  * 从 MultiTimeframe 中提取的HTML生成方法
  */
 
+import { generateResonanceAnalysis } from '../utils/enhancedFormatting.js';
+
 /**
  * 生成阶段卡片HTML
  * @param {Object} helpers - 工具方法对象（包含 getScoreGrade, getScoreGradeColor, getTrendColor, getDirectionIcon）
@@ -163,6 +165,34 @@ export function generateEmptyStateHTML() {
       <div class="mtf-empty-icon">📊</div>
       <div class="mtf-empty-text">暂无数据</div>
       <div class="mtf-empty-hint">请先分析股票获取多周期数据</div>
+    </div>
+  `;
+}
+
+/**
+ * 生成周期共振分析HTML
+ * @param {Array} analysisData - 分析数据
+ * @param {Object} timeframeNames - 周期名称映射
+ * @returns {string} 共振分析HTML
+ */
+export function generateResonanceHTML(analysisData, timeframeNames = {}) {
+  const resonance = generateResonanceAnalysis(analysisData, timeframeNames);
+
+  return `
+    <div class="mtf-resonance-card">
+      <div class="mtf-resonance-header">
+        <span class="mtf-resonance-title">🔄 周期共振分析</span>
+        <span class="mtf-resonance-score" style="color: ${resonance.consistency.overall >= 0.6 ? '#10b981' : resonance.consistency.overall >= 0.4 ? '#f59e0b' : '#9ca3af'}">
+          一致性: ${(resonance.consistency.overall * 100).toFixed(0)}%
+        </span>
+      </div>
+      <div class="mtf-resonance-content">
+        ${resonance.summary.map(item => `
+          <div class="mtf-resonance-item" style="color: ${item.type === 'bullish' ? '#10b981' : item.type === 'bearish' ? '#ef4444' : '#9ca3af'}">
+            ${item.text}
+          </div>
+        `).join('')}
+      </div>
     </div>
   `;
 }

@@ -95,7 +95,7 @@ describe('Watchlist - 卡片渲染', () => {
     expect(html).toContain('000001');
     expect(html).toContain('平安银行');
     expect(html).toContain('上升');
-    expect(html).toContain('买入');
+    expect(html).toContain('做多'); // 更新为使用标准化信号徽章
   });
 
   it('应该生成空状态HTML', () => {

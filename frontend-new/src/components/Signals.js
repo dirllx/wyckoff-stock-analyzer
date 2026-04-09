@@ -6,6 +6,7 @@
 import { stocksApi } from '../api/stocks.js';
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
+import { createSignalBadge, createScoreBadge } from '../utils/formatting.js';
 
 /**
  * 信号展示类
@@ -152,14 +153,18 @@ export class Signals {
   static generateCardHTML(card) {
     const truncatedReason = this.truncateReason(card.reason, 60);
 
+    // 使用格式化工具生成徽章
+    const signalBadge = createSignalBadge(card.direction, card.score);
+    const scoreBadge = createScoreBadge(card.score);
+
     return `
       <div class="signal-card" data-id="${card.id}">
         <div class="signal-card-header">
-          <span class="signal-card-direction" style="color: ${card.directionColor}">
-            ${card.directionIcon} ${card.directionName}
+          <span class="signal-card-direction">
+            ${signalBadge}
           </span>
-          <span class="signal-card-score" style="color: ${card.scoreColor}">
-            ${card.score}分
+          <span class="signal-card-score">
+            ${scoreBadge}
           </span>
         </div>
         <div class="signal-card-meta">

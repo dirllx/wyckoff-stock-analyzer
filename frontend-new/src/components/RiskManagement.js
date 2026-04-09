@@ -218,6 +218,19 @@ export class RiskManagement {
   }
 
   /**
+   * 生成后端未实现的提示HTML
+   */
+  static generateUnavailableHTML() {
+    return `
+      <div class="risk-empty">
+        <div class="risk-empty-icon">📊</div>
+        <div class="risk-empty-text">风险管理功能暂未开放</div>
+        <div class="risk-empty-hint">后端服务尚未实现此功能，敬请期待</div>
+      </div>
+    `;
+  }
+
+  /**
    * 渲染风险管理
    * @param {string} containerId - 容器ID
    * @param {string} code - 股票代码（可选）
@@ -236,9 +249,16 @@ export class RiskManagement {
         riskApi.getRiskHistory({ limit: 20 })
       ]);
 
+      // 后端未实现时显示暂未开放提示
+      if (config === null && history === null) {
+        container.innerHTML = this.generateUnavailableHTML();
+        this.bindEvents();
+        return;
+      }
+
       const data = {
         config: config || {},
-        risk_history: history.items || []
+        risk_history: (history && history.items) || []
       };
 
       // 如果提供了股票代码，计算风险指标

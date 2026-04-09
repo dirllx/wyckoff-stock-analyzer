@@ -46,10 +46,10 @@ sources:
         priority: 1
         timeout: 30
       monthly:
-        priority: 3
+        priority: 1
         timeout: 45
       weekly:
-        priority: 3
+        priority: 1
         timeout: 45
     timeout: 30
   baostock:
@@ -112,21 +112,27 @@ speed_test:
   - monthly
   timeout: 10
 timeframe_priority:
+  '5':
+  - akshare
+  - baostock
+  '15':
+  - akshare
+  - baostock
   '30':
-  - baostock
   - akshare
+  - baostock
   '60':
-  - baostock
   - akshare
+  - baostock
   daily:
-  - baostock
   - akshare
+  - baostock
   monthly:
-  - baostock
   - akshare
+  - baostock
   realtime:
   - easyquotation
   - akshare
   weekly:
-  - baostock
   - akshare
+  - baostock

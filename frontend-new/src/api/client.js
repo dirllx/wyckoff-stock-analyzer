@@ -1,4 +1,5 @@
 import Logger from '../utils/logger.js';
+import { apiCache } from '../utils/cache.js';
 
 /**
  * API错误类
@@ -112,6 +113,16 @@ export class ApiClient {
       requestConfig.body = JSON.stringify(data);
     }
 
+    // GET请求检查缓存
+    if (method === 'GET') {
+      const cacheKey = apiCache.generateKey(url);
+      const cached = apiCache.get(cacheKey);
+      if (cached) {
+        Logger.debug(`HTTP ${method} cache hit`, { url });
+        return cached;
+      }
+    }
+
     Logger.debug(`HTTP ${method}`, { url, data });
 
     let lastError;
@@ -162,6 +173,12 @@ export class ApiClient {
 
         const result = await response.json();
         Logger.debug(`HTTP ${method} success`, { url });
+
+        // 缓存GET请求结果
+        if (method === 'GET') {
+          apiCache.set(apiCache.generateKey(url), result);
+        }
+
         return result;
 
       } catch (error) {

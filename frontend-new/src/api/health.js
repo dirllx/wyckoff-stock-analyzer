@@ -14,10 +14,16 @@ export const healthApi = {
 
   /**
    * 获取测试状态
-   * @returns {Promise<Object>} 测试状态对象
+   * @returns {Promise<Object|null>} 测试状态对象，不可用时返回null
    */
   async getTestStatus() {
-    return await client.get('/api/v1/health/tests');
+    try {
+      return await client.get('/api/v1/health/tests');
+    } catch (error) {
+      // 后端不支持测试端点时静默返回null
+      if (error.status === 404) return null;
+      throw error;
+    }
   },
 
   /**

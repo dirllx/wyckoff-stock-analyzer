@@ -314,6 +314,66 @@
   color: var(--text-secondary);
 }
 
+/* ========================================
+   周期共振分析样式
+   ======================================== */
+
+.mtf-resonance-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.mtf-resonance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.mtf-resonance-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.mtf-resonance-score {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.mtf-resonance-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.mtf-resonance-item {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.5);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mtf-resonance-item::before {
+  content: '●';
+  font-size: 8px;
+}
+
 .mtf-loading::after {
   content: "";
   width: 20px;

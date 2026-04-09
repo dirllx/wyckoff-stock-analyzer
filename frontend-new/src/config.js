@@ -11,7 +11,7 @@ import { logger } from './utils/logger.js';
 
 export const AppConfig = {
   // API 配置
-  API_BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  API_BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   API_TIMEOUT: 30000,
 
   // 调试模式

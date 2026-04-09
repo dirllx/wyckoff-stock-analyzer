@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiClient } from '../../src/api/client.js';
+import { apiCache } from '../../src/utils/cache.js';
 
 describe('ApiClient Integration Tests', () => {
   let client;
@@ -9,6 +10,9 @@ describe('ApiClient Integration Tests', () => {
     // Mock fetch globally
     mockFetch = vi.fn();
     global.fetch = mockFetch;
+
+    // Clear API cache before each test
+    apiCache.clear();
 
     // Create client instance
     client = new ApiClient({
@@ -20,6 +24,7 @@ describe('ApiClient Integration Tests', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    apiCache.clear();
   });
 
   describe('基础功能', () => {

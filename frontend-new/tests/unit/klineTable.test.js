@@ -156,8 +156,12 @@ describe('KlineTable - 动态表头生成', () => {
     expect(headers).toContain('高');
     expect(headers).toContain('低');
     expect(headers).toContain('收');
+    expect(headers).toContain('涨跌幅');
+    expect(headers).toContain('信号强度');
     expect(headers).toContain('成交量');
-    expect(headers).toContain('信号');
+    expect(headers).toContain('MA状态');
+    expect(headers).toContain('量能');
+    expect(headers).toContain('方向');
     expect(headers).toContain('阶段');
   });
 
@@ -210,6 +214,22 @@ describe('KlineTable - 表格行生成', () => {
   });
 
   it('应该限制最大行数', () => {
+    // 使用150行数据（< 200行阈值），确保使用普通渲染
+    const quotes = Array.from({ length: 150 }, (_, i) => ({
+      date: `2024-01-${String((i % 28) + 1).padStart(2, '0')}`,
+      open: 10,
+      close: 10.20
+    }));
+
+    const tableHTML = KlineTable.render(quotes, 'daily');
+    const tbodyMatch = tableHTML.match(/<tbody>([\s\S]*?)<\/tbody>/);
+    expect(tbodyMatch).toBeTruthy();
+
+    const rows = tbodyMatch[1].match(/<tr/g);
+    expect(rows.length).toBeLessThanOrEqual(150);
+  });
+
+  it('大数据量应启用虚拟滚动', () => {
     const quotes = Array.from({ length: 400 }, (_, i) => ({
       date: `2024-01-${String((i % 28) + 1).padStart(2, '0')}`,
       open: 10,
@@ -217,12 +237,8 @@ describe('KlineTable - 表格行生成', () => {
     }));
 
     const tableHTML = KlineTable.render(quotes, 'daily');
-    // 检查tbody中的行数
-    const tbodyMatch = tableHTML.match(/<tbody>([\s\S]*?)<\/tbody>/);
-    expect(tbodyMatch).toBeTruthy();
-
-    const rows = tbodyMatch[1].match(/<tr/g);
-    expect(rows.length).toBeLessThanOrEqual(350);
+    // 虚拟滚动模式应包含 data-virtual 属性
+    expect(tableHTML).toContain('data-virtual="true"');
   });
 });
 

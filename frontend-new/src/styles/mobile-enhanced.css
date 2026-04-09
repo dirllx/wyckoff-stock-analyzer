@@ -1,0 +1,515 @@
+/* ========================================
+   移动端增强样式
+   ======================================== */
+
+/* ========================================
+   移动端容器优化
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 应用容器 */
+  #app {
+    min-height: 100vh;
+    min-height: 100dvh; /* 动态视口高度 */
+  }
+
+  /* 触摸优化 */
+  button,
+  .btn,
+  .tab-btn,
+  .watchlist-card {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* 增大触摸目标 */
+  .header-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  /* 优化输入框 */
+  .stock-input-bar input,
+  .watchlist-search-input,
+  .input-wrapper input {
+    font-size: 16px; /* 防止iOS自动缩放 */
+    min-height: 44px;
+  }
+
+  /* 滚动优化 */
+  .tab-content {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 图表容器 */
+  .chart-container {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .chart-small {
+    height: 120px;
+    min-height: 120px;
+  }
+}
+
+/* ========================================
+   移动端导航优化
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 头部 */
+  .app-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 56px;
+  }
+
+  .app-header h1 {
+    font-size: var(--font-size-lg);
+  }
+
+  /* 健康状态栏 - 隐藏或缩小 */
+  .health-status-bar {
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    padding: 4px 8px;
+    transform: scale(0.9);
+    transform-origin: top right;
+  }
+
+  .health-label {
+    display: none;
+  }
+
+  /* 输入栏 */
+  .stock-input-bar {
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .input-wrapper {
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  /* 标签导航 - 底部导航栏风格 */
+  .tab-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    z-index: var(--z-fixed);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.3);
+    justify-content: space-around;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    text-align: center;
+    border-radius: var(--radius-md);
+  }
+
+  .tab-btn svg {
+    display: block;
+    margin: 0 auto var(--spacing-xs);
+  }
+
+  /* 内容区域底部留白 - 为底部导航栏留空间 */
+  .tab-content {
+    padding-bottom: calc(60px + var(--spacing-md));
+  }
+
+  /* 快捷操作栏 */
+  .quick-actions {
+    order: -1;
+    margin-bottom: 0;
+  }
+
+  .quick-action-btn {
+    flex: 1;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  .quick-actions-divider {
+    display: none;
+  }
+}
+
+/* ========================================
+   移动端分析布局
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 分析布局 - 单列 */
+  .analysis-layout {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  /* 图表区域 */
+  .chart-area {
+    order: 1;
+  }
+
+  /* 数据区域 - 卡片式 */
+  .data-area {
+    order: 2;
+    gap: var(--spacing-sm);
+  }
+
+  /* 数据卡片 */
+  .data-card {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+  }
+
+  /* K线表格 */
+  .kline-table-area {
+    order: 3;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+  }
+
+  /* 图表头部 */
+  .chart-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .chart-title {
+    font-size: var(--font-size-base);
+  }
+
+  .chart-controls {
+    width: 100%;
+    display: flex;
+  }
+
+  .chart-control-btn {
+    flex: 1;
+  }
+}
+
+/* ========================================
+   移动端关注列表
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 关注列表头部 */
+  .watchlist-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .watchlist-header h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  /* 网格布局 - 单列 */
+  .watchlist-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  /* 卡片 */
+  .watchlist-card {
+    padding: var(--spacing-md);
+  }
+
+  .watchlist-card-header {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .watchlist-card-code {
+    font-size: var(--font-size-lg);
+  }
+
+  /* 价格 */
+  .watchlist-card-price {
+    font-size: var(--font-size-xl);
+  }
+
+  /* 快捷操作 */
+  .watchlist-card-quick-actions {
+    display: none; /* 移动端隐藏快捷操作，使用底部操作按钮 */
+  }
+
+  /* 卡片操作 */
+  .watchlist-card-actions {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+  }
+
+  .watchlist-card-action-btn {
+    min-height: 40px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* 统计卡片 */
+  .watchlist-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .watchlist-stat-card {
+    padding: var(--spacing-sm);
+  }
+
+  .watchlist-stat-value {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* ========================================
+   移动端多周期分析
+   ======================================== */
+
+@media (max-width: 768px) {
+  .multi-timeframe-panel {
+    padding: var(--spacing-sm);
+  }
+
+  .timeframe-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* ========================================
+   移动端设置页面
+   ======================================== */
+
+@media (max-width: 768px) {
+  .settings-panel,
+  .notifications-panel,
+  .risk-panel {
+    padding: var(--spacing-sm);
+  }
+
+  .settings-section {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .settings-row {
+    flex-wrap: wrap;
+  }
+
+  .settings-label {
+    width: 100%;
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+/* ========================================
+   移动端弹窗和模态框
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Toast 容器 */
+  #toast-container {
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    left: var(--spacing-sm);
+    max-width: none;
+  }
+
+  .toast {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+  }
+
+  /* 模态框 */
+  .modal-overlay {
+    padding: var(--spacing-md);
+  }
+
+  .modal-content {
+    max-height: calc(100vh - var(--spacing-2xl));
+    overflow-y: auto;
+  }
+}
+
+/* ========================================
+   移动端手势优化
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 滑动删除指示器 */
+  .swipeable {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .swipeable-content {
+    transition: transform var(--transition-base);
+  }
+
+  .swipeable-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    transform: translateX(100%);
+    transition: transform var(--transition-base);
+  }
+
+  .swipeable.active .swipeable-content {
+    transform: translateX(-80px);
+  }
+
+  .swipeable.active .swipeable-actions {
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   移动端横屏优化
+   ======================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  /* 减少垂直间距 */
+  .app-header {
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .stock-input-bar {
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .tab-content {
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-bottom: calc(56px + var(--spacing-sm));
+  }
+
+  /* 图表高度调整 */
+  .chart-container {
+    height: 250px;
+    min-height: 250px;
+  }
+
+  .chart-small {
+    height: 100px;
+    min-height: 100px;
+  }
+}
+
+/* ========================================
+   平板优化 (768px - 1024px)
+   ======================================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* 分析布局 */
+  .analysis-layout {
+    grid-template-columns: 1fr 350px;
+    gap: var(--spacing-lg);
+  }
+
+  /* 关注列表 */
+  .watchlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 图表 */
+  .chart-container {
+    height: 350px;
+  }
+
+  .chart-small {
+    height: 150px;
+  }
+}
+
+/* ========================================
+   安全区域适配 (iPhone X+)
+   ======================================== */
+
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .app-header {
+      padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+      padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+      padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+    }
+
+    .tab-nav {
+      padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
+      padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
+      padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
+    }
+
+    .tab-content {
+      padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+      padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+    }
+
+    #toast-container {
+      top: max(var(--spacing-xl), env(safe-area-inset-top));
+      right: max(var(--spacing-xl), env(safe-area-inset-right));
+    }
+  }
+}
+
+/* ========================================
+   移动端性能优化
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 减少阴影效果 */
+  .card,
+  .data-card,
+  .watchlist-card {
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+
+  /* 简化渐变 */
+  :root {
+    --gradient-card: linear-gradient(145deg, #1e293b 0%, #1e293b 100%);
+  }
+
+  /* 禁用复杂动画 */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* 保持基本交互反馈 */
+  .btn:hover,
+  .card:hover {
+    animation: none !important;
+    transition: transform var(--transition-fast) !important;
+  }
+}
+
+/* 在性能更好的设备上恢复动画 */
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  * {
+    animation-duration: var(--transition-base) !important;
+    transition-duration: var(--transition-base) !important;
+  }
+}

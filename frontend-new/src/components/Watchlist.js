@@ -8,6 +8,7 @@ import { stocksApi } from '../api/stocks.js';
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
 import { eventBus, Events } from '../config.js';
+import { createPhaseBadge, createSignalBadge } from '../utils/formatting.js';
 
 /**
  * 自选股类
@@ -106,10 +107,9 @@ export class Watchlist {
    * @returns {string} 卡片HTML
    */
   static generateCardHTML(card) {
-    const phaseName = this.getPhaseDisplayName(card.phase);
-    const phaseColor = this.getPhaseColor(card.phase);
-    const signalName = this.getSignalDisplayName(card.signal);
-    const signalColor = this.getSignalColor(card.signal);
+    // 使用格式化工具生成徽章
+    const phaseBadge = createPhaseBadge(card.phase);
+    const signalBadge = createSignalBadge(card.signal === '买入' ? 'LONG' : card.signal === '卖出' ? 'SHORT' : 'NEUTRAL');
 
     return `
       <div class="watchlist-card" data-code="${card.code}">
@@ -119,8 +119,8 @@ export class Watchlist {
         </div>
         <div class="watchlist-card-name">${card.name}</div>
         <div class="watchlist-card-info">
-          <span class="watchlist-card-phase" style="color: ${phaseColor}">${phaseName}</span>
-          <span class="watchlist-card-signal" style="color: ${signalColor}">${signalName}</span>
+          <span class="watchlist-card-phase">${phaseBadge}</span>
+          <span class="watchlist-card-signal">${signalBadge}</span>
         </div>
         <div class="watchlist-card-actions">
           <button class="btn btn-small btn-primary" data-action="analyze" data-code="${card.code}">分析</button>

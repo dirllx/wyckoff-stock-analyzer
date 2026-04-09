@@ -1,0 +1,493 @@
+/* ========================================
+   徽章和指示器样式
+   ======================================== */
+
+/* ========================================
+   涨跌颜色（中国习惯：红涨绿跌）
+   ======================================== */
+
+.kline-red {
+  color: #ef4444 !important;
+}
+
+.kline-green {
+  color: #10b981 !important;
+}
+
+.kline-neutral {
+  color: #94a3b8 !important;
+}
+
+/* 背景变体 */
+.bg-kline-red {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.bg-kline-green {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+/* ========================================
+   评分徽章
+   ======================================== */
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.score-high {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.score-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+.score-low {
+  background: rgba(107, 114, 128, 0.2);
+  color: #6b7280;
+  border: 1px solid #6b7280;
+}
+
+/* 评分星星 */
+.score-stars {
+  color: #f59e0b;
+  letter-spacing: 2px;
+}
+
+/* ========================================
+   信号方向徽章
+   ======================================== */
+
+.signal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.signal-bullish {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.signal-bearish {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.signal-neutral {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid #94a3b8;
+}
+
+.signal-score {
+  font-size: 10px;
+  opacity: 0.9;
+  margin-left: 2px;
+}
+
+/* ========================================
+   威科夫阶段徽章
+   ======================================== */
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.phase-U {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.phase-D {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.phase-A {
+  background: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+}
+
+.phase-DS {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+.phase-neutral {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid #94a3b8;
+}
+
+/* 阶段详细说明 */
+.phase-U-detail { background: rgba(34, 197, 94, 0.3); color: #16a34a; }
+.phase-D-detail { background: rgba(239, 68, 68, 0.3); color: #dc2626; }
+.phase-A-detail { background: rgba(139, 92, 246, 0.3); color: #7c3aed; }
+.phase-DS-detail { background: rgba(245, 158, 11, 0.3); color: #d97706; }
+
+/* ========================================
+   状态指示器
+   ======================================== */
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-indicator.success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.status-indicator.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+.status-indicator.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.status-indicator.info {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  border: 1px solid #06b6d4;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ========================================
+   趋势指示器
+   ======================================== */
+
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trend-bullish {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.trend-bearish {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.trend-neutral {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+/* 趋势图标 */
+.trend-arrow-up::before {
+  content: '↑';
+  color: #22c55e;
+}
+
+.trend-arrow-down::before {
+  content: '↓';
+  color: #ef4444;
+}
+
+.trend-arrow-flat::before {
+  content: '→';
+  color: #94a3b8;
+}
+
+/* ========================================
+   MA 均线指示器
+   ======================================== */
+
+.ma-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ma-bullish {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.ma-bearish {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.ma-neutral {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+/* MA 交叉指示 */
+.ma-cross-golden {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.ma-cross-death {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+/* MA 趋势箭头 */
+.ma-trend-up::after {
+  content: ' ↑';
+  color: #22c55e;
+  font-size: 10px;
+}
+
+.ma-trend-down::after {
+  content: ' ↓';
+  color: #ef4444;
+  font-size: 10px;
+}
+
+.ma-trend-flat::after {
+  content: ' →';
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+/* ========================================
+   表格单元格样式增强
+   ======================================== */
+
+.table-cell-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-weight: 500;
+}
+
+.table-cell-value.positive {
+  color: #10b981;
+}
+
+.table-cell-value.negative {
+  color: #ef4444;
+}
+
+/* 带变化的数值 */
+.table-cell-with-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-cell-change-arrow {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ========================================
+   表头排序指示器
+   ======================================== */
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 20px !important;
+}
+
+.sortable-header:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.sort-icon {
+  font-size: 12px;
+  margin-left: 4px;
+  opacity: 0.3;
+}
+
+.sortable-header.sort-asc .sort-icon,
+.sortable-header.sort-desc .sort-icon {
+  opacity: 1;
+  color: #6366f1;
+}
+
+.sortable-header.sort-asc::after,
+.sortable-header.sort-desc::after {
+  display: none;
+}
+
+/* ========================================
+   筛选标签
+   ======================================== */
+
+.filter-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-tag:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+}
+
+.filter-tag.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.filter-tag .filter-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ========================================
+   工具提示增强
+   ======================================== */
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+  z-index: var(--z-tooltip);
+  margin-bottom: 8px;
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+}
+
+/* ========================================
+   脉冲效果（用于新数据）
+   ======================================== */
+
+.pulse-new {
+  animation: pulse-new 2s ease-in-out 3;
+}
+
+@keyframes pulse-new {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+
+/* ========================================
+   响应式调整
+   ======================================== */
+
+@media (max-width: 768px) {
+  .signal-badge,
+  .phase-badge,
+  .score-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .filter-tags {
+    gap: 6px;
+  }
+
+  .filter-tag {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}

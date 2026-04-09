@@ -1,0 +1,641 @@
+/* ========================================
+   增强版自选股样式
+   ======================================== */
+
+/* ========================================
+   关注列表头部
+   ======================================== */
+
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.watchlist-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.watchlist-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.watchlist-count {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--gradient-primary);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  border-radius: var(--radius-lg);
+}
+
+.watchlist-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* 排序和筛选控件 */
+.watchlist-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.watchlist-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-base);
+}
+
+.watchlist-select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.watchlist-filter-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watchlist-filter-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.watchlist-filter-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* ========================================
+   自选股网格布局 - 响应式
+   ======================================== */
+
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* 大屏：4列 */
+@media (min-width: 1400px) {
+  .watchlist-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 中屏：3列 */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .watchlist-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 小屏：2列 */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .watchlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 手机：1列 */
+@media (max-width: 639px) {
+  .watchlist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   增强版自选股卡片
+   ======================================== */
+
+.watchlist-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 卡片顶部装饰条 */
+.watchlist-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.watchlist-card:hover::before {
+  opacity: 1;
+}
+
+.watchlist-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px);
+}
+
+/* 卡片头部 */
+.watchlist-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.watchlist-card-left {
+  flex: 1;
+}
+
+.watchlist-card-code {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.watchlist-card-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.watchlist-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 删除按钮 */
+.watchlist-card-remove {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watchlist-card-remove:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* 快捷操作按钮组 */
+.watchlist-card-quick-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.quick-action-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.quick-action-icon:hover {
+  background: var(--bg-elevated);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 价格和变化 */
+.watchlist-card-price-section {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.watchlist-card-price {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.watchlist-card-change {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+}
+
+.watchlist-card-change.positive {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.watchlist-card-change.negative {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* 信号和阶段标签 */
+.watchlist-card-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.watchlist-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 评分徽章 */
+.watchlist-card-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.score-stars {
+  color: var(--color-warning);
+}
+
+.score-value {
+  color: var(--text-primary);
+}
+
+/* 威科夫阶段标签 */
+.wyckoff-phase {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.wyckoff-phase.U {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.wyckoff-phase.D {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.wyckoff-phase.A {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.wyckoff-phase.DS {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+/* 信号方向标签 */
+.signal-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.signal-direction.LONG {
+  color: var(--color-success);
+}
+
+.signal-direction.SHORT {
+  color: var(--color-error);
+}
+
+.signal-direction.NEUTRAL {
+  color: var(--text-secondary);
+}
+
+/* 卡片底部操作 */
+.watchlist-card-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.watchlist-card-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watchlist-card-action-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.watchlist-card-action-btn.primary {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  color: white;
+}
+
+.watchlist-card-action-btn.primary:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* ========================================
+   空状态
+   ======================================== */
+
+.watchlist-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-2xl);
+  background: var(--gradient-surface);
+}
+
+.watchlist-empty-icon {
+  font-size: 64px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
+  filter: grayscale(0.5);
+}
+
+.watchlist-empty-text {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.watchlist-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  max-width: 300px;
+}
+
+.watchlist-empty-action {
+  margin-top: var(--spacing-lg);
+}
+
+/* ========================================
+   加载状态
+   ======================================== */
+
+.watchlist-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-3xl);
+}
+
+.watchlist-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+/* ========================================
+   批量操作工具栏
+   ======================================== */
+
+.watchlist-batch-toolbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.watchlist-batch-toolbar.visible {
+  display: flex;
+}
+
+.watchlist-batch-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.watchlist-batch-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+/* ========================================
+   统计信息卡片
+   ======================================== */
+
+.watchlist-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.watchlist-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.watchlist-stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.watchlist-stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+/* ========================================
+   搜索框
+   ======================================== */
+
+.watchlist-search {
+  position: relative;
+  margin-bottom: var(--spacing-lg);
+}
+
+.watchlist-search-input {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 40px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  outline: none;
+  transition: all var(--transition-base);
+}
+
+.watchlist-search-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
+.watchlist-search-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.watchlist-search-clear {
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-base);
+}
+
+.watchlist-search-input:not(:placeholder-shown) + .watchlist-search-clear {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.watchlist-search-clear:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   移动端优化
+   ======================================== */
+
+@media (max-width: 639px) {
+  .watchlist-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .watchlist-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .watchlist-controls {
+    flex-direction: column;
+  }
+
+  .watchlist-select,
+  .watchlist-filter-btn {
+    width: 100%;
+  }
+
+  .watchlist-card {
+    padding: var(--spacing-md);
+  }
+
+  .watchlist-card-price {
+    font-size: var(--font-size-xl);
+  }
+
+  .watchlist-card-actions {
+    flex-wrap: wrap;
+  }
+
+  .watchlist-card-action-btn {
+    min-width: calc(50% - var(--spacing-xs));
+  }
+}

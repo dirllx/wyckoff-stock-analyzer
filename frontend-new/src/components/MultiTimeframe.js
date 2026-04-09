@@ -11,7 +11,8 @@ import {
   generatePhaseCardHTML,
   generateSuggestionHTML,
   generatePhaseDetailCardsHTML,
-  generateEmptyStateHTML
+  generateEmptyStateHTML,
+  generateResonanceHTML
 } from './MultiTimeframeTemplate.js';
 
 /**
@@ -434,7 +435,11 @@ export class MultiTimeframe {
     const suggestion = this.generateComprehensiveSuggestion(shortAnalysis, midAnalysis, longAnalysis);
     html += this.generateSuggestionHTML(suggestion);
 
-    // 3. 各阶段详细周期卡片
+    // 3. 周期共振分析
+    const timeframeNames = this.TIMEFRAME_NAMES;
+    html += generateResonanceHTML(analysisData, timeframeNames);
+
+    // 4. 各阶段详细周期卡片
     html += '<div class="mtf-details-section">';
     html += this.generatePhaseDetailCardsHTML('⚡ 短线分析详情', shortTerm);
     html += this.generatePhaseDetailCardsHTML('📈 中线分析详情', midTerm);
