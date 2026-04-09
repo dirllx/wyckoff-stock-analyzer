@@ -17,9 +17,9 @@ class StockAnalysisRequest(BaseModel):
 
     @validator('code')
     def validate_code(cls, v):
-        """验证股票代码格式"""
-        if not re.match(r'^\d{6}$', v):
-            raise ValueError(f'股票代码格式错误: {v}, 应为6位数字')
+        """验证股票代码格式（支持5位B股或6位A股代码）"""
+        if not re.match(r'^\d{5,6}$', v):
+            raise ValueError(f'股票代码格式错误: {v}, 应为5-6位数字')
         return v
 
     @validator('timeframe')
@@ -58,8 +58,8 @@ class BulkQuotesRequest(BaseModel):
             raise ValueError('股票代码列表不能为空')
         if len(v) > 50:
             raise ValueError('最多支持50只股票')
-        # 验证每个代码格式
-        pattern = re.compile(r'^\d{6}$')
+        # 验证每个代码格式（支持5位B股或6位A股代码）
+        pattern = re.compile(r'^\d{5,6}$')
         invalid_codes = [c for c in v if not pattern.match(c)]
         if invalid_codes:
             raise ValueError(f'无效的股票代码: {", ".join(invalid_codes)}')
