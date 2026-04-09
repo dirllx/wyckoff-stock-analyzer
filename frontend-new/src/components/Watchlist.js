@@ -104,18 +104,25 @@ export class Watchlist {
   /**
    * 生成单个卡片HTML
    * @param {Object} card - 卡片数据
+   * @param {string} currentTab - 当前标签 (favorite | browse)
    * @returns {string} 卡片HTML
    */
-  static generateCardHTML(card) {
+  static generateCardHTML(card, currentTab = 'favorite') {
     // 使用格式化工具生成徽章
     const phaseBadge = createPhaseBadge(card.phase);
     const signalBadge = createSignalBadge(card.signal === '买入' ? 'LONG' : card.signal === '卖出' ? 'SHORT' : 'NEUTRAL');
+
+    // 根据当前标签类型显示不同的操作按钮
+    const isFavorite = currentTab === 'favorite';
+    const toggleButton = isFavorite
+      ? `<button class="watchlist-card-btn btn-unfavorite" data-action="unfavorite" data-code="${card.code}" title="取消关注，转为浏览股">💔</button>`
+      : `<button class="watchlist-card-btn btn-favorite" data-action="favorite" data-code="${card.code}" title="添加到自选股">⭐</button>`;
 
     return `
       <div class="watchlist-card" data-code="${card.code}">
         <div class="watchlist-card-header">
           <span class="watchlist-card-code">${card.code}</span>
-          <button class="watchlist-card-remove" data-code="${card.code}" title="删除">✕</button>
+          <button class="watchlist-card-remove" data-action="delete" data-code="${card.code}" title="删除">✕</button>
         </div>
         <div class="watchlist-card-name">${card.name}</div>
         <div class="watchlist-card-info">
@@ -123,7 +130,9 @@ export class Watchlist {
           <span class="watchlist-card-signal">${signalBadge}</span>
         </div>
         <div class="watchlist-card-actions">
-          <button class="btn btn-small btn-primary" data-action="analyze" data-code="${card.code}">分析</button>
+          <button class="watchlist-card-btn btn-analyze" data-action="analyze" data-code="${card.code}" title="日线分析">📊</button>
+          <button class="watchlist-card-btn btn-multi" data-action="multi" data-code="${card.code}" title="多周期分析">📈</button>
+          ${toggleButton}
         </div>
       </div>
     `;
@@ -146,16 +155,20 @@ export class Watchlist {
   /**
    * 渲染自选股列表
    * @param {Array} data - 自选股数据
+   * @param {string} currentTab - 当前标签 (favorite | browse)
    * @returns {string} 完整HTML
    */
-  static render(data) {
+  static render(data, currentTab = 'favorite') {
     if (!data || data.length === 0) {
-      return this.generateEmptyState();
+      const emptyMessage = currentTab === 'favorite'
+        ? '暂无自选股，从浏览股收藏股票'
+        : '暂无浏览股，分析股票后会自动记录';
+      return this.generateEmptyState(emptyMessage);
     }
 
     const cards = this.convertToCards(data);
 
-    const cardsHTML = cards.map(card => this.generateCardHTML(card)).join('');
+    const cardsHTML = cards.map(card => this.generateCardHTML(card, currentTab)).join('');
 
     return `
       <div class="watchlist-grid">
@@ -304,21 +317,78 @@ export class Watchlist {
 
   /**
    * 刷新自选股数据
+   * @param {string} watchType - 关注类型 (favorite | browse)
    * @returns {Promise<Array>} 自选股数据
    */
-  static async refresh() {
+  static async refresh(watchType = 'favorite') {
     try {
-      logger.info('Refreshing watchlist data');
+      logger.info(`Refreshing watchlist data: ${watchType}`);
 
-      const result = await watchlistApi.getAll();
+      const result = await watchlistApi.getAll(watchType);
       const items = result?.items || (Array.isArray(result) ? result : []);
 
-      logger.info(`Watchlist refreshed: ${items.length} items`);
+      logger.info(`Watchlist refreshed: ${items.length} items (${watchType})`);
 
       return items;
     } catch (error) {
       logger.error('Failed to refresh watchlist:', error);
       toast.error('刷新失败，请稍后重试');
+      throw error;
+    }
+  }
+
+  /**
+   * 收藏股票（浏览股转自选股）
+   * @param {string} code - 股票代码
+   * @returns {Promise<Object>} 结果
+   */
+  static async favoriteStock(code) {
+    try {
+      logger.info(`Favoriting stock: ${code}`);
+
+      const response = await fetch(`/api/v1/watchlist/favorite/${code}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || '已收藏到自选股');
+        return { success: true, data };
+      } else {
+        toast.error(data.detail || '收藏失败');
+        return { success: false, error: data.detail };
+      }
+    } catch (error) {
+      logger.error('Failed to favorite stock:', error);
+      toast.error('收藏失败，请稍后重试');
+      throw error;
+    }
+  }
+
+  /**
+   * 取消收藏（自选股转浏览股）
+   * @param {string} code - 股票代码
+   * @returns {Promise<Object>} 结果
+   */
+  static async unfavoriteStock(code) {
+    try {
+      logger.info(`Unfavoriting stock: ${code}`);
+
+      const response = await fetch(`/api/v1/watchlist/favorite/${code}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || '已取消收藏');
+        return { success: true, data };
+      } else {
+        toast.error(data.detail || '取消失败');
+        return { success: false, error: data.detail };
+      }
+    } catch (error) {
+      logger.error('Failed to unfavorite stock:', error);
+      toast.error('操作失败，请稍后重试');
       throw error;
     }
   }

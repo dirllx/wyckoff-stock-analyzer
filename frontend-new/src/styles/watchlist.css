@@ -81,6 +81,72 @@
 
 .watchlist-card-actions {
   margin-top: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.watchlist-card-btn {
+  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 20px;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.watchlist-card-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-analyze:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.btn-multi:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.btn-favorite:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.btn-unfavorite:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* 关注列表子标签 */
+.watchlist-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.watchlist-tab {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.watchlist-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.watchlist-tab.active {
+  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.1));
 }
 
 /* 空状态 */

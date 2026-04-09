@@ -6,10 +6,12 @@ import client from './client.js';
 export const watchlistApi = {
   /**
    * 获取所有关注列表
+   * @param {string} watchType - 关注类型 (favorite | browse | null=全部)
    * @returns {Promise<Array>} 关注列表
    */
-  async getAll() {
-    return await client.get('/api/v1/watchlist');
+  async getAll(watchType = null) {
+    const params = watchType ? { watch_type: watchType } : {};
+    return await client.get('/api/v1/watchlist', params);
   },
 
   /**
