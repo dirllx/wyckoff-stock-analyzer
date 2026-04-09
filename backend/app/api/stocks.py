@@ -13,6 +13,7 @@ from app.models.schemas import (
     StockAnalysisRequest,
     StockAnalysisResponse,
     StockQuoteResponse,
+    StockResponse,
     WyckoffSignalResponse,
     MessageResponse,
     BulkQuotesRequest
@@ -30,6 +31,7 @@ from app.services.redis_service import (
 from app.services.data.source_scheduler import get_scheduler
 from app.utils.converters import dict_to_stock_quotes
 from app.repositories.stock_repository import StockRepository
+from app.utils.cache_validator import CacheValidator
 
 router = APIRouter()
 limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
@@ -87,7 +89,19 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             cached_analysis = get_cached_analysis(body.code, body.timeframe)
 
         if cached_analysis:
-            logger.info(f"✅ 从缓存获取分析结果: {body.code} {body.timeframe}")
+            # 检查缓存数据是否新鲜
+            current_quote_dict = cached_analysis.get("current_quote")
+            if current_quote_dict:
+                latest_date = datetime.strptime(current_quote_dict["date"], "%Y-%m-%d %H:%M:%S")
+                cache_status = CacheValidator.get_cache_status(body.timeframe, latest_date)
+
+                if cache_status["is_fresh"]:
+                    logger.info(f"✅ 从缓存获取分析结果: {body.code} {body.timeframe} - {cache_status['reason']}")
+                else:
+                    logger.info(f"⏰ 缓存过期，重新获取: {body.code} {body.timeframe} - {cache_status['reason']}")
+                    cached_analysis = None
+            else:
+                logger.info(f"✅ 从缓存获取分析结果: {body.code} {body.timeframe}")
 
             # 从缓存返回时，仍然需要查询最近的信号
             repo = StockRepository(db)
@@ -163,14 +177,27 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             update_success = storage.update_stock_quotes(body.code, body.timeframe)
             quotes = storage.get_quotes(body.code, body.timeframe, limit=500)
         elif not body.end_date:
-            # 日线/周线/月线：检查缓存，支持降级
+            # 日线/周线/月线：检查缓存时效性
             try:
                 quotes = get_cached_stock_data(body.code, body.timeframe)
                 if quotes:
-                    logger.info(f"✅ 从缓存获取K线数据: {body.code} {body.timeframe} ({len(quotes)}条)")
-                    # 如果是字典列表，转换为StockQuote对象
-                    if quotes and isinstance(quotes[0], dict):
-                        quotes = dict_to_stock_quotes(quotes, stock.id, body.timeframe)
+                    # 检查缓存数据是否新鲜
+                    latest_date_str = quotes[-1].get("date") if isinstance(quotes[-1], dict) else quotes[-1].date
+                    if isinstance(latest_date_str, str):
+                        latest_date = datetime.strptime(latest_date_str, "%Y-%m-%d %H:%M:%S")
+                    else:
+                        latest_date = latest_date_str
+
+                    cache_status = CacheValidator.get_cache_status(body.timeframe, latest_date)
+
+                    if cache_status["is_fresh"]:
+                        logger.info(f"✅ 从缓存获取K线数据: {body.code} {body.timeframe} ({len(quotes)}条) - {cache_status['reason']}")
+                        # 如果是字典列表，转换为StockQuote对象
+                        if quotes and isinstance(quotes[0], dict):
+                            quotes = dict_to_stock_quotes(quotes, stock.id, body.timeframe)
+                    else:
+                        logger.info(f"⏰ K线缓存过期，重新获取: {body.code} {body.timeframe} - {cache_status['reason']}")
+                        quotes = None
             except Exception as e:
                 # Redis失败时降级到数据库
                 logger.warning(f"⚠️ Redis读取失败，降级到数据库: {e}")
@@ -533,6 +560,47 @@ async def get_stock_signals(code: str, db: Session = Depends(get_db)):
         WyckoffSignalResponse.model_validate(signal)
         for signal in signals
     ]
+
+
+@router.get(
+    "/stocks/{code}",
+    response_model=StockResponse,
+    summary="获取股票基本信息",
+    description="""
+获取股票的基本信息，包括代码、名称、市场、行业等。
+
+## 返回字段
+
+- **code**: 股票代码
+- **name**: 股票名称
+- **market**: 市场类型（A股/B股等）
+- **industry**: 所属行业
+- **created_at**: 创建时间
+- **updated_at**: 更新时间
+
+## 示例请求
+
+```
+GET /api/v1/stocks/688234
+```
+
+## 注意事项
+
+- 如果股票不存在，会自动创建并获取基本信息
+- 使用缓存提高性能
+"""
+)
+async def get_stock_info(code: str, db: Session = Depends(get_db)):
+    """获取股票基本信息"""
+    repo = StockRepository(db)
+    stock = repo.find_by_code(code)
+
+    if not stock:
+        # 股票不存在，自动创建
+        storage = DataStorage(db)
+        stock = storage.get_or_create_stock(code)
+
+    return StockResponse.model_validate(stock)
 
 
 @router.post(
@@ -1068,40 +1136,64 @@ async def get_bulk_stock_quotes(
         storage = DataStorage(db)
         results = []
 
-        # ✅ 分钟线数据实时更新：并发控制，避免过多并发请求
-        # 对于30分钟线等分钟线，每次刷新都获取最新数据
+        # ✅ 分钟线数据：检查缓存时效性，仅更新过期数据
+        # 对于30分钟线等分钟线，使用 CacheValidator 判断是否需要更新
         if timeframe in ['1', '5', '15', '30', '60']:
-            logger.info(f"⚡ 批量更新分钟线数据: {len(codes)}只股票, 周期: {timeframe}")
+            # 收集需要更新的股票
+            codes_to_update = []
 
-            # 限制并发更新数量（一次最多3只），避免数据源压力过大，确保稳定性
-            from concurrent.futures import ThreadPoolExecutor
-            import threading
+            for code in codes:
+                # 检查数据库最新数据时间
+                existing_quotes = storage.get_quotes(code, timeframe, limit=1)
+                if existing_quotes and len(existing_quotes) > 0:
+                    latest_date = existing_quotes[0].date
+                    cache_status = CacheValidator.get_cache_status(timeframe, latest_date)
 
-            update_lock = threading.Lock()
-            updated_count = 0
-            failed_count = 0
+                    if cache_status["should_refresh"]:
+                        codes_to_update.append(code)
+                        logger.debug(f"  🔄 {code} {timeframe}分钟线需要更新: {cache_status['reason']}")
+                    else:
+                        logger.debug(f"  ✅ {code} {timeframe}分钟线缓存新鲜: {cache_status['reason']}")
+                else:
+                    # 无数据，需要更新
+                    codes_to_update.append(code)
+                    logger.debug(f"  📭 {code} {timeframe}分钟线无数据，需要获取")
 
-            def update_single_stock(code):
-                nonlocal updated_count, failed_count
-                try:
-                    success = storage.update_stock_quotes(code, timeframe)
-                    with update_lock:
-                        if success:
-                            updated_count += 1
-                            logger.info(f"  ✅ {code} 更新成功")
-                        else:
+            # 仅更新过期的股票
+            if codes_to_update:
+                logger.info(f"⚡ 批量更新分钟线数据: {len(codes_to_update)}/{len(codes)}只股票需要更新, 周期: {timeframe}")
+
+                # 限制并发更新数量（一次最多3只），避免数据源压力过大
+                from concurrent.futures import ThreadPoolExecutor
+                import threading
+
+                update_lock = threading.Lock()
+                updated_count = 0
+                failed_count = 0
+
+                def update_single_stock(code):
+                    nonlocal updated_count, failed_count
+                    try:
+                        success = storage.update_stock_quotes(code, timeframe)
+                        with update_lock:
+                            if success:
+                                updated_count += 1
+                                logger.info(f"  ✅ {code} 更新成功")
+                            else:
+                                failed_count += 1
+                                logger.warning(f"  ❌ {code} 更新失败")
+                    except Exception as e:
+                        logger.warning(f"  ⚠️ {code} 更新异常: {e}")
+                        with update_lock:
                             failed_count += 1
-                            logger.warning(f"  ❌ {code} 更新失败")
-                except Exception as e:
-                    logger.warning(f"  ⚠️ {code} 更新异常: {e}")
-                    with update_lock:
-                        failed_count += 1
 
-            # 使用线程池并发更新，但限制并发数为3（更稳定）
-            with ThreadPoolExecutor(max_workers=3) as executor:
-                executor.map(update_single_stock, codes)
+                # 使用线程池并发更新，但限制并发数为3（更稳定）
+                with ThreadPoolExecutor(max_workers=3) as executor:
+                    executor.map(update_single_stock, codes_to_update)
 
-            logger.info(f"✅ 批量更新完成: 成功{updated_count}只, 失败{failed_count}只")
+                logger.info(f"✅ 批量更新完成: 成功{updated_count}只, 失败{failed_count}只")
+            else:
+                logger.info(f"✅ 所有股票{timeframe}分钟线数据都是最新的，无需更新")
 
         for code in codes:
             try:
@@ -1120,7 +1212,6 @@ async def get_bulk_stock_quotes(
                 # 1. 只返回今天的数据
                 # 2. 只返回最新的5条（关注列表只显示5笔）
                 if timeframe in ['1', '5', '15', '30', '60']:
-                    from datetime import datetime
                     today = datetime.now().date()
 
                     # 过滤出今天的数据

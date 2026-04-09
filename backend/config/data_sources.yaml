@@ -1,0 +1,51 @@
+# 数据源配置文件
+# 禁用自动测速，避免启动时阻塞
+
+global:
+  auto_speed_test: false  # 禁用自动测速
+
+speed_test:
+  interval: 3600  # 测速间隔（秒）
+  test_stock: "000001"
+  test_timeframes:
+    - daily
+    - weekly
+
+# 数据源优先级配置
+sources:
+  ashare:
+    enabled: true
+    priority: 1  # 最高优先级，速度快
+    supported_timeframes: [daily, weekly, monthly, 30, 60, 15, 5]
+    timeout: 10
+
+  mcp:
+    enabled: true
+    priority: 2
+    supported_timeframes: [daily, weekly, monthly]
+    timeout: 15
+
+  baostock:
+    enabled: false  # 禁用 baostock，连接不稳定
+    priority: 3
+    supported_timeframes: [daily, weekly, monthly]
+    timeout: 20
+
+  akshare:
+    enabled: true
+    priority: 4
+    supported_timeframes: [daily, weekly, monthly, 5, 15, 30, 60]
+    timeout: 30
+
+# 各周期优先级（留空则按 sources.priority 排序）
+timeframe_priority:
+  daily: [ashare, mcp, akshare]
+  weekly: [ashare, mcp, akshare]
+  monthly: [ashare, mcp, akshare]
+  30: [ashare, akshare]
+  60: [ashare, akshare]
+  15: [ashare, akshare]
+  5: [ashare, akshare]
+
+# 各周期优先级（可选，留空则自动测速）
+timeframe_priority: {}

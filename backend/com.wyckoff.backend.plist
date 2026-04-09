@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.wyckoff.backend</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python</string>
+        <string>-m</string>
+        <string>uvicorn</string>
+        <string>app.main:app</string>
+        <string>--host</string>
+        <string>0.0.0.0</string>
+        <string>--port</string>
+        <string>8000</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend/daemon.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend/daemon.error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONPATH</key>
+        <string>/Users/dirllx/Claude Code/wyckoff-stock-analyzer/backend</string>
+    </dict>
+</dict>
+</plist>

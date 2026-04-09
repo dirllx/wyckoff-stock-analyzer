@@ -234,8 +234,8 @@ class DataStorage:
         for col in ["ma5", "ma10", "ma15", "ma20", "ma30", "ma60", "ma90", "ma120", "ma250",
                     "duokong_line", "volume_ma5", "obv"]:
             if col in df.columns:
-                # 使用 astype(float) 转换为 float64，然后用 apply + item() 转为 Python float
-                df[col] = df[col].astype(float).apply(lambda x: x.item() if pd.notna(x) else None)
+                # 安全转换：先转float64，再转Python float
+                df[col] = df[col].astype(float).apply(lambda x: float(x) if pd.notna(x) else None)
 
         return df
 
