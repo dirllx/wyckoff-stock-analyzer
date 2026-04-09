@@ -149,6 +149,33 @@ export class Settings {
             </div>
           </section>
 
+          <!-- 日志配置 -->
+          <section class="settings-section">
+            <h3 class="settings-section-title">📋 日志配置</h3>
+            <div class="settings-form">
+              <div class="settings-field">
+                <label class="settings-label">日志级别</label>
+                <select id="log-level" class="settings-select">
+                  <option value="DEBUG" ${display.log_level === 'DEBUG' ? 'selected' : ''}>DEBUG - 调试</option>
+                  <option value="INFO" ${display.log_level === 'INFO' || !display.log_level ? 'selected' : ''}>INFO - 信息</option>
+                  <option value="WARN" ${display.log_level === 'WARN' ? 'selected' : ''}>WARN - 警告</option>
+                  <option value="ERROR" ${display.log_level === 'ERROR' ? 'selected' : ''}>ERROR - 错误</option>
+                  <option value="NONE" ${display.log_level === 'NONE' ? 'selected' : ''}>NONE - 静默</option>
+                </select>
+                <small class="settings-hint">当前级别: <span id="current-log-level">${logger.getLevel()}</span></small>
+              </div>
+
+              <div class="settings-field">
+                <label class="settings-checkbox">
+                  <input type="checkbox" id="enable-perf-monitoring"
+                    ${display.perf_monitoring ? 'checked' : ''}>
+                  <span>性能监控</span>
+                </label>
+                <small class="settings-hint">启用后会在控制台显示性能计时信息</small>
+              </div>
+            </div>
+          </section>
+
           <!-- 通知配置 -->
           <section class="settings-section">
             <h3 class="settings-section-title">🔔 通知配置</h3>
@@ -255,6 +282,30 @@ export class Settings {
       });
     });
 
+    // 日志级别实时变更
+    const logLevelSelect = document.getElementById('log-level');
+    if (logLevelSelect) {
+      logLevelSelect.addEventListener('change', (e) => {
+        const level = e.target.value;
+        logger.setLevel(level);
+        const currentLevelSpan = document.getElementById('current-log-level');
+        if (currentLevelSpan) {
+          currentLevelSpan.textContent = level;
+        }
+        logger.info(`日志级别已更改为: ${level}`);
+      });
+    }
+
+    // 性能监控实时变更
+    const perfMonitoringCheckbox = document.getElementById('enable-perf-monitoring');
+    if (perfMonitoringCheckbox) {
+      perfMonitoringCheckbox.addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        logger.setPerfMonitoring(enabled);
+        logger.info(`性能监控已${enabled ? '启用' : '禁用'}`);
+      });
+    }
+
     // 保存设置按钮
     const saveBtn = document.getElementById('save-settings-btn');
     if (saveBtn) {
@@ -295,7 +346,9 @@ export class Settings {
       display: {
         watchlist_columns: parseInt(document.getElementById('watchlist-columns')?.value) || 5,
         default_sort: document.getElementById('default-sort')?.value || 'score_desc',
-        show_investment_advice: document.getElementById('show-advice')?.checked || false
+        show_investment_advice: document.getElementById('show-advice')?.checked || false,
+        log_level: document.getElementById('log-level')?.value || 'INFO',
+        perf_monitoring: document.getElementById('enable-perf-monitoring')?.checked || false
       },
       notification: {
         feishu_webhook: document.getElementById('feishu-webhook')?.value || null,
@@ -397,7 +450,9 @@ export class Settings {
       display: {
         watchlist_columns: 5,
         default_sort: 'score_desc',
-        show_investment_advice: true
+        show_investment_advice: true,
+        log_level: 'INFO',
+        perf_monitoring: false
       },
       notification: {
         feishu_webhook: null,

@@ -43,6 +43,21 @@
 .chart-controls {
   display: flex;
   gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.data-refresh-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.data-refresh-time:hover {
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
 }
 
 .chart-controls button {

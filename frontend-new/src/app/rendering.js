@@ -27,6 +27,18 @@ const getPrediction = () => import('../components/Prediction.js').then(m => m.Pr
 const getPatterns = () => import('../components/Patterns.js').then(m => m.Patterns);
 
 /**
+ * 更新数据刷新时间显示
+ */
+function updateDataRefreshTime() {
+  const refreshTimeEl = document.getElementById('dataRefreshTime');
+  if (refreshTimeEl) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    refreshTimeEl.textContent = `更新 ${timeStr}`;
+  }
+}
+
+/**
  * 绑定K线表格行点击事件 - 显示详情弹窗
  * @param {Array} quotes - K线数据
  * @param {Array} signals - 信号数据
@@ -412,6 +424,9 @@ async function handleStockAnalyzed({ code, analysis, signals }) {
   let quotes = null;
 
   try {
+    // 更新数据刷新时间
+    updateDataRefreshTime();
+
     // 获取K线数据
     quotes = await stocksApi.getQuotes(code, 'daily', 100);
 

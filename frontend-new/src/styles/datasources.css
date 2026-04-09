@@ -1,0 +1,418 @@
+/**
+ * 数据源管理样式
+ */
+
+/* 容器 */
+.datasources-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+/* 头部 */
+.datasources-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.datasources-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.datasources-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.datasources-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.datasources-btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.datasources-btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.datasources-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.datasources-btn-secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+.datasources-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 概览区域 */
+.datasources-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.datasource-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.datasource-card-header {
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.datasource-card-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.datasource-card-content {
+  min-height: 150px;
+}
+
+/* 统计网格 */
+.datasources-stats-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.datasource-stat-item {
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.datasource-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.datasource-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.datasource-status {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.status-healthy {
+  background: var(--color-success);
+  color: white;
+}
+
+.status-unhealthy {
+  background: var(--color-danger);
+  color: white;
+}
+
+.datasource-stat-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.metric-value {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 健康列表 */
+.datasources-health-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.datasource-health-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+}
+
+.health-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.health-status.status-healthy {
+  background: var(--color-success);
+}
+
+.health-status.status-unhealthy {
+  background: var(--color-danger);
+}
+
+.health-info {
+  flex: 1;
+}
+
+.health-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.health-details {
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.health-last {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* 优先级配置 */
+.datasources-priority,
+.datasources-config {
+  margin-bottom: var(--spacing-lg);
+}
+
+.datasources-section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.datasources-priority-list,
+.datasources-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.priority-item {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.priority-timeframe {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+.priority-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.priority-source {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: move;
+  user-select: none;
+}
+
+.priority-source:hover {
+  border-color: var(--color-primary);
+}
+
+.priority-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.priority-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* 配置列表 */
+.datasource-config-item {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.config-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.config-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.config-toggle input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.config-toggle span {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.config-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.config-detail {
+  font-size: var(--font-size-sm);
+}
+
+.detail-label {
+  color: var(--text-tertiary);
+}
+
+.detail-value {
+  color: var(--text-secondary);
+  margin-left: var(--spacing-xs);
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: var(--text-secondary);
+}
+
+.datasources-empty,
+.datasources-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.datasources-empty-icon,
+.error-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.datasources-empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.datasources-empty-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .datasources-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .datasources-actions {
+    width: 100%;
+  }
+
+  .datasources-btn {
+    flex: 1;
+  }
+
+  .datasources-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .priority-sources {
+    flex-direction: column;
+  }
+
+  .config-details {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+}

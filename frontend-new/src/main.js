@@ -17,6 +17,7 @@ const Settings = () => import('./components/Settings.js').then(m => m.Settings);
 const Health = () => import('./components/Health.js').then(m => m.Health);
 const Notifications = () => import('./components/Notifications.js').then(m => m.Notifications);
 const RiskManagement = () => import('./components/RiskManagement.js').then(m => m.RiskManagement);
+const DataSources = () => import('./components/DataSources.js').then(m => m.DataSources);
 const healthApi = () => import('./api/health.js').then(m => m.healthApi);
 
 // 应用模块
@@ -25,6 +26,7 @@ import { analyzeStock } from './app/stockAnalysis.js';
 import { loadWatchlist, addCurrentToWatchlist, batchAnalyzeWatchlist } from './app/watchlistManager.js';
 import { handleStockAnalyzed } from './app/rendering.js';
 import { switchTab, initTheme, toggleTheme, MinimalMode } from './app/ui.js';
+import { getViewManager } from './app/viewManager.js';
 
 // ========================================
 // 全局错误处理
@@ -60,10 +62,100 @@ window.addEventListener('unhandledrejection', (event) => {
 // ========================================
 
 /**
+ * 加载数据源管理组件
+ */
+let dataSourcesLoaded = false;
+async function loadDataSources() {
+  if (dataSourcesLoaded) {
+    return; // 已加载，跳过
+  }
+
+  try {
+    logger.info('Loading DataSources component...');
+    const DS = await DataSources();
+    const ds = new DS();
+    await ds.render('datasources');
+    dataSourcesLoaded = true;
+    logger.info('DataSources component loaded');
+  } catch (error) {
+    logger.error('Failed to load DataSources:', error);
+    const datasourcesDiv = document.getElementById('datasources');
+    if (datasourcesDiv) {
+      const DS = await DataSources();
+      datasourcesDiv.innerHTML = DS.generateErrorHTML(error.message);
+    }
+  }
+}
+
+/**
  * 包装 analyzeStock，自动注入 globalErrorHandler
  */
 function doAnalyzeStock(stockCode) {
   return analyzeStock(stockCode, globalErrorHandler);
+}
+
+/**
+ * 更新数据刷新时间显示
+ */
+function updateDataRefreshTime() {
+  const refreshTimeEl = document.getElementById('dataRefreshTime');
+  if (refreshTimeEl) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    refreshTimeEl.textContent = `更新 ${timeStr}`;
+  }
+}
+
+/**
+ * 执行多周期分析
+ * @param {string} stockCode - 股票代码
+ */
+async function doMultiTimeframeAnalysis(stockCode) {
+  try {
+    logger.info(`Starting multi-timeframe analysis for: ${stockCode}`);
+
+    // 切换到多周期Tab
+    switchTab('multi');
+
+    // 显示加载中状态
+    const mtfDiv = document.getElementById('multiTimeframe');
+    if (mtfDiv) {
+      mtfDiv.innerHTML = '<div class="loading">正在加载多周期分析...</div>';
+    }
+
+    // 导入多周期分析组件
+    const { default: MultiTimeframe } = await import('./components/MultiTimeframe.js');
+
+    // 加载多周期数据
+    const timeframes = ['30', '60', 'daily', 'weekly', 'monthly'];
+    const multiTimeframeData = await MultiTimeframe.loadMultipleTimeframes(stockCode, timeframes);
+
+    if (multiTimeframeData && multiTimeframeData.length > 0) {
+      logger.info(`Multi-timeframe data loaded: ${multiTimeframeData.length} timeframes`);
+
+      const mtfHTML = MultiTimeframe.render(multiTimeframeData);
+
+      if (mtfDiv) {
+        mtfDiv.innerHTML = mtfHTML;
+        logger.info('多周期分析渲染完成');
+      }
+
+      toast.success(`多周期分析完成: ${stockCode}`);
+    } else {
+      logger.warn('No multi-timeframe data available');
+      if (mtfDiv) {
+        mtfDiv.innerHTML = MultiTimeframe.generateEmptyStateHTML();
+      }
+      toast.warning('暂无多周期数据');
+    }
+  } catch (error) {
+    logger.error('Multi-timeframe analysis failed:', error);
+    const mtfDiv = document.getElementById('multiTimeframe');
+    if (mtfDiv) {
+      mtfDiv.innerHTML = '<div class="mtf-error">多周期分析加载失败，请稍后重试</div>';
+    }
+    toast.error(`多周期分析失败: ${error.message}`);
+  }
 }
 
 /**
@@ -84,19 +176,63 @@ function bindEvents() {
     }
   }, 'Stock Input'));
 
+  // 多周期分析按钮点击事件
+  const mtfAnalyzeBtn = document.getElementById('mtf-analyze-btn');
+  if (mtfAnalyzeBtn) {
+    mtfAnalyzeBtn.addEventListener('click', withErrorHandling(async (event) => {
+      const stockCode = document.getElementById('mtf-stock-code').value;
+      if (stockCode) {
+        await doMultiTimeframeAnalysis(stockCode);
+      } else {
+        toast.error('请输入股票代码');
+      }
+    }, 'Multi-Timeframe Analyze Button'));
+  }
+
+  // 多周期输入框回车事件
+  const mtfStockInput = document.getElementById('mtf-stock-code');
+  if (mtfStockInput) {
+    mtfStockInput.addEventListener('keypress', withSyncErrorHandling((event) => {
+      if (event.key === 'Enter') {
+        const stockCode = event.target.value;
+        if (stockCode) {
+          doMultiTimeframeAnalysis(stockCode);
+        }
+      }
+    }, 'Multi-Timeframe Stock Input'));
+  }
+
+  // 多周期清空按钮
+  const mtfClearBtn = document.getElementById('mtf-clear-btn');
+  if (mtfClearBtn) {
+    mtfClearBtn.addEventListener('click', withSyncErrorHandling(() => {
+      document.getElementById('mtf-stock-code').value = '';
+      const mtfDiv = document.getElementById('multiTimeframe');
+      if (mtfDiv) {
+        mtfDiv.innerHTML = '<div class="mtf-empty">请输入股票代码进行多周期分析</div>';
+      }
+    }, 'Multi-Timeframe Clear Button'));
+  }
+
   // 监听股票分析完成事件
   eventBus.on(Events.STOCK_ANALYZED, handleStockAnalyzed);
 
   // 标签页切换
   const tabNav = document.querySelector('.tab-nav');
   if (tabNav) {
-    tabNav.addEventListener('click', (event) => {
+    tabNav.addEventListener('click', withSyncErrorHandling((event) => {
       const btn = event.target.closest('.tab-btn');
       if (!btn) return;
 
       const tabName = btn.dataset.tab;
+
+      // 切换到数据源标签页时，加载数据源组件
+      if (tabName === 'datasources') {
+        loadDataSources();
+      }
+
       switchTab(tabName);
-    });
+    }, 'Tab Switch'));
   }
 
   // 主题切换
@@ -167,6 +303,9 @@ async function initApp() {
     // 初始化 DOM
     initDOM();
     validateDOM();
+
+    // 初始化视图管理器
+    getViewManager().init();
 
     // 初始化主题
     initTheme();
@@ -242,6 +381,11 @@ async function initApp() {
         RM.bindEvents();
       }
     }
+
+    // 加载数据源管理（懒加载，切换到数据源标签时才加载）
+    logger.debug('DataSources will be loaded on demand');
+
+    // 设置默认股票代码（如果有）
 
     // 设置默认股票代码（如果有）
     if (AppConfig.DEFAULTS.STOCK.CODE) {
