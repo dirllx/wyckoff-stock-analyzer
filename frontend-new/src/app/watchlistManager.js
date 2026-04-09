@@ -62,9 +62,11 @@ async function loadWatchlist(globalErrorHandler, analyzeStock) {
       html += '<h3>我的关注</h3>';
 
       // 子标签切换
+      const favoriteActive = currentWatchlistTab === 'favorite' ? ' active' : '';
+      const browseActive = currentWatchlistTab === 'browse' ? ' active' : '';
       html += '<div class="watchlist-tabs">';
-      html += '<button class="watchlist-tab active" id="subtab-favorite" data-tab="favorite">自选股</button>';
-      html += '<button class="watchlist-tab" id="subtab-browse" data-tab="browse">浏览股</button>';
+      html += `<button class="watchlist-tab${favoriteActive}" id="subtab-favorite" data-tab="favorite">自选股</button>`;
+      html += `<button class="watchlist-tab${browseActive}" id="subtab-browse" data-tab="browse">浏览股</button>`;
       html += '</div>';
 
       // 操作按钮
@@ -257,4 +259,4 @@ async function batchAnalyzeWatchlist(globalErrorHandler) {
   }
 }
 
-export { loadWatchlist, bindWatchlistEvents, addCurrentToWatchlist, batchAnalyzeWatchlist };
+export { loadWatchlist, bindWatchlistEvents, addCurrentToWatchlist, batchAnalyzeWatchlist, switchWatchlistTab };

@@ -61,8 +61,15 @@ export const stocksApi = {
 
       Logger.info('Signals fetched successfully');
 
-      // 返回信号数组
-      return result?.signals || result || [];
+      // 返回信号数组，处理空对象和数组情况
+      const signals = result?.signals;
+      if (Array.isArray(signals)) {
+        return signals;
+      }
+      if (Array.isArray(result)) {
+        return result;
+      }
+      return [];
     } catch (error) {
       Logger.error('Failed to fetch signals', error);
       throw error;

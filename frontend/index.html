@@ -8097,6 +8097,34 @@
 
             console.log(`[addToWatchlist] 添加股票: ${stockCode}, 名称: ${name}, 类型: ${targetType}, 静默: ${silent}`);
 
+            // ✅ 检查是否已在另一个列表中
+            const oppositeType = targetType === 'favorite' ? 'browse' : 'favorite';
+            const isInOppositeList = watchlistData.items.some(item =>
+                item.stock_code === stockCode && item.watch_type === oppositeType
+            );
+
+            if (isInOppositeList) {
+                const oppositeTypeName = oppositeType === 'favorite' ? '自选股' : '浏览股';
+                console.log(`[addToWatchlist] 股票${stockCode}已在${oppositeTypeName}中，跳过添加`);
+                if (!silent) {
+                    addLog('跳过添加', `股票${stockCode}已在${oppositeTypeName}中`);
+                }
+                return;
+            }
+
+            // ✅ 检查是否已在当前列表中
+            const isInCurrentList = watchlistData.items.some(item =>
+                item.stock_code === stockCode && item.watch_type === targetType
+            );
+
+            if (isInCurrentList) {
+                console.log(`[addToWatchlist] 股票${stockCode}已在当前列表中，跳过添加`);
+                if (!silent) {
+                    addLog('跳过添加', `股票${stockCode}已在当前列表中`);
+                }
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE}/api/v1/watchlist`, {
                     method: 'POST',
