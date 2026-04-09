@@ -94,24 +94,24 @@ class DataStorage:
                 if date_val in existing_dates:
                     # 更新现有记录（收集对象，稍后批量提交）
                     existing = existing_dates[date_val]
-                    existing.open = row.get("open")
-                    existing.high = row.get("high")
-                    existing.low = row.get("low")
-                    existing.close = row.get("close")
-                    existing.volume = row.get("volume")
-                    existing.amount = row.get("amount")
+                    existing.open = float(row.get("open")) if pd.notna(row.get("open")) else None
+                    existing.high = float(row.get("high")) if pd.notna(row.get("high")) else None
+                    existing.low = float(row.get("low")) if pd.notna(row.get("low")) else None
+                    existing.close = float(row.get("close")) if pd.notna(row.get("close")) else None
+                    existing.volume = float(row.get("volume")) if pd.notna(row.get("volume")) else None
+                    existing.amount = float(row.get("amount")) if pd.notna(row.get("amount")) else None
                 else:
                     # 收集需要添加的新记录
                     quote = StockQuote(
                         stock_id=stock.id,
                         date=date_val,
                         timeframe=timeframe,
-                        open=row.get("open"),
-                        high=row.get("high"),
-                        low=row.get("low"),
-                        close=row.get("close"),
-                        volume=row.get("volume"),
-                        amount=row.get("amount")
+                        open=float(row.get("open")) if pd.notna(row.get("open")) else None,
+                        high=float(row.get("high")) if pd.notna(row.get("high")) else None,
+                        low=float(row.get("low")) if pd.notna(row.get("low")) else None,
+                        close=float(row.get("close")) if pd.notna(row.get("close")) else None,
+                        volume=float(row.get("volume")) if pd.notna(row.get("volume")) else None,
+                        amount=float(row.get("amount")) if pd.notna(row.get("amount")) else None
                     )
                     quotes_to_add.append(quote)
                     saved_count += 1
@@ -230,6 +230,13 @@ class DataStorage:
                 obv.append(obv[-1])
         df["obv"] = obv
 
+        # 将numpy类型转换为Python原生类型，避免PostgreSQL类型错误
+        for col in ["ma5", "ma10", "ma15", "ma20", "ma30", "ma60", "ma90", "ma120", "ma250",
+                    "duokong_line", "volume_ma5", "obv"]:
+            if col in df.columns:
+                # 使用 astype(float) 转换为 float64，然后用 apply + item() 转为 Python float
+                df[col] = df[col].astype(float).apply(lambda x: x.item() if pd.notna(x) else None)
+
         return df
 
     def _update_quote_indicators(self, quotes: List[StockQuote], df: pd.DataFrame) -> None:
@@ -241,18 +248,27 @@ class DataStorage:
             df: 包含技术指标的DataFrame
         """
         for i, q in enumerate(quotes):
-            q.ma5 = df.iloc[i]["ma5"]
-            q.ma10 = df.iloc[i]["ma10"]
-            q.ma15 = df.iloc[i]["ma15"]
-            q.ma20 = df.iloc[i]["ma20"]
-            q.ma30 = df.iloc[i]["ma30"]
-            q.ma60 = df.iloc[i]["ma60"]
-            q.ma90 = df.iloc[i]["ma90"]
-            q.ma120 = df.iloc[i]["ma120"]
-            q.ma250 = df.iloc[i]["ma250"]
-            q.duokong_line = df.iloc[i]["duokong_line"]
-            q.volume_ma5 = df.iloc[i]["volume_ma5"]
-            q.obv = df.iloc[i]["obv"]
+            # 将numpy类型转换为Python原生类型，避免PostgreSQL类型错误
+            row = df.iloc[i]
+            def to_float(val):
+                if pd.isna(val):
+                    return None
+                if hasattr(val, 'item'):
+                    return float(val.item())
+                return float(val)
+
+            q.ma5 = to_float(row["ma5"])
+            q.ma10 = to_float(row["ma10"])
+            q.ma15 = to_float(row["ma15"])
+            q.ma20 = to_float(row["ma20"])
+            q.ma30 = to_float(row["ma30"])
+            q.ma60 = to_float(row["ma60"])
+            q.ma90 = to_float(row["ma90"])
+            q.ma120 = to_float(row["ma120"])
+            q.ma250 = to_float(row["ma250"])
+            q.duokong_line = to_float(row["duokong_line"])
+            q.volume_ma5 = to_float(row["volume_ma5"])
+            q.obv = to_float(row["obv"])
 
     def get_quotes(
         self,
