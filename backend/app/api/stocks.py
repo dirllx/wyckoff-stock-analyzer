@@ -493,18 +493,6 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             from_cache=False
         )
 
-        # 构建响应
-        return StockAnalysisResponse(
-            stock=stock,
-            current_quote=current_quote_with_change,
-            signals=[
-                WyckoffSignalResponse.model_validate(signal)
-                for signal in recent_signals
-            ],
-            analysis_summary=analysis_result,
-            from_cache=False
-        )
-
     except HTTPException:
         raise
     except Exception as e:
@@ -1210,8 +1198,8 @@ async def get_bulk_stock_quotes(
 
                 # ✅ 检查MA值是否已计算，如果没有则触发计算
                 if timeframe in ['1', '5', '15', '30', '60']:
-                    # 检查最新数据的MA值
-                    latest_quote = quotes[0] if quotes else None
+                    # 检查最新数据的MA值（quotes是升序，最新的在最后）
+                    latest_quote = quotes[-1] if quotes else None
                     if latest_quote and latest_quote.ma5 is None:
                         logger.info(f"⚠️ {code} {timeframe}分钟线MA值未计算，触发重新计算")
                         # 触发重新计算（获取足够的数据并计算MA）
