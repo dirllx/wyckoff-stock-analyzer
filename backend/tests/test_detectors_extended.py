@@ -45,10 +45,10 @@ def spring_sample_data():
 def test_breakout_detector_detect_breakout(breakout_sample_data):
     """测试检测突破形态"""
     detector = BreakoutDetector()
-    patterns = detector.detect(breakout_sample_data, "TEST001", "daily")
+    result = detector.detect(breakout_sample_data)
 
-    # 应该返回列表
-    assert isinstance(patterns, list)
+    # 应该返回Dict或None
+    assert result is None or isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -67,20 +67,20 @@ def test_breakout_detector_no_breakout():
         'ma20': [100] * 100,
     })
 
-    patterns = detector.detect(data, "TEST001", "daily")
+    result = detector.detect(data)
 
-    # 应该返回空列表或列表
-    assert isinstance(patterns, list)
+    # 应该返回None或Dict
+    assert result is None or isinstance(result, dict)
 
 
 @pytest.mark.unit
 def test_spring_detector_detect_spring(spring_sample_data):
     """测试检测Spring形态"""
     detector = SpringDetector()
-    patterns = detector.detect(spring_sample_data, "TEST001", "daily")
+    result = detector.detect(spring_sample_data)
 
-    # 应该返回列表
-    assert isinstance(patterns, list)
+    # 应该返回Dict或None
+    assert result is None or isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -101,10 +101,10 @@ def test_spring_detector_no_spring():
         'obv': [1000000 + i * 50000 for i in range(100)],
     })
 
-    patterns = detector.detect(data, "TEST001", "daily")
+    result = detector.detect(data)
 
-    # 应该返回列表
-    assert isinstance(patterns, list)
+    # 应该返回None或Dict
+    assert result is None or isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -122,7 +122,7 @@ def test_detector_with_insufficient_data():
         'volume': [1000000] * 10,
     })
 
-    patterns = detector.detect(data, "TEST001", "daily")
+    result = detector.detect(data)
 
-    # 应该返回空列表
-    assert isinstance(patterns, list)
+    # 应该返回None或Dict
+    assert result is None or isinstance(result, dict)

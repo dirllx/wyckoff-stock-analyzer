@@ -18,6 +18,7 @@ const Health = () => import('./components/Health.js').then(m => m.Health);
 const Notifications = () => import('./components/Notifications.js').then(m => m.Notifications);
 const RiskManagement = () => import('./components/RiskManagement.js').then(m => m.RiskManagement);
 const DataSources = () => import('./components/DataSources.js').then(m => m.DataSources);
+const MarketOverview = () => import('./components/MarketOverview.js').then(m => m.MarketOverview);
 const healthApi = () => import('./api/health.js').then(m => m.healthApi);
 
 // 应用模块
@@ -83,6 +84,32 @@ async function loadDataSources() {
     if (datasourcesDiv) {
       const DS = await DataSources();
       datasourcesDiv.innerHTML = DS.generateErrorHTML(error.message);
+    }
+  }
+}
+
+/**
+ * 加载行情看板组件
+ */
+let marketOverviewLoaded = false;
+let marketOverviewInstance = null;
+async function loadMarketOverview() {
+  if (marketOverviewLoaded) {
+    return; // 已加载，跳过
+  }
+
+  try {
+    logger.info('Loading MarketOverview component...');
+    const MO = await MarketOverview();
+    marketOverviewInstance = new MO();
+    await marketOverviewInstance.render('market-overview');
+    marketOverviewLoaded = true;
+    logger.info('MarketOverview component loaded');
+  } catch (error) {
+    logger.error('Failed to load MarketOverview:', error);
+    const marketDiv = document.getElementById('market-overview');
+    if (marketDiv) {
+      marketDiv.innerHTML = '<div class="error-state">加载失败</div>';
     }
   }
 }
@@ -229,6 +256,11 @@ function bindEvents() {
       // 切换到数据源标签页时，加载数据源组件
       if (tabName === 'datasources') {
         loadDataSources();
+      }
+
+      // 切换到行情标签页时，加载行情看板组件
+      if (tabName === 'market') {
+        loadMarketOverview();
       }
 
       switchTab(tabName);

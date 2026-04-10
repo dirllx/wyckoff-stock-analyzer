@@ -171,28 +171,48 @@ class CacheValidator:
         判断分钟线缓存是否新鲜
 
         规则：
-        1. 仅在交易时间内判断
-        2. 最新数据时间 >= 当前时间 - 周期时长
-        3. 非交易时间不强制刷新
+        1. 计算下一个K线节点的预期时间
+        2. 如果当前时间已超过预期时间+缓冲期，则认为过期
+        3. 非交易日视为新鲜
 
         Args:
             timeframe: '30' 或 '60'
             latest_date: 最新数据时间
             now: 当前时间
         """
-        # 非交易时间，不过期
-        if not CacheValidator.is_trading_time(now):
+        # 周末或非交易日，缓存不过期
+        if now.weekday() >= 5:  # 5=周六, 6=周日
             return True
 
-        # 计算允许的最大时间差（分钟）
-        max_diff_minutes = int(timeframe)
+        # 计算下一个K线节点的预期时间
+        latest_time = latest_date.time()
+        latest_minute = latest_time.hour * 60 + latest_time.minute
+        period_minutes = int(timeframe)
 
-        # 计算时间差
-        time_diff = (now - latest_date).total_seconds() / 60
+        # 计算下一个K线应该在的时间点
+        next_minute = ((latest_minute // period_minutes) + 1) * period_minutes
+        next_hour = (next_minute // 60) % 24
+        next_time = time(hour=next_hour, minute=next_minute % 60)
 
-        # 如果时间差小于周期时长，视为新鲜
-        # 例如：30分钟线，最新数据是19:45，现在是20:10，差25分钟，仍然新鲜
-        return time_diff <= max_diff_minutes
+        # 如果下一个节点是13:00（午休结束），特殊处理
+        # 因为11:30到13:00之间有90分钟的休市，不应该在这期间触发更新
+        if next_time == time(13, 0):
+            # 只有当前时间过了13:00之后，才认为需要更新
+            if now.time() < time(13, 0):
+                return True
+
+        # 检查是否已经过了下一个K线节点时间+缓冲期（5分钟）
+        # 例如：最新数据11:00，下一个节点11:30
+        # 如果当前时间>=11:35，说明11:30的K线应该已经完成了
+        next_datetime = datetime.combine(now.date(), next_time)
+        if next_datetime.time() == time(13, 0):
+            # 下午开盘时间特殊处理
+            next_datetime = datetime.combine(now.date(), time(13, 0))
+
+        buffer_minutes = 5  # 5分钟缓冲，让K线数据有时间写入
+        should_have_data_by = next_datetime + timedelta(minutes=buffer_minutes)
+
+        return now < should_have_data_by
 
     @staticmethod
     def should_refresh_cache(timeframe: str, latest_date: datetime = None, now: datetime = None) -> bool:

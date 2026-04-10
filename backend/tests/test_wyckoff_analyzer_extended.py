@@ -52,7 +52,9 @@ def test_analyze_volume(analyzer, sample_dataframe_uptrend):
     result = analyzer._analyze_volume(sample_dataframe_uptrend)
 
     assert isinstance(result, dict)
-    assert 'trend' in result
+    # 检查有效字段
+    assert 'type' in result
+    assert result['type'] == 'VOLUME'
 
 
 @pytest.mark.unit
@@ -82,7 +84,9 @@ def test_analyze_trend(analyzer, sample_dataframe_uptrend):
     result = analyzer._analyze_trend(sample_dataframe_uptrend)
 
     assert isinstance(result, dict)
-    assert 'trend' in result
+    # 检查有效字段
+    assert 'type' in result
+    assert result['type'] == 'TREND'
 
 
 @pytest.mark.unit
@@ -94,43 +98,72 @@ def test_generate_ma_signals(analyzer, sample_dataframe_uptrend):
 
 
 @pytest.mark.unit
-def test_infer_wyckoff_phase(analyzer):
+def test_infer_wyckoff_phase(analyzer, sample_dataframe_uptrend):
     """测试威科夫阶段推断"""
-    # 上涨趋势
-    uptrend_data = {
-        'trend': 'up',
-        'strength': 'strong',
-        'volume_confirmation': True
+    # 创建趋势和成交量分析结果
+    trend_analysis = {
+        'type': 'TREND',
+        'direction': 'LONG',
+        'strength': 'STRONG',
+        'reason': '均线多头排列，上涨趋势'
     }
-    phase = analyzer._infer_wyckoff_phase(uptrend_data)
-    assert phase in ['A', 'B', 'C', 'D']
+    volume_analysis = {
+        'type': 'VOLUME',
+        'anomaly': False,
+        'direction': 'LONG',
+        'strength': 'STRONG',
+        'reason': '成交量正常，OBV上升，资金流入'
+    }
 
-    # 下跌趋势
-    downtrend_data = {
-        'trend': 'down',
-        'strength': 'strong',
-        'volume_confirmation': False
-    }
-    phase = analyzer._infer_wyckoff_phase(downtrend_data)
-    assert phase in ['A', 'B', 'C', 'D']
+    phase = analyzer._infer_wyckoff_phase(
+        sample_dataframe_uptrend,
+        trend_analysis,
+        volume_analysis
+    )
+    # 返回格式是 U(放量上涨), D(放量下跌) 等
+    assert phase is not None
+    assert isinstance(phase, str)
 
 
 @pytest.mark.unit
 def test_combine_signals(analyzer):
     """测试信号组合"""
-    ma_signals = [{"type": "golden_cross", "strength": "strong"}]
-    volume_analysis = {"trend": "increasing"}
-    trend_analysis = {"trend": "up"}
-    wyckoff_phase = "B"
+    volume = {
+        'type': 'VOLUME',
+        'direction': 'LONG',
+        'strength': 'STRONG',
+        'obv_trend': 'UP',
+        'reason': '成交量正常，OBV上升，资金流入'
+    }
+    effort_result = {
+        'type': 'EFFORT_RESULT',
+        'relation_type': '量价齐升',
+        'signal_direction': 'STRONG_CONFIRMATION',
+        'reason': '量价协调'
+    }
+    sps = {
+        'type': 'SPS',
+        'direction': 'NEUTRAL',
+        'strength': 'WEAK',
+        'has_sps': False,
+        'reason': '无明确SPS信号'
+    }
+    trend = {
+        'type': 'TREND',
+        'direction': 'LONG',
+        'strength': 'STRONG',
+        'reason': '均线多头排列，上涨趋势'
+    }
 
     result = analyzer._combine_signals(
-        ma_signals,
-        volume_analysis,
-        trend_analysis,
-        wyckoff_phase
+        volume,
+        effort_result,
+        sps,
+        trend
     )
 
     assert isinstance(result, dict)
+    assert 'score' in result
 
 
 @pytest.mark.unit

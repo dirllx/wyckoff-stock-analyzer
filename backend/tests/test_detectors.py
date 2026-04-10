@@ -34,10 +34,10 @@ def test_breakout_detector_detect(sample_dataframe):
     """测试突破检测"""
     detector = BreakoutDetector()
 
-    patterns = detector.detect(sample_dataframe, "TEST001", "daily")
+    result = detector.detect(sample_dataframe)
 
-    # 应该返回列表
-    assert isinstance(patterns, list)
+    # 应该返回Dict或None
+    assert result is None or isinstance(result, dict)
 
 
 @pytest.mark.unit
@@ -52,7 +52,7 @@ def test_spring_detector_detect(sample_dataframe):
     """测试Spring检测"""
     detector = SpringDetector()
 
-    patterns = detector.detect(sample_dataframe, "TEST001", "daily")
+    result = detector.detect(sample_dataframe)
 
-    # 应该返回列表
-    assert isinstance(patterns, list)
+    # 应该返回Dict或None
+    assert result is None or isinstance(result, dict)

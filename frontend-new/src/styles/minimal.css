@@ -4,83 +4,73 @@
    ======================================== */
 
 /* ========================================
-   核心原则
-   ========================================
-   1. 去除一切非必要元素
-   2. 突出核心功能
-   3. 大量留白
-   4. 统一视觉语言
-   5. 流畅动画
+   极简模式覆盖
+   当启用极简模式时，覆盖默认样式
    ======================================== */
 
-/* ========================================
-   CSS变量 - 精简版
-   ======================================== */
-:root {
-  /* 主色 - 单一强调色 */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: rgba(99, 102, 241, 0.1);
+.minimal-mode {
+  /* 增加留白 */
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
 
-  /* 状态色 */
-  --success: #22c55e;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --neutral: #64748b;
+  /* 简化边框 */
+  --border-color: transparent;
 
-  /* 背景色 - 深色主题 */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-elevated: #334155;
-  --bg-hover: #475569;
-
-  /* 文字色 */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-
-  /* 间距 - 8px基准 */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-
-  /* 圆角 */
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-
-  /* 过渡 */
-  --transition-fast: 100ms ease;
-  --transition: 150ms ease;
-  --transition-slow: 250ms ease;
-
-  /* 阴影 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  /* 减少装饰 */
+  --shadow-sm: none;
+  --shadow-md: none;
 }
 
-/* ========================================
-   全局重置
-   ======================================== */
-* {
-  margin: 0;
+/* 隐藏非必要元素 */
+.minimal-mode .health-status-bar,
+.minimal-mode .app-footer,
+.minimal-mode .header-badge {
+  display: none;
+}
+
+/* 简化头部 */
+.minimal-mode .app-header {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border: none;
+}
+
+.minimal-mode .app-header h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+}
+
+/* 简化输入区域 */
+.minimal-mode .stock-input-bar {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: transparent;
+  border: none;
+}
+
+.minimal-mode .quick-actions {
+  display: none;
+}
+
+/* 简化标签页 */
+.minimal-mode .tab-nav {
+  padding: 0 var(--spacing-xl);
+  border: none;
+}
+
+.minimal-mode .tab-btn {
+  padding: var(--spacing-md) 0;
+  border-bottom: 2px solid transparent;
+}
+
+/* 简化卡片 */
+.minimal-mode .data-card {
+  border: none;
+  box-shadow: none;
+  padding: var(--spacing-lg) 0;
+}
+
+.minimal-mode .data-card-header {
+  border: none;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ========================================

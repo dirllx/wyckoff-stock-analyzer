@@ -11,6 +11,10 @@ export default defineConfig({
       }
     }
   },
+  esbuild: {
+    loader: 'js',
+    jsx: 'preserve'
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,

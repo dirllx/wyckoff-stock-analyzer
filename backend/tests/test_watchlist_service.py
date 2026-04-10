@@ -140,7 +140,9 @@ def test_favorite_stock(db_session):
     # 收藏为自选股
     result = service.favorite_stock("TEST001")
 
-    assert result is True
+    # 返回dict，不是bool
+    assert isinstance(result, dict)
+    assert result.get("success") is True
 
     # 验证已转换为自选股
     watchlist = service.get_watchlist(watch_type="favorite")

@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="/src/styles/settings.css">
   <link rel="stylesheet" href="/src/styles/health.css">
   <link rel="stylesheet" href="/src/styles/datasources.css">
+  <link rel="stylesheet" href="/src/styles/market.css">
   <link rel="stylesheet" href="/src/styles/patterns.css">
   <link rel="stylesheet" href="/src/styles/patterns-history.css">
   <link rel="stylesheet" href="/src/styles/notifications.css">
@@ -140,6 +141,7 @@
     <nav class="tab-nav">
       <button class="tab-btn active" data-tab="analysis">图表</button>
       <button class="tab-btn" data-tab="multi">多周期</button>
+      <button class="tab-btn" data-tab="market">行情</button>
       <button class="tab-btn" data-tab="watchlist">自选</button>
       <button class="tab-btn" data-tab="settings">设置</button>
       <button class="tab-btn" data-tab="datasources">数据源</button>
@@ -244,6 +246,11 @@
           </div>
         </div>
         <div id="multiTimeframe" class="multi-timeframe-panel"></div>
+      </section>
+
+      <!-- 行情看板标签页 -->
+      <section id="tab-market" class="tab-panel">
+        <div id="market-overview" class="market-overview-panel"></div>
       </section>
 
       <!-- 我的关注标签页 -->

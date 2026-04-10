@@ -10,5 +10,10 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: ['node_modules/', 'tests/']
     }
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
   }
 });

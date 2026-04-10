@@ -1221,31 +1221,11 @@ async def get_bulk_stock_quotes(
                         logger.info(f"✅ {code} {timeframe}分钟线MA值重新计算完成")
 
                 # ✅ 分钟线数据特殊处理：
-                # 需要获取足够数据来计算均线（至少5条用于MA5）
-                # 优先使用今天数据，不足时使用历史数据补充
+                # 确保返回足够的最新数据（尊重用户指定的limit参数）
                 if timeframe in ['1', '5', '15', '30', '60']:
-                    today = datetime.now().date()
-
-                    # 过滤出今天的数据
-                    today_quotes = [q for q in quotes if q.date.date() == today]
-
-                    if len(today_quotes) >= 5:
-                        # 今天数据充足，使用今天最新的5条
-                        quotes = today_quotes[-5:]
-                        logger.info(f"✅ {code} {timeframe}分钟线：今天数据充足，取最新{len(quotes)}条")
-                    else:
-                        # 今天数据不足，需要从历史数据补充
-                        # 获取更多历史数据来计算均线
-                        all_quotes = storage.get_quotes(code, timeframe, limit=20)
-
-                        if all_quotes and len(all_quotes) >= 5:
-                            # 使用最新的5条数据（可能包含历史数据）
-                            quotes = all_quotes[-5:]
-                            logger.info(f"✅ {code} {timeframe}分钟线：今天数据不足({len(today_quotes)}条)，使用最新{len(quotes)}条")
-                        else:
-                            # 数据库中数据也不足，使用可用数据
-                            quotes = all_quotes if all_quotes else quotes
-                            logger.warning(f"⚠️ {code} {timeframe}分钟线：数据不足，仅{len(quotes)}条")
+                    # 直接使用已获取的数据（已按日期升序排列，最新的在最后）
+                    # 数据已经在上面通过 storage.get_quotes() 获取，包含最新数据
+                    logger.info(f"✅ {code} {timeframe}分钟线：返回最新{len(quotes)}条数据")
 
                 # 使用简化评分规则（基于MA和成交量），不使用WyckoffAnalyzer（太慢）
                 quotes_dict = []

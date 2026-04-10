@@ -3,40 +3,6 @@
    ======================================== */
 
 /* ========================================
-   浅色主题（默认）
-   ======================================== */
-
-:root,
-[data-theme="light"] {
-  /* 主题色 */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #6366f1;
-
-  /* 背景色 */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-
-  /* 文本色 */
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-
-  /* 边框色 */
-  --border-color: #e5e7eb;
-  --border-hover: #d1d5db;
-
-  /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-/* ========================================
    深色主题
    ======================================== */
 
@@ -139,36 +105,6 @@
 [data-theme="dark"] .theme-toggle .moon-icon {
   opacity: 1;
   transform: rotate(0deg);
-}
-
-/* ========================================
-   系统主题检测
-   ======================================== */
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-primary: #60a5fa;
-    --color-primary-hover: #3b82f6;
-    --color-success: #34d399;
-    --color-warning: #fbbf24;
-    --color-error: #f87171;
-    --color-info: #818cf8;
-
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --bg-tertiary: #374151;
-
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-tertiary: #9ca3af;
-
-    --border-color: #374151;
-    --border-hover: #4b5563;
-
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  }
 }
 
 /* ========================================

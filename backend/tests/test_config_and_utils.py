@@ -131,7 +131,7 @@ def test_schemas_imports():
         MessageResponse
     )
 
-    # 验证可以创建实例
-    request = StockAnalysisRequest(code="TEST001", timeframe="daily")
-    assert request.code == "TEST001"
+    # 验证可以创建实例 - 使用有效的股票代码格式
+    request = StockAnalysisRequest(code="688234", timeframe="daily")
+    assert request.code == "688234"
     assert request.timeframe == "daily"

@@ -2,6 +2,7 @@
 测试数据库和配置
 """
 import pytest
+from datetime import datetime
 from app.database import get_db, init_db
 from app.models.database import Stock, StockQuote, WyckoffSignal
 from sqlalchemy import create_engine
@@ -54,7 +55,7 @@ def test_stock_quote_creation(in_memory_db):
     quote = StockQuote()
     quote.stock_id = stock.id
     quote.timeframe = "daily"
-    quote.date = "2024-01-01"
+    quote.date = datetime(2024, 1, 1)  # 使用datetime对象而不是字符串
     quote.open = 100.0
     quote.high = 105.0
     quote.low = 98.0
@@ -82,7 +83,7 @@ def test_wyckoff_signal_creation(in_memory_db):
     signal = WyckoffSignal()
     signal.stock_id = stock.id
     signal.timeframe = "daily"
-    signal.date = "2024-01-01"
+    signal.date = datetime(2024, 1, 1)  # 使用datetime对象而不是字符串
     signal.signal_type = "BREAKOUT"
     signal.direction = "LONG"
     signal.score = 4
@@ -110,7 +111,7 @@ def test_stock_relationships(in_memory_db):
         quote = StockQuote()
         quote.stock_id = stock.id
         quote.timeframe = "daily"
-        quote.date = f"2024-01-{i+1:02d}"
+        quote.date = datetime(2024, 1, i + 1)  # 使用datetime对象
         quote.close = 100.0 + i
         in_memory_db.add(quote)
 

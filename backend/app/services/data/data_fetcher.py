@@ -59,7 +59,7 @@ class DataFetcher:
             logger.info(f"获取{market}股票列表成功，共{len(df)}只股票")
             return df
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
             logger.error(f"获取股票列表失败: {e}")
             return pd.DataFrame()
 
@@ -91,7 +91,7 @@ class DataFetcher:
                             "market": "港股",
                             "industry": ""
                         }
-                except Exception as e:
+                except (ValueError, KeyError, IndexError, ConnectionError) as e:
                     logger.warning(f"获取港股{code}名称失败: {e}")
                 return {"code": code, "market": "港股", "name": "", "industry": ""}
 
@@ -132,8 +132,6 @@ class DataFetcher:
                         }
                 except Exception as e:
                     logger.warning(f"获取基金{code}信息失败: {e}")
-                # 如果获取失败，返回默认信息
-                return {"code": code, "market": "基金", "name": "", "industry": "ETF"}
 
             # 普通A股：0/3开头，或6开头但不是688（科创板已单独处理）
             elif code.startswith("0") or code.startswith("3") or \
@@ -171,7 +169,7 @@ class DataFetcher:
                             "market": "港股",
                             "industry": ""
                         }
-                except Exception as e:
+                except (ValueError, KeyError, IndexError, ConnectionError) as e:
                     logger.warning(f"获取港股{code}名称失败: {e}")
                 return {"code": code, "market": "港股", "name": "", "industry": ""}
             else:
@@ -180,7 +178,7 @@ class DataFetcher:
             logger.info(f"获取股票{code}信息成功: {info.get('name', 'N/A')}")
             return info
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
             logger.error(f"获取股票{code}信息失败: {e}")
             return {"code": code, "market": "未知", "name": "", "industry": ""}
 
@@ -329,7 +327,7 @@ class DataFetcher:
             logger.info(f"获取股票{code} K线数据成功，共{len(df)}条")
             return df
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
             logger.error(f"获取股票{code} K线数据失败: {e}")
             return pd.DataFrame()
 
@@ -409,10 +407,10 @@ class DataFetcher:
             logger.info(f"获取股票{code} {period}分钟线数据成功，共{len(df)}条")
             return df
 
-        except ValueError as e:
+        except ValueError:
             # 重新抛出ValueError，让上层处理
-            raise e
-        except Exception as e:
+            raise
+        except (KeyError, IndexError, ConnectionError, RuntimeError) as e:
             error_msg = str(e)
             if "不存在" in error_msg or "退市" in error_msg:
                 logger.error(f"股票{code}不存在或已退市，无法获取{period}分钟线数据")
@@ -450,6 +448,6 @@ class DataFetcher:
 
             return {}
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
             logger.error(f"获取股票{code}实时行情失败: {e}")
             return {}

@@ -71,6 +71,7 @@ def test_calculate_short_term_score(enhanced_scorer):
     df = pd.DataFrame({
         'close': [100 + i for i in range(50)],
         'volume': [1000000] * 50,
+        'volume_ma5': [1000000] * 50,
         'obv': [1000000 + i * 10000 for i in range(50)],
         'high': [105 + i for i in range(50)],
         'low': [98 + i for i in range(50)],
