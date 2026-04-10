@@ -43,7 +43,7 @@ class DataStorage:
                 stock.industry = stock_info.get("industry", "")
                 self.db.commit()
                 logger.info(f"更新股票信息: {code} - {stock.name}")
-            except Exception as e:
+            except (ValueError, KeyError, ConnectionError) as e:
                 logger.warning(f"获取股票信息失败: {e}")
 
         return stock
@@ -179,7 +179,7 @@ class DataStorage:
             logger.info(f"保存股票{code} K线数据成功，新增{saved_count}条，已重新计算均线")
             return saved_count
 
-        except Exception as e:
+        except (ValueError, KeyError, RuntimeError) as e:
             self.db.rollback()
             logger.error(f"保存股票{code} K线数据失败: {e}")
             return 0
@@ -356,9 +356,19 @@ class DataStorage:
             if timeframe in ["1", "5", "15", "30", "60"]:
                 logger.info(f"分钟线数据实时更新: {code} {timeframe}分钟")
 
-                # 获取最新的分钟线数据（获取足够的数据用于计算均线）
+                # 🔥 优化：只获取计算所需的数据，不获取过多历史数据
+                # 对于30分钟线，前端只显示MA5/10/15/20/60，不需要MA250
+                # MA60需要60条，MA120需要120条，取120条足够
+                # 30分钟线每天约8条（4小时×2条/小时），120条÷8≈15天
+
+                max_ma_period = 120  # 只计算到MA120，不计算MA250
+                trading_minutes_per_day = 8  # 每天8条30分钟线
+                days_needed = (max_ma_period / trading_minutes_per_day) + 5  # +5天余量
+
                 end_date = datetime.now().strftime("%Y-%m-%d")
-                start_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")  # 最近60天
+                start_date = (datetime.now() - timedelta(days=int(days_needed))).strftime("%Y-%m-%d")
+
+                logger.info(f"获取 {code} {timeframe}分钟线数据：{start_date} 到 {end_date} (约{int(days_needed)}天)")
 
                 # 先获取新数据，成功后再删除旧数据（避免获取失败导致数据丢失）
                 quotes_dict = scheduler.fetch_with_fallback(
@@ -473,6 +483,6 @@ class DataStorage:
             logger.info(f"✅ 股票{code} {timeframe}数据更新成功，新增{saved_count}条")
             return saved_count > 0
 
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
             logger.error(f"更新股票{code}数据失败: {e}")
             return False

@@ -1208,23 +1208,44 @@ async def get_bulk_stock_quotes(
                     })
                     continue
 
+                # ✅ 检查MA值是否已计算，如果没有则触发计算
+                if timeframe in ['1', '5', '15', '30', '60']:
+                    # 检查最新数据的MA值
+                    latest_quote = quotes[0] if quotes else None
+                    if latest_quote and latest_quote.ma5 is None:
+                        logger.info(f"⚠️ {code} {timeframe}分钟线MA值未计算，触发重新计算")
+                        # 触发重新计算（获取足够的数据并计算MA）
+                        storage.update_stock_quotes(code, timeframe)
+                        # 重新获取数据
+                        quotes = storage.get_quotes(code, timeframe, limit=limit)
+                        logger.info(f"✅ {code} {timeframe}分钟线MA值重新计算完成")
+
                 # ✅ 分钟线数据特殊处理：
-                # 1. 只返回今天的数据
-                # 2. 只返回最新的5条（关注列表只显示5笔）
+                # 需要获取足够数据来计算均线（至少5条用于MA5）
+                # 优先使用今天数据，不足时使用历史数据补充
                 if timeframe in ['1', '5', '15', '30', '60']:
                     today = datetime.now().date()
 
                     # 过滤出今天的数据
                     today_quotes = [q for q in quotes if q.date.date() == today]
 
-                    if today_quotes:
-                        # 只返回最新的5条
-                        quotes = today_quotes[-5:] if len(today_quotes) > 5 else today_quotes
-                        logger.info(f"✅ {code} {timeframe}分钟线：今天数据，取最新{len(quotes)}条")
+                    if len(today_quotes) >= 5:
+                        # 今天数据充足，使用今天最新的5条
+                        quotes = today_quotes[-5:]
+                        logger.info(f"✅ {code} {timeframe}分钟线：今天数据充足，取最新{len(quotes)}条")
                     else:
-                        # 如果今天没有数据，使用最新的5条数据
-                        quotes = quotes[-5:] if len(quotes) > 5 else quotes
-                        logger.warning(f"⚠️ {code} {timeframe}分钟线：今天无数据，使用最新{len(quotes)}条")
+                        # 今天数据不足，需要从历史数据补充
+                        # 获取更多历史数据来计算均线
+                        all_quotes = storage.get_quotes(code, timeframe, limit=20)
+
+                        if all_quotes and len(all_quotes) >= 5:
+                            # 使用最新的5条数据（可能包含历史数据）
+                            quotes = all_quotes[-5:]
+                            logger.info(f"✅ {code} {timeframe}分钟线：今天数据不足({len(today_quotes)}条)，使用最新{len(quotes)}条")
+                        else:
+                            # 数据库中数据也不足，使用可用数据
+                            quotes = all_quotes if all_quotes else quotes
+                            logger.warning(f"⚠️ {code} {timeframe}分钟线：数据不足，仅{len(quotes)}条")
 
                 # 使用简化评分规则（基于MA和成交量），不使用WyckoffAnalyzer（太慢）
                 quotes_dict = []

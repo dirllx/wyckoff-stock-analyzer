@@ -6326,14 +6326,30 @@
                 const bulkData = await bulkResponse.json();
                 const quotesFetchTime = (performance.now() - quotesFetchStart).toFixed(0);
 
+                // 🔍 调试信息：输出到页面日志
+                addLog('批量数据', `返回数量: ${bulkData.data?.length}`);
+                if (bulkData.data) {
+                    const codesWithData = bulkData.data.map(s => s.code).join(', ');
+                    addLog('有数据股票', codesWithData);
+                }
+
                 // 更新进度：获取行情数据完成
                 updateLoadingProgress(70, 2);
 
                 console.log('[refreshWatchlist] 批量API返回，周期:', timeframe, '股票数量:', bulkData.data?.length);
+                if (bulkData.data) {
+                    console.log('[refreshWatchlist] 批量API返回的股票代码:', bulkData.data.map(s => s.code).join(', '));
+                }
 
                 // 统计实际获取的数据量
                 let totalQuotes = 0;
                 const quotesListMap = {};  // 存储K线列表供详情弹窗使用
+
+                console.log('[refreshWatchlist] 批量API返回股票数量:', bulkData.data?.length);
+                console.log('[refreshWatchlist] 数据库返回股票数量:', data.items.length);
+
+                // 🔍 调试信息：输出到页面日志
+                addLog('数据库股票', `数量: ${data.items.length}, 代码: ${data.items.map(i => i.stock_code).join(', ')}`);
 
                 bulkData.data?.forEach(stock => {
                     totalQuotes += stock.quotes?.length || 0;
@@ -6345,9 +6361,31 @@
                     }
                 });
 
+                console.log('[refreshWatchlist] quotesListMap 包含的股票:', Object.keys(quotesListMap));
+                addLog('quotesListMap', `包含: ${Object.keys(quotesListMap).join(', ')}`);
+
+                // 检查是否有股票缺失数据
+                const missingStocks = [];
+                data.items.forEach(item => {
+                    if (!quotesListMap[item.stock_code]) {
+                        console.warn(`[refreshWatchlist] 股票 ${item.stock_code} 在 quotesListMap 中没有数据!`);
+                        missingStocks.push(item.stock_code);
+                    }
+                });
+
+                // 🔍 调试信息：输出缺失股票到页面日志
+                if (missingStocks.length > 0) {
+                    addLog('⚠️ 缺失数据', `股票: ${missingStocks.join(', ')}`);
+                } else {
+                    addLog('✅ 数据完整', '所有股票都有K线数据');
+                }
+
                 // 将批量数据转换为前端需要的格式
                 const quotes = data.items.map(item => {
                     const stockData = bulkData.data?.find(d => d.code === item.stock_code);
+                    if (!stockData) {
+                        console.warn(`[refreshWatchlist] 股票 ${item.stock_code} 在 bulkData.data 中未找到!`);
+                    }
                     if (stockData && stockData.quotes && stockData.quotes.length > 0) {
                         // 批量API返回的数据是从旧到新的，取最后一条作为最新数据
                         const latestQuote = stockData.quotes[stockData.quotes.length - 1];
@@ -6384,12 +6422,23 @@
                     }
                 });
 
-                quotes.forEach((quote, index) => {
-                    if (quote.current_quote) {
-                        watchlistData.quoteMap[data.items[index].stock_code] = quote.current_quote;
+                // 使用股票代码而不是索引来映射数据，避免错位
+                data.items.forEach((item, index) => {
+                    const quote = quotes[index];
+                    if (quote && quote.current_quote) {
+                        watchlistData.quoteMap[item.stock_code] = quote.current_quote;
                     }
-                    if (quote.analysis_summary) {
-                        watchlistData.quoteMap[data.items[index].stock_code + '_summary'] = quote.analysis_summary;
+                    if (quote && quote.analysis_summary) {
+                        watchlistData.quoteMap[item.stock_code + '_summary'] = quote.analysis_summary;
+                    }
+                    // 即使没有行情数据，也初始化空的summary
+                    if (!watchlistData.quoteMap[item.stock_code + '_summary']) {
+                        watchlistData.quoteMap[item.stock_code + '_summary'] = {
+                            score: 0,
+                            direction: 'NEUTRAL',
+                            confidence: 0,
+                            reason: '暂无数据'
+                        };
                     }
                 });
 
@@ -6494,7 +6543,18 @@
 
         // 应用排序和筛选
         function applySortAndFilter() {
+            const content = document.getElementById('watchlistContent');
             if (!watchlistData.items || watchlistData.items.length === 0) {
+                // 数据为空时显示提示，清除加载状态
+                if (content) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding: 60px; background: #1f2937; border-radius: 12px; border: 2px dashed #374151;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                            <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">暂无数据</div>
+                            <button class="btn btn-primary" onclick="refreshWatchlist()" style="margin-top: 12px;">刷新</button>
+                        </div>
+                    `;
+                }
                 return;
             }
 
@@ -6556,6 +6616,8 @@
 
             // 更新筛选后的列表
             watchlistData.filteredItems = filtered;
+
+            console.log(`[applySortAndFilter] 筛选完成: ${filtered.length}/${watchlistData.items.length} 只股票`);
 
             // 更新统计信息
             const statsEl = document.getElementById('filterStats');
@@ -7044,8 +7106,15 @@
 
                 // 检查数据是否已加载
                 if (!watchlistData.quotesListMap || Object.keys(watchlistData.quotesListMap).length === 0) {
-                    console.warn('[refreshWatchlistListView] 数据未加载，先刷新数据');
-                    await refreshWatchlist();
+                    console.warn('[refreshWatchlistListView] 数据未加载，显示空状态');
+                    content.innerHTML = `
+                        <div style="text-align:center; padding: 60px; background: #1f2937; border-radius: 12px; border: 2px dashed #374151;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                            <div style="color: #10b981; font-size: 16px; margin-bottom: 12px; font-weight: 600;">数据加载中，请稍候</div>
+                            <div style="color: #9ca3af; font-size: 12px;">如果长时间没有响应，请刷新页面</div>
+                            <button class="btn btn-primary" onclick="refreshWatchlist()" style="margin-top: 12px;">重新加载</button>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -7081,6 +7150,26 @@
                 const summaryMap = {};
                 const quotesListMap = watchlistData.quotesListMap || {};  // 复用批量API已获取的数据
 
+                console.log('[refreshWatchlistListView] 开始渲染，data.length:', data.length);
+                console.log('[refreshWatchlistListView] quotesListMap 包含的股票:', Object.keys(quotesListMap));
+
+                // 检查数据完整性
+                const missingData = [];
+                const hasData = [];
+                data.forEach(item => {
+                    if (!quotesListMap[item.stock_code]) {
+                        missingData.push(item.stock_code);
+                    } else {
+                        hasData.push(item.stock_code);
+                    }
+                });
+
+                // 🔍 调试信息：输出到页面日志
+                if (missingData.length > 0) {
+                    addLog('⚠️ 渲染缺失', `无数据: ${missingData.join(', ')}`);
+                }
+                addLog('📊 渲染统计', `总计${data.length}只, 有数据${hasData.length}只, 无数据${missingData.length}只`);
+
                 // 将数据分批，每批10只股票，避免服务器压力
                 const batchSize = 10;
                 for (let i = 0; i < data.length; i += batchSize) {
@@ -7094,14 +7183,6 @@
                             const quotes = quotesListMap[item.stock_code] || [];
                             if (quotes.length > 0) {
                                 const quoteIndex = quotes.length - 1 - currentWatchlistQuoteOffset;
-                                console.log(`[${item.stock_code}] 数据详情:`, {
-                                    总数据量: quotes.length,
-                                    当前偏移: currentWatchlistQuoteOffset,
-                                    计算索引: quoteIndex,
-                                    第一条日期: quotes[0]?.date,
-                                    最后一条日期: quotes[quotes.length - 1]?.date,
-                                    将要使用的数据: quotes[quoteIndex]?.date
-                                });
                                 if (quoteIndex >= 0 && quoteIndex < quotes.length) {
                                     quotesMap[item.stock_code] = quotes[quoteIndex];
                                 }
@@ -7117,8 +7198,17 @@
                     }));
                 }
 
-                // 保存K线数据供详情弹窗使用
-                watchlistData.quotesListMap = quotesListMap;
+                // 🔍 调试信息：检查 quotesMap 填充情况
+                const quotesWithQuote = Object.keys(quotesMap).length;
+                const quotesWithoutQuote = data.length - quotesWithQuote;
+                addLog('📝 quotesMap', `有数据${quotesWithQuote}只, 无数据${quotesWithoutQuote}只`);
+
+                if (quotesWithoutQuote > 0) {
+                    const noQuoteStocks = data.filter(item => !quotesMap[item.stock_code]).map(i => i.stock_code);
+                    addLog('⚠️ quotesMap空', `股票: ${noQuoteStocks.join(', ')}`);
+                }
+
+                // 注意：不要重新赋值 quotesListMap，使用 watchlistData.quotesListMap 中的数据
                 watchlistData.currentTimeframe = timeframe;
 
                 // 计算当前显示的时间点信息
@@ -7129,6 +7219,15 @@
                 const canGoForward = currentOffset > 0;
 
                 console.log('[表格渲染] 总数据:', totalQuotes, '当前偏移:', currentOffset, '当前索引:', currentIndex, '可后退:', canGoBack, '可前进:', canGoForward);
+
+                // 检测哪些MA列有数据（遍历所有股票的quote）
+                const hasMa15 = data.some(item => quotesMap[item.stock_code]?.ma15 != null);
+                const hasMa20 = data.some(item => quotesMap[item.stock_code]?.ma20 != null);
+                const hasMa30 = data.some(item => quotesMap[item.stock_code]?.ma30 != null);
+                const hasMa60 = data.some(item => quotesMap[item.stock_code]?.ma60 != null);
+                const hasDuokong = data.some(item => quotesMap[item.stock_code]?.duokong_line != null);
+
+                console.log('[表格列检测] MA15:', hasMa15, 'MA20:', hasMa20, 'MA30:', hasMa30, 'MA60:', hasMa60, '多空线:', hasDuokong);
 
                 // 渲染表格
                 let html = `
@@ -7152,8 +7251,11 @@
                                     <th style="min-width: 45px;">量能</th>
                                     <th style="min-width: 66px;">MA5</th>
                                     <th style="min-width: 66px;">MA10</th>
-                                    <th style="min-width: 66px;">MA15</th>
-                                    <th style="min-width: 66px;">多空线</th>
+                                    ${hasMa15 ? '<th style="min-width: 66px;">MA15</th>' : ''}
+                                    ${hasMa20 ? '<th style="min-width: 66px;">MA20</th>' : ''}
+                                    ${hasMa30 ? '<th style="min-width: 66px;">MA30</th>' : ''}
+                                    ${hasMa60 ? '<th style="min-width: 66px;">MA60</th>' : ''}
+                                    ${hasDuokong ? '<th style="min-width: 66px;">多空线</th>' : ''}
                                     <th style="min-width: 55px;">威(短)</th>
                                     <th style="min-width: 55px;">威(长)</th>
                                     <th style="min-width: 70px;">评分</th>
@@ -7166,6 +7268,13 @@
                 data.forEach(item => {
                     const quote = quotesMap[item.stock_code];
                     const summary = summaryMap[item.stock_code];
+
+                    // 🔍 调试：检查每只股票的数据
+                    if (!quote) {
+                        console.warn(`[表格渲染] ${item.stock_code} quote 为空!`);
+                    } else {
+                        console.log(`[表格渲染] ${item.stock_code} quote.close: ${quote.close}, quote.date: ${quote.date}`);
+                    }
 
                     // 从 scoresByOffset 中获取当前 offset 对应的评分
                     let score = 0;
@@ -7336,10 +7445,14 @@
 
                     // MA5显示 - 值和对比（一行显示）
                     let ma5Display = '-';
+                    let ma5Title = '';
                     if (quote && quote.ma5) {
                         const diff = quote.close ? ((quote.close - quote.ma5) / quote.ma5 * 100) : 0;
                         const sign = diff >= 0 ? '+' : '';
                         ma5Display = `${quote.ma5.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    } else if (quote) {
+                        ma5Display = '-';
+                        ma5Title = '数据不足（需要至少5期）';
                     }
 
                     // MA10显示 - 值和对比（一行显示）
@@ -7356,6 +7469,30 @@
                         const diff = quote.close ? ((quote.close - quote.ma15) / quote.ma15 * 100) : 0;
                         const sign = diff >= 0 ? '+' : '';
                         ma15Display = `${quote.ma15.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA20显示 - 值和对比（一行显示）
+                    let ma20Display = '-';
+                    if (quote && quote.ma20) {
+                        const diff = quote.close ? ((quote.close - quote.ma20) / quote.ma20 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma20Display = `${quote.ma20.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA30显示 - 值和对比（一行显示）
+                    let ma30Display = '-';
+                    if (quote && quote.ma30) {
+                        const diff = quote.close ? ((quote.close - quote.ma30) / quote.ma30 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma30Display = `${quote.ma30.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
+                    }
+
+                    // MA60显示 - 值和对比（一行显示）
+                    let ma60Display = '-';
+                    if (quote && quote.ma60) {
+                        const diff = quote.close ? ((quote.close - quote.ma60) / quote.ma60 * 100) : 0;
+                        const sign = diff >= 0 ? '+' : '';
+                        ma60Display = `${quote.ma60.toFixed(1)} / ${sign}${diff.toFixed(1)}%`;
                     }
 
                     // 多空线显示 - 只显示值
@@ -7377,6 +7514,9 @@
                     const ma5Color = getMaColor(quote?.ma5);
                     const ma10Color = getMaColor(quote?.ma10);
                     const ma15Color = getMaColor(quote?.ma15);
+                    const ma20Color = getMaColor(quote?.ma20);
+                    const ma30Color = getMaColor(quote?.ma30);
+                    const ma60Color = getMaColor(quote?.ma60);
 
                     // 简化量能显示 - emoji + 比率
                     let volSimpleDisplay = '-';
@@ -7406,10 +7546,13 @@
                             </td>
                             <td style="color: ${changeColor};">${changeDisplay}</td>
                             <td>${volSimpleDisplay}</td>
-                            <td style="color: ${ma5Color}; text-align: center;">${ma5Display}</td>
+                            <td style="color: ${ma5Color}; text-align: center;" ${ma5Title ? `title="${ma5Title}"` : ''}>${ma5Display}</td>
                             <td style="color: ${ma10Color}; text-align: center;">${ma10Display}</td>
-                            <td style="color: ${ma15Color}; text-align: center;">${ma15Display}</td>
-                            <td style="color: ${duokongColor}; text-align: center;">${duokongDisplay}</td>
+                            ${hasMa15 ? `<td style="color: ${ma15Color}; text-align: center;">${ma15Display}</td>` : ''}
+                            ${hasMa20 ? `<td style="color: ${ma20Color}; text-align: center;">${ma20Display}</td>` : ''}
+                            ${hasMa30 ? `<td style="color: ${ma30Color}; text-align: center;">${ma30Display}</td>` : ''}
+                            ${hasMa60 ? `<td style="color: ${ma60Color}; text-align: center;">${ma60Display}</td>` : ''}
+                            ${hasDuokong ? `<td style="color: ${duokongColor}; text-align: center;">${duokongDisplay}</td>` : ''}
                             <td style="text-align: center;">
                                 <span style="color: ${shortTermColor}; cursor: help;" data-tooltip="${shortTermTooltip}" onmouseover="showTooltip(event)" onmouseout="hideTooltip()">${shortTermDisplay}</span>
                             </td>
@@ -7454,6 +7597,7 @@
                     </div>
                 `;
 
+                console.log(`[refreshWatchlistListView] 渲染完成: ${data.length} 只股票`);
                 content.innerHTML = html;
                 addLog('列表视图渲染完成', `共 ${data.length} 只股票，周期: ${timeframe}`);
             } catch (error) {
