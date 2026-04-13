@@ -151,17 +151,18 @@ describe('KlineTable - 动态表头生成', () => {
     const quotes = [{ ma5: 10 }];
     const headers = KlineTable.generateHeaders(quotes);
 
+    // 基础列（与旧版本保持一致）
     expect(headers).toContain('日期');
     expect(headers).toContain('开');
     expect(headers).toContain('高');
     expect(headers).toContain('低');
     expect(headers).toContain('收');
-    expect(headers).toContain('涨跌幅');
-    expect(headers).toContain('信号强度');
     expect(headers).toContain('成交量');
-    expect(headers).toContain('MA状态');
-    expect(headers).toContain('量能');
-    expect(headers).toContain('方向');
+    expect(headers).toContain('MA5');
+    expect(headers).toContain('MA10');
+    // 信号列
+    expect(headers).toContain('信号');
+    // 威科夫阶段列
     expect(headers).toContain('阶段');
   });
 

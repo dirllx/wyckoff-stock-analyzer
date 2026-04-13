@@ -5,7 +5,7 @@
 .patterns-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -326,7 +326,7 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .patterns-container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
   }
 
   .patterns-header {

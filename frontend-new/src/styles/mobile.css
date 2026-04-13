@@ -1,0 +1,432 @@
+/* ========================================
+   移动端专用样式
+   ======================================== */
+
+/* 移动端断点 */
+@media (max-width: 768px) {
+  /* ========== 全局样式 ========== */
+
+  :root {
+    --mobile-safe-top: env(safe-area-inset-top, 0px);
+    --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --mobile-nav-height: 60px;
+    --mobile-status-height: 30px;
+  }
+
+  body {
+    padding-top: calc(var(--mobile-status-height) + var(--mobile-safe-top));
+    padding-bottom: calc(var(--mobile-nav-height) + var(--mobile-safe-bottom));
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  /* ========== 顶部状态栏 ========== */
+
+  .health-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--mobile-status-height);
+    background: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 9999;
+    padding-top: var(--mobile-safe-top);
+  }
+
+  .health-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+
+  .health-status-dot.healthy {
+    background: #10b981;
+  }
+
+  .health-status-dot.error {
+    background: #ef4444;
+  }
+
+  .health-status-dot.warning {
+    background: #f59e0b;
+  }
+
+  /* ========== 底部导航栏 ========== */
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--mobile-nav-height) + var(--mobile-safe-bottom));
+    background: #1f2937;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 8px;
+    padding-bottom: calc(8px + var(--mobile-safe-bottom));
+    border-top: 1px solid #374151;
+    z-index: 9998;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 20%;
+    height: 50px;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .bottom-nav-item.active {
+    color: #3b82f6;
+  }
+
+  .bottom-nav-item:active {
+    color: #60a5fa;
+  }
+
+  .bottom-nav-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  /* ========== 按钮尺寸规范 ========== */
+
+  /* 主要按钮 */
+  .btn-primary {
+    min-height: 60px;
+    min-width: 60px;
+    padding: 16px 32px;
+    font-size: 16px;
+  }
+
+  /* 次要按钮 */
+  .btn-secondary {
+    min-height: 50px;
+    min-width: 50px;
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
+  /* 图标按钮 */
+  .btn-icon {
+    min-width: 60px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 输入框 */
+  input[type="text"],
+  input[type="number"],
+  select {
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  /* ========== 列表项 ========== */
+
+  .stock-card,
+  .list-item {
+    min-height: 60px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    touch-action: pan-y;
+  }
+
+  /* ========== 间距规范 ========== */
+
+  .container {
+    padding: 16px;
+  }
+
+  .btn-group {
+    gap: 8px;
+  }
+
+  .card-group {
+    gap: 12px;
+  }
+
+  /* ========== 刷新按钮 ========== */
+
+  .refresh-button {
+    position: fixed;
+    top: calc(var(--mobile-status-height) + var(--mobile-safe-top) + 8px);
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #3b82f6;
+    border: none;
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9997;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .refresh-button:active {
+    transform: scale(0.95);
+  }
+
+  .refresh-button.spinning i::before {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ========== 下拉刷新提示 ========== */
+
+  .pull-to-refresh-indicator {
+    position: fixed;
+    top: calc(var(--mobile-status-height) + var(--mobile-safe-top));
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f2937;
+    color: #9ca3af;
+    font-size: 14px;
+    transform: translateY(-100%);
+    transition: transform 0.2s;
+    z-index: 9996;
+  }
+
+  .pull-to-refresh-indicator.visible {
+    transform: translateY(0);
+  }
+
+  /* ========== 隐藏桌面端元素 ========== */
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* ========== 单列布局 ========== */
+
+  .row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .col {
+    width: 100% !important;
+  }
+
+  /* ========== 表格横向滚动 ========== */
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrapper table {
+    min-width: 600px;
+  }
+
+  /* 滚动提示 */
+  .table-wrapper::after {
+    content: '→ 左右滑动查看更多';
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    background: rgba(31, 41, 55, 0.9);
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  /* ========== 图表容器 ========== */
+
+  .chart-container {
+    width: 100%;
+    height: 300px;
+    touch-action: none;
+  }
+
+  @media (orientation: landscape) {
+    .chart-container {
+      height: calc(100vh - var(--mobile-status-height) - var(--mobile-nav-height) - var(--mobile-safe-top) - var(--mobile-safe-bottom) - 32px);
+    }
+  }
+}
+
+/* ========== 桌面端隐藏移动端元素 ========== */
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+
+  .bottom-nav,
+  .health-status-bar,
+  .refresh-button {
+    display: none !important;
+  }
+
+  .offline-banner {
+    top: 0;
+  }
+}
+
+/* ========================================
+   响应式布局调整
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 主容器调整为单列 */
+  .main-container,
+  .container-fluid {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  /* 网格系统转为单列 */
+  .row {
+    flex-direction: column;
+  }
+
+  .col,
+  .col-1,
+  .col-2,
+  .col-3,
+  .col-4,
+  .col-5,
+  .col-6,
+  .col-7,
+  .col-8,
+  .col-9,
+  .col-10,
+  .col-11,
+  .col-12 {
+    width: 100% !important;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* 卡片布局 */
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* 标签页导航 */
+  .tab-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    flex-shrink: 0;
+    min-width: 80px;
+    min-height: 44px;
+  }
+
+  /* 表格响应式 */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  table th,
+  table td {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  /* 图表容器 */
+  .chart-wrapper {
+    height: 300px;
+  }
+
+  /* 分析结果卡片 */
+  .analysis-card {
+    margin-bottom: 12px;
+  }
+
+  .analysis-card .card-body {
+    padding: 12px;
+  }
+
+  /* 关注列表 */
+  .watchlist-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 表单元素 */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-control {
+    font-size: 16px; /* 防止iOS缩放 */
+    min-height: 50px;
+  }
+
+  /* 工具提示调整 */
+  .tooltip {
+    font-size: 12px;
+    max-width: 200px;
+  }
+
+  /* 离线横幅 */
+  .offline-banner {
+    position: fixed;
+    top: calc(var(--mobile-status-height) + var(--mobile-safe-top));
+    left: 0;
+    right: 0;
+    height: 44px;
+    background: #f59e0b;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9995;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .offline-banner.visible {
+    transform: translateY(0);
+  }
+}

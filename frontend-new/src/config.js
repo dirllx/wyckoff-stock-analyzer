@@ -11,7 +11,9 @@ import { logger } from './utils/logger.js';
 
 export const AppConfig = {
   // API 配置
-  API_BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  // 开发环境使用空字符串，通过 Vite 代理访问 /api/v1/*
+  // 生产环境需要配置完整的后端 URL
+  API_BASE: import.meta.env.VITE_API_BASE_URL || (import.meta.env.MODE === 'development' ? '' : 'http://localhost:8080'),
   API_TIMEOUT: 30000,
 
   // 调试模式
@@ -141,7 +143,16 @@ export const AppState = {
   watchlist: {
     items: [],
     loading: false,
-    error: null
+    error: null,
+    // 翻页状态
+    pagination: {
+      currentTab: 'favorite', // 'favorite' | 'browse'
+      currentTimeframe: 'daily', // 当前数据周期
+      currentOffset: 0, // 当前偏移量（0=最新，1=前一期，以此类推）
+      maxOffset: 10, // 最大偏移量（最多查看前10期）
+      quotesListMap: {}, // 存储K线列表 { stockCode: [quotes] }
+      scoresByOffset: {} // 存储评分数据 { stockCode: [scores] }
+    }
   },
 
   // 当前标签页
@@ -166,6 +177,9 @@ export const AppState = {
     main: null,
     volume: null
   },
+
+  // 虚拟滚动实例
+  virtualScroll: null,
 
   // 主题
   theme: localStorage.getItem(AppConfig.UI.THEME.STORAGE_KEY) || AppConfig.UI.THEME.DEFAULT,
@@ -305,6 +319,9 @@ export const Events = {
   WATCHLIST_REMOVE: 'watchlist:remove',
   WATCHLIST_UPDATE: 'watchlist:update',
   WATCHLIST_CHANGED: 'watchlist:changed',
+  WATCHLIST_VIEW_CHANGED: 'watchlist:view:changed',
+  WATCHLIST_PAGE_CHANGED: 'watchlist:page:changed',
+  WATCHLIST_TIMEFRAME_CHANGED: 'watchlist:timeframe:changed',
 
   // 图表事件
   CHART_READY: 'chart:ready',

@@ -12,12 +12,13 @@
 .signals-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .signals-stat-item {
@@ -56,20 +57,21 @@
 
 /* 信号卡片 */
 .signal-card {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  transition: all var(--transition-base);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
-  border-left: 3px solid var(--color-tertiary);
+  border-left: 4px solid var(--color-tertiary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .signal-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+  transform: translateY(-4px);
 }
 
 /* 根据方向设置左边框颜色 */
@@ -140,29 +142,29 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
   color: var(--text-tertiary);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-secondary);
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
 }
 
 .signals-empty-icon {
-  font-size: 48px;
-  margin-bottom: var(--spacing-md);
-  opacity: 0.5;
+  font-size: 64px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.4;
 }
 
 .signals-empty-text {
-  font-size: var(--font-size-base);
-  font-weight: 500;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
 }
 
 .signals-empty-hint {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--text-tertiary);
 }
 

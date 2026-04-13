@@ -381,6 +381,47 @@ export class StockChart {
       logger.debug('Chart resized', size);
     }
   }
+
+  /**
+   * 设置图表响应式调整（移动端兼容）
+   * @param {Object} chart - ECharts实例
+   * @param {HTMLElement} container - 图表容器
+   */
+  static setupResponsiveResize(chart, container) {
+    if (!chart || !container) return;
+
+    let resizeTimeout;
+    const resizeObserver = new ResizeObserver(() => {
+      // 防抖处理
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        chart.resize();
+        logger.debug('Chart resized due to container resize');
+      }, 100);
+    });
+
+    resizeObserver.observe(container);
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        chart.resize();
+        logger.debug('Chart resized due to window resize');
+      }, 100);
+    });
+
+    // 监听设备方向变化（移动端）
+    window.addEventListener('orientationchange', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        chart.resize();
+        logger.debug('Chart resized due to orientation change');
+      }, 200);
+    });
+
+    return resizeObserver;
+  }
 }
 
 export default StockChart;

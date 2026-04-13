@@ -139,7 +139,7 @@
 .quick-actions {
   display: flex;
   gap: var(--spacing-xs);
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-md) 0;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   overflow-x: auto;
@@ -330,7 +330,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-md) 0;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   margin-top: auto;
@@ -385,7 +385,7 @@
   }
 
   .quick-actions {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-sm) 0;
   }
 
   .chart-header {

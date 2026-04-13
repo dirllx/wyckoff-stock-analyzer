@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="version" content="20260403-0006">
+    <meta name="version" content="20260412-0001">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>威科夫股票分析系统</title>
+  <!-- 移动端适配 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#3b82f6">
+
+  <!-- PWA清单 -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+
     <script src="lightweight-charts.standalone.production.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -4271,7 +4283,7 @@
                 const analysisRes = await fetchWithRetry(`${API_BASE}/api/v1/stocks/analyze`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, timeframe })
+                    body: JSON.stringify({ code, timeframe, refresh: true })
                 }, 3, 1000, 60000);  // 60秒超时（需要更新数据和分析）
 
                 if (!analysisRes.ok) {
@@ -4773,7 +4785,7 @@
 
                         // 构建请求URL，如果选择了日期则添加end_date参数
                         let url = `${API_BASE}/api/v1/stocks/analyze`;
-                        const requestBody = { code, timeframe: tf };
+                        const requestBody = { code, timeframe: tf, refresh: true };
 
                         if (analysisDate) {
                             // 统一使用 ISO 8601 格式 (YYYY-MM-DD)
@@ -7779,7 +7791,7 @@
                     const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code, timeframe: 'daily' })
+                        body: JSON.stringify({ code, timeframe: 'daily', refresh: true })
                     });
                     const data = await response.json();
 
@@ -8527,7 +8539,7 @@
                         const response = await fetch(`${API_BASE}/api/v1/stocks/analyze`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ code: item.stock_code, timeframe: 'daily' })
+                            body: JSON.stringify({ code: item.stock_code, timeframe: 'daily', refresh: true })
                         });
 
                         if (!response.ok) {
@@ -11112,5 +11124,18 @@
 
     <!-- K线详情弹窗 -->
     <div id="quoteModal"></div>
+
+  <!-- Service Worker注册 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

@@ -56,10 +56,27 @@ export class VirtualScroll {
     this.container.style.overflow = 'auto';
     this.container.style.position = 'relative';
 
-    // 创建内容容器
-    this.contentEl = document.createElement('div');
-    this.contentEl.style.position = 'relative';
-    this.container.appendChild(this.contentEl);
+    // 查找table（单一table，thead用sticky固定）
+    const table = this.container.querySelector('.kline-table');
+    if (table) {
+      this.contentEl = table;
+      this.tbodyEl = table.querySelector('.virtual-tbody') || table.querySelector('tbody');
+      if (!this.tbodyEl) {
+        this.tbodyEl = document.createElement('tbody');
+        this.tbodyEl.className = 'virtual-tbody';
+        this.contentEl.appendChild(this.tbodyEl);
+      }
+    } else {
+      // 如果没有table，创建一个
+      this.contentEl = document.createElement('table');
+      this.contentEl.className = 'kline-table';
+      this.contentEl.style.cssText = 'width: 100%; max-width: 100%; border-collapse: collapse; font-size: 12px; table-layout: auto;';
+      this.container.appendChild(this.contentEl);
+
+      this.tbodyEl = document.createElement('tbody');
+      this.tbodyEl.className = 'virtual-tbody';
+      this.contentEl.appendChild(this.tbodyEl);
+    }
   }
 
   /**
@@ -68,21 +85,23 @@ export class VirtualScroll {
    */
   setData(data) {
     this.data = data || [];
-    this.containerHeight = this.container.clientHeight;
-
-    // 计算表头高度
-    this._updateHeader();
+    this.containerHeight = this.container.clientHeight || 600; // 默认高度防止为0
 
     // 重置滚动位置
     this.container.scrollTop = 0;
     this.visibleStart = 0;
 
-    // 设置总高度
+    // 设置总高度 - 使用tbody的最小高度来创建滚动空间
     const totalHeight = this.data.length * this.rowHeight;
-    this.contentEl.style.height = `${totalHeight}px`;
+    this.tbodyEl.style.minHeight = `${totalHeight}px`;
+    this.tbodyEl.style.height = 'auto';
 
-    // 渲染可见行
-    this._updateVisibleRows();
+    // 延迟渲染，确保DOM完成布局
+    requestAnimationFrame(() => {
+      // 重新获取容器高度
+      this.containerHeight = this.container.clientHeight || 600;
+      this._updateVisibleRows();
+    });
 
     logger.debug('VirtualScroll: data set', { count: this.data.length });
   }
@@ -137,14 +156,16 @@ export class VirtualScroll {
       html += this.renderRow(this.data[i], i);
     }
 
-    // 使用transform定位（比top性能更好）
-    this.contentEl.innerHTML = html;
-    this.contentEl.style.transform = `translateY(${start * this.rowHeight}px)`;
-    this.contentEl.style.height = `${(this.data.length - start) * this.rowHeight}px`;
+    // 渲染行
+    this.tbodyEl.innerHTML = html;
+
+    // 使用padding-top来定位（替代表格总高度）
+    this.tbodyEl.style.paddingTop = `${start * this.rowHeight}px`;
+    this.tbodyEl.style.boxSizing = 'border-box';
 
     // 绑定行点击事件
     if (this.onRowClick) {
-      const rows = this.contentEl.querySelectorAll('[data-index]');
+      const rows = this.tbodyEl.querySelectorAll('[data-index]');
       rows.forEach(row => {
         row.addEventListener('click', () => {
           const index = parseInt(row.dataset.index, 10);
@@ -160,7 +181,7 @@ export class VirtualScroll {
    * 处理容器大小变化
    */
   _handleResize() {
-    this.containerHeight = this.container.clientHeight;
+    this.containerHeight = this.container.clientHeight || 600;
     this._updateVisibleRows();
   }
 

@@ -72,6 +72,12 @@ const MinimalMode = {
  * @param {string} tabName - 标签页名称
  */
 function switchTab(tabName) {
+  // 移除所有Tab特定的布局类
+  document.body.classList.remove('layout-analyze', 'layout-multi', 'layout-watchlist', 'layout-config', 'layout-status');
+
+  // 添加当前Tab的布局类
+  document.body.classList.add(`layout-${tabName}`);
+
   // 更新标签按钮状态
   const buttons = DOM.tabNav.querySelectorAll('.tab-btn');
   buttons.forEach(btn => {
@@ -79,12 +85,15 @@ function switchTab(tabName) {
   });
 
   // 更新面板显示
-  const panels = document.querySelectorAll('.tab-panel');
+  const panels = document.querySelectorAll('.tab-content');
   panels.forEach(panel => {
     panel.classList.toggle('active', panel.id === `tab-${tabName}`);
   });
 
   logger.info(`Switched to tab: ${tabName}`);
+
+  // 触发Tab切换事件
+  eventBus.emit(Events.TAB_CHANGE, { tabName });
 }
 
 /**

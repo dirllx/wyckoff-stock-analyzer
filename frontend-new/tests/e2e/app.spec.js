@@ -15,8 +15,16 @@ test.describe('页面基础功能', () => {
     // 验证核心DOM元素
     await expect(page.locator('#stock-code')).toBeVisible();
     await expect(page.locator('#analyze-btn')).toBeVisible();
-    await expect(page.locator('#mainChart')).toBeVisible();
-    await expect(page.locator('#volumeChart')).toBeVisible();
+    // 图表元素在DOM中存在（但可能在隐藏的图表模式容器中）
+    await expect(page.locator('#mainChart')).toBeAttached();
+    await expect(page.locator('#volumeChart')).toBeAttached();
+    // 表格模式容器在DOM中存在（默认为空直到有数据）
+    await expect(page.locator('#tableMode')).toBeAttached();
+    // 图表模式容器默认隐藏
+    await expect(page.locator('#chartMode')).not.toBeVisible();
+    // 切换按钮存在
+    await expect(page.locator('#btnTable')).toBeVisible();
+    await expect(page.locator('#btnChart')).toBeVisible();
 
     // 验证无JS错误
     const errors = [];
@@ -55,26 +63,181 @@ test.describe('页面基础功能', () => {
   });
 });
 
-test.describe('标签导航', () => {
-  test('标签按钮存在且可切换', async ({ page }) => {
+test.describe('健康状态栏', () => {
+  test('健康状态栏显示在右上角', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // 查找标签按钮
-    const tabButtons = page.locator('.tab-btn, [data-tab]');
-    const tabCount = await tabButtons.count();
+    // 验证健康状态栏存在
+    const healthBar = page.locator('.health-status-bar');
+    await expect(healthBar).toBeVisible();
 
-    if (tabCount > 1) {
-      // 点击第二个标签
-      await tabButtons.nth(1).click();
+    // 验证位置是固定在右上角
+    const position = await healthBar.evaluate(el => {
+      const styles = getComputedStyle(el);
+      return {
+        position: styles.position,
+        top: styles.top,
+        right: styles.right
+      };
+    });
+    expect(position.position).toBe('fixed');
+    expect(position.top).toBe('0px');
+  });
 
-      // 验证标签状态变化
-      const isActive = await tabButtons.nth(1).evaluate(el =>
-        el.classList.contains('active') || el.getAttribute('aria-selected') === 'true'
-      );
-      // 标签切换行为可能不同，只验证不报错
-      expect(true).toBeTruthy();
-    }
+  test('健康状态指示器元素存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 验证系统状态
+    await expect(page.locator('#overallStatusDot')).toBeAttached();
+    await expect(page.locator('#overallStatusText')).toBeAttached();
+
+    // 验证数据库状态
+    await expect(page.locator('#dbStatusDot')).toBeAttached();
+    await expect(page.locator('#dbStatusText')).toBeAttached();
+
+    // 验证Redis状态
+    await expect(page.locator('#redisStatusDot')).toBeAttached();
+    await expect(page.locator('#redisStatusText')).toBeAttached();
+  });
+});
+
+test.describe('标签导航', () => {
+  test('五个标签按钮存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 验证5个标签按钮
+    await expect(page.locator('#tabAnalyze')).toBeVisible();
+    await expect(page.locator('#tabMulti')).toBeVisible();
+    await expect(page.locator('#btnWatchlist')).toBeVisible();
+    await expect(page.locator('#tabConfig')).toBeVisible();
+    await expect(page.locator('#tabStatus')).toBeVisible();
+  });
+
+  test('可以切换到多周期标签', async ({ page }) => {
+    await page.goto('/');
+
+    // 点击多周期标签
+    await page.locator('#tabMulti').click();
+    await page.waitForTimeout(200);
+
+    // 验证多周期内容区域显示
+    const multiContent = page.locator('#tab-multi');
+    await expect(multiContent).toHaveClass(/active/);
+  });
+
+  test('可以切换到我的关注标签', async ({ page }) => {
+    await page.goto('/');
+
+    // 点击我的关注标签
+    await page.locator('#btnWatchlist').click();
+    await page.waitForTimeout(200);
+
+    // 验证关注列表内容区域显示
+    const watchlistContent = page.locator('#tab-watchlist');
+    await expect(watchlistContent).toHaveClass(/active/);
+  });
+
+  test('可以切换到系统配置标签', async ({ page }) => {
+    await page.goto('/');
+
+    // 点击系统配置标签
+    await page.locator('#tabConfig').click();
+    await page.waitForTimeout(200);
+
+    // 验证配置内容区域显示
+    const configContent = page.locator('#tab-config');
+    await expect(configContent).toHaveClass(/active/);
+  });
+
+  test('可以切换到测试状态标签', async ({ page }) => {
+    await page.goto('/');
+
+    // 点击测试状态标签
+    await page.locator('#tabStatus').click();
+    await page.waitForTimeout(200);
+
+    // 验证状态内容区域显示
+    const statusContent = page.locator('#tab-status');
+    await expect(statusContent).toHaveClass(/active/);
+  });
+
+  test('默认日分析标签激活', async ({ page }) => {
+    await page.goto('/');
+
+    // 验证日分析标签是激活状态
+    await expect(page.locator('#tabAnalyze')).toHaveClass(/active/);
+    await expect(page.locator('#tab-analyze')).toHaveClass(/active/);
+  });
+});
+
+test.describe('多周期分析', () => {
+  test('多周期输入框和按钮存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 切换到多周期标签
+    await page.locator('#tabMulti').click();
+    await page.waitForTimeout(200);
+
+    // 验证元素存在
+    await expect(page.locator('#mtf-stock-code')).toBeVisible();
+    await expect(page.locator('#mtf-analyze-btn')).toBeVisible();
+    await expect(page.locator('#mtf-clear-btn')).toBeVisible();
+  });
+
+  test('多周期关注列表选择按钮存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 切换到多周期标签
+    await page.locator('#tabMulti').click();
+    await page.waitForTimeout(200);
+
+    // 验证关注列表选择按钮存在
+    await expect(page.locator('#mtf-watchlist-picker-btn')).toBeVisible();
+  });
+});
+
+test.describe('关注列表', () => {
+  test('关注列表容器和控件存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 切换到关注列表标签
+    await page.locator('#btnWatchlist').click();
+    await page.waitForTimeout(200);
+
+    // 验证容器存在
+    await expect(page.locator('#watchlist')).toBeAttached();
+
+    // 验证添加股票输入框和按钮
+    await expect(page.locator('#watchlist-code')).toBeVisible();
+    await expect(page.locator('#add-watchlist-btn')).toBeVisible();
+
+    // 验证操作按钮
+    await expect(page.locator('#batch-analyze-btn')).toBeVisible();
+    await expect(page.locator('#refresh-watchlist-btn')).toBeVisible();
+  });
+
+  test('自选股/浏览股子标签存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 切换到关注列表标签
+    await page.locator('#btnWatchlist').click();
+    await page.waitForTimeout(200);
+
+    // 验证子标签按钮存在
+    await expect(page.locator('#subtab-favorite')).toBeVisible();
+    await expect(page.locator('#subtab-browse')).toBeVisible();
+  });
+
+  test('周期选择器存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 切换到关注列表标签
+    await page.locator('#btnWatchlist').click();
+    await page.waitForTimeout(200);
+
+    // 验证周期选择器存在
+    await expect(page.locator('#watchlist-timeframe')).toBeVisible();
   });
 });
 
@@ -101,6 +264,13 @@ test.describe('股票分析流程', () => {
     expect(apiRequests.length).toBeGreaterThan(0);
   });
 
+  test('关注列表选择按钮存在', async ({ page }) => {
+    await page.goto('/');
+
+    // 验证关注列表选择按钮存在
+    await expect(page.locator('#watchlist-picker-btn')).toBeVisible();
+  });
+
   test('分析后加载指示器出现', async ({ page }) => {
     await page.goto('/');
 
@@ -117,18 +287,21 @@ test.describe('股票分析流程', () => {
     // loading状态可能很快消失，不强制要求
     expect(typeof hasLoading).toBe('boolean');
   });
-});
 
-test.describe('关注列表', () => {
-  test('关注列表容器存在', async ({ page }) => {
+  test('清空按钮存在且可点击', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
 
-    const watchlist = page.locator('#watchlist');
-    await expect(watchlist).toBeAttached();
+    // 验证清空按钮存在
+    await expect(page.locator('#clear-btn')).toBeVisible();
 
-    // 验证容器存在且在DOM中即可，内容可能为空
-    await expect(watchlist).toBeAttached();
+    // 输入内容后清空
+    await page.locator('#stock-code').fill('000001');
+    await page.locator('#clear-btn').click();
+    await page.waitForTimeout(100);
+
+    // 验证输入框已清空
+    const value = await page.locator('#stock-code').inputValue();
+    expect(value).toBe('');
   });
 });
 
@@ -185,163 +358,30 @@ test.describe('错误处理', () => {
   });
 });
 
-test.describe('极简模式', () => {
-  test('极简模式切换按钮存在', async ({ page }) => {
+test.describe('系统配置', () => {
+  test('系统配置各分区容器存在', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
 
-    const toggleBtn = page.locator('#minimal-mode-toggle');
-    await expect(toggleBtn).toBeVisible();
+    // 切换到系统配置标签
+    await page.locator('#tabConfig').click();
+    await page.waitForTimeout(200);
+
+    // 验证各配置分区容器存在
+    await expect(page.locator('#settings')).toBeAttached();
+    await expect(page.locator('#notifications')).toBeAttached();
+    await expect(page.locator('#risk')).toBeAttached();
   });
+});
 
-  test('点击切换按钮激活极简模式', async ({ page }) => {
+test.describe('测试状态', () => {
+  test('健康检查容器存在', async ({ page }) => {
     await page.goto('/');
 
-    // 确保初始状态不是极简模式
-    await page.evaluate(() => {
-      localStorage.removeItem('minimal_mode');
-      document.body.classList.remove('minimal-mode');
-    });
-    await page.reload();
+    // 切换到测试状态标签
+    await page.locator('#tabStatus').click();
+    await page.waitForTimeout(200);
 
-    // 使用编程方式点击按钮（更可靠）
-    await page.evaluate(() => {
-      const btn = document.getElementById('minimal-mode-toggle');
-      if (btn) btn.click();
-    });
-
-    // 等待模式切换
-    await page.waitForTimeout(500);
-
-    // 验证body有minimal-mode类
-    const hasMinimalClass = await page.evaluate(() =>
-      document.body.classList.contains('minimal-mode')
-    );
-    expect(hasMinimalClass).toBeTruthy();
-  });
-
-  test('极简模式样式表正确启用', async ({ page }) => {
-    await page.goto('/');
-
-    await page.evaluate(() => {
-      const btn = document.getElementById('minimal-mode-toggle');
-      if (btn) btn.click();
-    });
-    await page.waitForTimeout(500);
-
-    // 验证minimal.css样式表已启用
-    const minimalStyleEnabled = await page.evaluate(() => {
-      const link = document.getElementById('minimal-style');
-      return link && !link.disabled;
-    });
-    expect(minimalStyleEnabled).toBeTruthy();
-  });
-
-  test('极简模式隐藏非必要元素', async ({ page }) => {
-    await page.goto('/');
-
-    await page.evaluate(() => {
-      const btn = document.getElementById('minimal-mode-toggle');
-      if (btn) btn.click();
-    });
-    await page.waitForTimeout(500);
-
-    // 验证健康状态栏被隐藏
-    const healthBar = page.locator('.health-status-bar');
-    const healthBarHidden = await healthBar.evaluate(el =>
-      el.closest('body') && getComputedStyle(el).display === 'none'
-    ).catch(() => true);
-    expect(healthBarHidden).toBeTruthy();
-
-    // 验证快捷操作栏被隐藏
-    const quickActions = page.locator('.quick-actions');
-    const quickActionsHidden = await quickActions.evaluate(el =>
-      el.closest('body') && getComputedStyle(el).display === 'none'
-    ).catch(() => true);
-    expect(quickActionsHidden).toBeTruthy();
-
-    // 验证底部状态栏被隐藏
-    const footer = page.locator('.app-footer');
-    const footerHidden = await footer.evaluate(el =>
-      el.closest('body') && getComputedStyle(el).display === 'none'
-    ).catch(() => true);
-    expect(footerHidden).toBeTruthy();
-  });
-
-  test('极简模式状态持久化到localStorage', async ({ page }) => {
-    await page.goto('/');
-
-    await page.evaluate(() => {
-      const btn = document.getElementById('minimal-mode-toggle');
-      if (btn) btn.click();
-    });
-    await page.waitForTimeout(500);
-
-    // 验证localStorage已保存
-    const minimalModeStored = await page.evaluate(() =>
-      localStorage.getItem('minimal_mode') === 'true'
-    );
-    expect(minimalModeStored).toBeTruthy();
-
-    // 刷新页面验证状态保持
-    await page.reload();
-    await page.waitForLoadState('domcontentloaded');
-
-    const hasMinimalClass = await page.evaluate(() =>
-      document.body.classList.contains('minimal-mode')
-    );
-    expect(hasMinimalClass).toBeTruthy();
-  });
-
-  test('极简模式下核心功能仍然可用', async ({ page }) => {
-    await page.goto('/');
-
-    // 激活极简模式
-    await page.evaluate(() => {
-      localStorage.setItem('minimal_mode', 'true');
-    });
-    await page.reload();
-    await page.waitForTimeout(500);
-
-    // 验证核心元素仍然可见
-    await expect(page.locator('#stock-code')).toBeVisible();
-    await expect(page.locator('#analyze-btn')).toBeVisible();
-    await expect(page.locator('.tab-nav')).toBeVisible();
-  });
-
-  test('可以关闭极简模式', async ({ page }) => {
-    await page.goto('/');
-
-    // 先开启极简模式
-    await page.evaluate(() => {
-      localStorage.setItem('minimal_mode', 'true');
-    });
-    await page.reload();
-    await page.waitForTimeout(500);
-
-    // 验证已开启
-    const hasMinimalClassBefore = await page.evaluate(() =>
-      document.body.classList.contains('minimal-mode')
-    );
-    expect(hasMinimalClassBefore).toBeTruthy();
-
-    // 点击关闭
-    await page.evaluate(() => {
-      const btn = document.getElementById('minimal-mode-toggle');
-      if (btn) btn.click();
-    });
-    await page.waitForTimeout(500);
-
-    // 验证已关闭
-    const hasMinimalClassAfter = await page.evaluate(() =>
-      document.body.classList.contains('minimal-mode')
-    );
-    expect(hasMinimalClassAfter).toBeFalsy();
-
-    // 验证localStorage已更新
-    const minimalModeStored = await page.evaluate(() =>
-      localStorage.getItem('minimal_mode') === 'false'
-    );
-    expect(minimalModeStored).toBeTruthy();
+    // 验证健康检查容器存在
+    await expect(page.locator('#health')).toBeAttached();
   });
 });

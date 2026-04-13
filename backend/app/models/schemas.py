@@ -14,6 +14,7 @@ class StockAnalysisRequest(BaseModel):
     code: str = Field(..., description="股票代码", example="688234")
     timeframe: Optional[str] = Field("daily", description="时间周期", example="daily")
     end_date: Optional[str] = Field(None, description="分析截止日期 (YYYYMMDD格式)，不填则使用最新数据")
+    refresh: Optional[bool] = Field(False, description="是否强制刷新，绕过缓存")
 
     @validator('code')
     def validate_code(cls, v):
@@ -165,6 +166,7 @@ class StockAnalysisResponse(BaseModel):
     """股票分析完整响应"""
     stock: StockResponse
     current_quote: Optional[StockQuoteResponse]
+    klines: Optional[List[StockQuoteResponse]] = []  # K线数据列表
     signals: List[WyckoffSignalResponse]
     analysis_summary: dict
     from_cache: Optional[bool] = False  # 是否来自缓存

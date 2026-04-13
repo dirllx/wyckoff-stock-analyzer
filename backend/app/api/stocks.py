@@ -83,11 +83,12 @@ limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
 async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Session = Depends(get_db)):
     try:
         # ========== Redis缓存：先检查缓存 ==========
-        # 注意：如果指定了end_date，跳过缓存（因为缓存不包含日期信息）
+        # 注意：如果指定了end_date或refresh=True，跳过缓存
         cached_analysis = None
-        if not body.end_date:
+        if not body.end_date and not body.refresh:
             cached_analysis = get_cached_analysis(body.code, body.timeframe)
 
+        # 从缓存返回处理（提取为独立代码块，避免缓存过期时继续执行）
         if cached_analysis:
             # 检查缓存数据是否新鲜
             current_quote_dict = cached_analysis.get("current_quote")
@@ -103,6 +104,8 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             else:
                 logger.info(f"✅ 从缓存获取分析结果: {body.code} {body.timeframe}")
 
+        # 只有当缓存有效时才从缓存返回
+        if cached_analysis:
             # 从缓存返回时，仍然需要查询最近的信号
             repo = StockRepository(db)
             stock = repo.find_by_code(body.code)
@@ -150,9 +153,17 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
                     change_percent=change_percent
                 )
 
+            # 从数据库获取 K线数据
+            storage = DataStorage(db)
+            klines = storage.get_quotes(body.code, body.timeframe, limit=500)
+            klines_responses = [
+                StockQuoteResponse.model_validate(kline) for kline in klines
+            ] if klines else []
+
             return StockAnalysisResponse(
                 stock=stock,
                 current_quote=current_quote,
+                klines=klines_responses,
                 signals=[
                     WyckoffSignalResponse.model_validate(signal)
                     for signal in recent_signals
@@ -482,9 +493,15 @@ async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Sessio
             )
 
         # 构建响应
+        # 将 quotes 转换为响应格式
+        klines_responses = [
+            StockQuoteResponse.model_validate(quote) for quote in quotes
+        ] if quotes else []
+
         return StockAnalysisResponse(
             stock=stock,
             current_quote=current_quote_with_change,
+            klines=klines_responses,
             signals=[
                 WyckoffSignalResponse.model_validate(signal)
                 for signal in recent_signals
@@ -708,6 +725,12 @@ async def get_stock_quotes(
     默认返回数量：日线300笔，其他周期500笔
     """
     try:
+        # 重置会话状态（如果之前有失败的事务）
+        try:
+            db.rollback()
+        except Exception as e:
+            logger.warning(f"Failed to rollback transaction for stock {code}: {e}")
+
         # 根据时间周期设置默认limit
         if limit is None:
             limit = 300 if timeframe == "daily" else 500
@@ -906,18 +929,28 @@ async def get_stock_quotes(
             df = storage._calculate_indicators(df)
 
             for i, q in enumerate(quotes_obj):
-                q.ma5 = df.iloc[i]["ma5"]
-                q.ma10 = df.iloc[i]["ma10"]
-                q.ma15 = df.iloc[i]["ma15"]
-                q.ma20 = df.iloc[i]["ma20"]
-                q.ma30 = df.iloc[i]["ma30"]
-                q.ma60 = df.iloc[i]["ma60"]
-                q.ma90 = df.iloc[i]["ma90"]
-                q.ma120 = df.iloc[i]["ma120"]
-                q.ma250 = df.iloc[i]["ma250"]
-                q.volume_ma5 = df.iloc[i]["volume_ma5"]
-                q.obv = df.iloc[i]["obv"]
-                storage.db.add(q)
+                # 转换numpy类型为Python原生类型
+                def to_py_float(val):
+                    if val is None:
+                        return None
+                    if hasattr(val, 'dtype'):  # numpy类型
+                        return float(val)
+                    if hasattr(val, 'item'):  # numpy标量
+                        return val.item()
+                    return float(val) if not isinstance(val, str) else val
+
+                q.ma5 = to_py_float(df.iloc[i]["ma5"])
+                q.ma10 = to_py_float(df.iloc[i]["ma10"])
+                q.ma15 = to_py_float(df.iloc[i]["ma15"])
+                q.ma20 = to_py_float(df.iloc[i]["ma20"])
+                q.ma30 = to_py_float(df.iloc[i]["ma30"])
+                q.ma60 = to_py_float(df.iloc[i]["ma60"])
+                q.ma90 = to_py_float(df.iloc[i]["ma90"])
+                q.ma120 = to_py_float(df.iloc[i]["ma120"])
+                q.ma250 = to_py_float(df.iloc[i]["ma250"])
+                q.volume_ma5 = to_py_float(df.iloc[i]["volume_ma5"])
+                q.obv = to_py_float(df.iloc[i]["obv"])
+            # 批量提交所有更新（优化：减少数据库交互）
             storage.db.commit()
 
             # 重新从数据库读取（包含MA）

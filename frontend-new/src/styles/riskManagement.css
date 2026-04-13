@@ -1,28 +1,25 @@
 /**
- * 风险管理样式
+ * 风险管理样式 - 简洁紧凑版
  */
 
 .risk-container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-sm) 0;
 }
 
+/* 头部 - 紧凑 */
 .risk-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
   margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
 }
 
 .risk-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
@@ -32,45 +29,24 @@
   gap: var(--spacing-sm);
 }
 
-.risk-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.risk-btn-primary {
-  background: var(--color-primary);
-  color: white;
-}
-
-.risk-btn-primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.risk-btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.risk-btn-secondary:hover {
-  background: var(--bg-tertiary);
-}
-
+/* 内容区域 */
 .risk-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
+/* 风险区块 */
 .risk-section {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  transition: all 0.3s ease;
+}
+
+.risk-section:hover {
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .risk-section-title {
@@ -78,63 +54,78 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
-/* 风险配置表单 */
+.risk-section-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* 风险配置表单 - 紧凑行 */
 .risk-config-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .risk-field {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .risk-label {
+  min-width: 140px;
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-secondary);
 }
 
 .risk-input {
-  padding: var(--spacing-sm) var(--spacing-md);
+  flex: 1;
+  max-width: 200px;
+  padding: 10px 14px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: var(--font-size-base);
-  transition: border-color 0.2s;
+  font-size: var(--font-size-sm);
+  transition: all 0.25s ease;
 }
 
 .risk-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .risk-checkbox {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-  width: fit-content;
+  transition: all 0.25s ease;
 }
 
 .risk-checkbox:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.15);
 }
 
 .risk-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+  accent-color: var(--color-primary);
 }
 
 .risk-checkbox span {
@@ -143,140 +134,101 @@
   user-select: none;
 }
 
-/* 风险指标网格 */
+/* 风险指标 - 简洁网格 */
 .risk-indicators-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--spacing-md);
 }
 
 .risk-indicator-card {
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.05);
   border: 2px solid transparent;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.risk-indicator-card:hover {
+  transform: translateY(-2px);
 }
 
 .risk-indicator-card.risk-high {
-  border-color: var(--color-error);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .risk-indicator-card.risk-medium {
-  border-color: var(--color-warning);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .risk-indicator-card.risk-low {
-  border-color: var(--color-success);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .risk-indicator-icon {
-  font-size: 2rem;
-}
-
-.risk-indicator-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  font-size: 24px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .risk-indicator-name {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .risk-indicator-value {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
   color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .risk-indicator-level {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--text-secondary);
-}
-
-/* 风险历史列表 */
-.risk-history-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.risk-history-item {
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  transition: all 0.2s;
-}
-
-.risk-history-item:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.risk-history-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.risk-history-icon {
-  font-size: 1.5rem;
-}
-
-.risk-history-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.risk-history-title {
-  font-size: var(--font-size-base);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--text-primary);
 }
 
-.risk-history-details {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+.risk-indicator-card.risk-high .risk-indicator-level {
+  background: #ef4444;
+  color: white;
 }
 
-.risk-history-time {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
+.risk-indicator-card.risk-medium .risk-indicator-level {
+  background: #f59e0b;
+  color: white;
 }
 
-/* 空状态和错误状态 */
+.risk-indicator-card.risk-low .risk-indicator-level {
+  background: #10b981;
+  color: white;
+}
+
+/* 空状态 */
 .risk-empty,
 .risk-error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
+  border: 2px dashed rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
 }
 
 .risk-empty-icon,
 .risk-error-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .risk-empty-title,
@@ -284,18 +236,13 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
-.risk-empty p {
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-md);
-}
-
-/* 响应式设计 */
+/* 响应式 */
 @media (max-width: 768px) {
   .risk-container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
   }
 
   .risk-header {
@@ -308,20 +255,26 @@
     width: 100%;
   }
 
-  .risk-btn {
+  .risk-actions .btn {
     flex: 1;
   }
 
-  .risk-indicators-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .risk-history-header {
+  .risk-field {
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--spacing-sm);
   }
 
-  .risk-history-time {
-    align-self: flex-end;
+  .risk-label {
+    min-width: 0;
+  }
+
+  .risk-input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .risk-indicators-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

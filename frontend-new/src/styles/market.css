@@ -6,7 +6,7 @@
 .market-overview-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
 }
 
 /* 头部 */
@@ -70,7 +70,7 @@
 .market-section {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) 0;
   margin-bottom: var(--spacing-md);
 }
 

@@ -4,6 +4,7 @@ export default defineConfig({
   server: {
     port: 3001,
     host: true,
+    strictPort: true,  // 强制使用3001端口
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

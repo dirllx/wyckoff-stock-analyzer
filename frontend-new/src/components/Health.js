@@ -12,7 +12,7 @@ export class Health {
    * @param {Object} testData - 测试数据
    * @returns {string} HTML字符串
    */
-  static generateHealthHTML(healthData = {}, testData = {}) {
+  static generateHealthHTML(healthData = {}, testData = null) {
     const {
       status = 'unknown',
       timestamp = new Date().toISOString(),
@@ -20,13 +20,22 @@ export class Health {
       version = 'unknown'
     } = healthData;
 
+    // 处理testData为null的情况
+    const testSafeData = testData || {
+      total_tests: 0,
+      passed_tests: 0,
+      failed_tests: 0,
+      last_run: null,
+      test_results: []
+    };
+
     const {
       total_tests = 0,
       passed_tests = 0,
       failed_tests = 0,
       last_run = null,
       test_results = []
-    } = testData;
+    } = testSafeData;
 
     const statusColor = this.getStatusColor(status);
     const statusIcon = this.getStatusIcon(status);
@@ -279,10 +288,15 @@ export class Health {
     try {
       logger.info('Refreshing health status...');
 
-      const [healthData, testData] = await Promise.all([
-        healthApi.getHealthStatus(),
-        healthApi.getTestStatus()
-      ]);
+      const healthData = await healthApi.getHealthStatus();
+
+      // 尝试获取测试状态
+      let testData = null;
+      try {
+        testData = await healthApi.getTestStatus();
+      } catch (e) {
+        logger.debug('Test status not available');
+      }
 
       this.render('health', healthData, testData);
 

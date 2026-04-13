@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug API</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    .success { background: #d4edda; }
+    .error { background: #f8d7da; }
+    button { padding: 10px 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>API Debug Tool</h1>
+  <button onclick="testAPI()">Test API</button>
+  <div id="result"></div>
+
+  <script>
+    async function testAPI() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<div class="test">Testing...</div>';
+
+      const tests = [
+        {
+          name: 'Direct Backend (8080)',
+          url: 'http://localhost:8080/api/v1/stocks/analyze',
+          body: { code: '000001', timeframe: 'daily' }
+        },
+        {
+          name: 'Via Vite Proxy (3001)',
+          url: '/api/v1/stocks/analyze',
+          body: { code: '000001', timeframe: 'daily' }
+        }
+      ];
+
+      for (const test of tests) {
+        try {
+          const response = await fetch(test.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(test.body)
+          });
+
+          const data = await response.json();
+          const stockName = data.stock?.name || 'Unknown';
+          const closePrice = data.current_quote?.close || 'N/A';
+
+          resultDiv.innerHTML += `
+            <div class="test success">
+              <strong>${test.name}</strong>: ✅ Success<br>
+              Stock: ${stockName}, Close: ${closePrice}
+            </div>
+          `;
+        } catch (error) {
+          resultDiv.innerHTML += `
+            <div class="test error">
+              <strong>${test.name}</strong>: ❌ Failed<br>
+              Error: ${error.message}
+            </div>
+          `;
+        }
+      }
+    }
+  </script>
+</body>
+</html>

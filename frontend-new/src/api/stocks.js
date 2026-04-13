@@ -27,13 +27,15 @@ export const stocksApi = {
   },
 
   // 分析股票
-  async analyze(code, endDate = null, timeframe = 'daily') {
+  async analyze(code, endDate = null, timeframe = 'daily', refresh = false) {
     try {
-      Logger.debug('Analyzing stock', { code, endDate, timeframe });
+      Logger.debug('Analyzing stock', { code, endDate, timeframe, refresh });
+      console.log('🔍 分析股票:', { code, endDate, timeframe, refresh }); // 调试日志
 
       const data = {
         code,
-        timeframe
+        timeframe,
+        refresh  // 添加refresh参数以绕过缓存
       };
 
       if (endDate) {
@@ -43,6 +45,12 @@ export const stocksApi = {
       const result = await apiClient.post('/api/v1/stocks/analyze', data);
 
       Logger.info('Stock analyzed successfully');
+
+      // 调试：检查返回的市场阶段
+      console.log('✅ API返回:', {
+        phase: result.analysis_summary?.wyckoff_phase,
+        from_cache: result.from_cache
+      });
 
       // 返回完整的结果对象（包含stock, current_quote, signals等）
       return result;
@@ -88,6 +96,26 @@ export const stocksApi = {
       return result;
     } catch (error) {
       Logger.error('Failed to batch analyze', error);
+      throw error;
+    }
+  },
+
+  // 批量获取K线数据（用于关注列表）
+  async getBulkQuotes(stockCodes, timeframe = 'daily', limit = 10) {
+    try {
+      Logger.debug('Fetching bulk quotes', { stockCodes, timeframe, limit });
+
+      const result = await apiClient.post('/api/v1/bulk-quotes', {
+        codes: stockCodes,
+        timeframe,
+        limit
+      });
+
+      Logger.info('Bulk quotes fetched successfully', { count: stockCodes.length });
+
+      return result;
+    } catch (error) {
+      Logger.error('Failed to fetch bulk quotes', error);
       throw error;
     }
   }

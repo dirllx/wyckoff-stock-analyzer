@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Test</title>
+</head>
+<body>
+  <h1>Simple API Test</h1>
+  <div id="result"></div>
+
+  <script>
+    async function testAPI() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<p>Testing...</p>';
+
+      try {
+        // 测试直接连接后端
+        resultDiv.innerHTML += '<p>1. Testing direct backend connection...</p>';
+        const response1 = await fetch('http://localhost:8080/api/v1/stocks/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: '000001', timeframe: 'daily' })
+        });
+        const data1 = await response1.json();
+        resultDiv.innerHTML += `<p>✅ Direct connection: ${data1.stock?.code}, Close: ${data1.current_quote?.close}</p>`;
+
+        // 测试通过 Vite 代理
+        resultDiv.innerHTML += '<p>2. Testing Vite proxy connection...</p>';
+        const response2 = await fetch('/api/v1/stocks/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: '000001', timeframe: 'daily' })
+        });
+        const data2 = await response2.json();
+        resultDiv.innerHTML += `<p>✅ Proxy connection: ${data2.stock?.code}, Close: ${data2.current_quote?.close}</p>`;
+
+        resultDiv.innerHTML += '<p><strong>🎉 All tests passed!</strong></p>';
+      } catch (error) {
+        resultDiv.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+        console.error(error);
+      }
+    }
+
+    // 页面加载完成后自动测试
+    window.addEventListener('DOMContentLoaded', testAPI);
+  </script>
+</body>
+</html>

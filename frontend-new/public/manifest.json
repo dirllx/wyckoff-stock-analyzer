@@ -1,0 +1,42 @@
+{
+  "name": "威克夫股票分析",
+  "short_name": "威克夫",
+  "description": "威科夫技术分析工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "分析股票",
+      "short_name": "分析",
+      "description": "快速分析股票",
+      "url": "/#chart",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "关注列表",
+      "short_name": "关注",
+      "description": "查看关注列表",
+      "url": "/#watchlist",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

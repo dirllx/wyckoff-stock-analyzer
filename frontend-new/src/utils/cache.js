@@ -156,6 +156,50 @@ export class ApiCache {
       defaultTTL: this.defaultTTL
     };
   }
+
+  /**
+   * 按模式清除缓存
+   * @param {string} pattern - URL模式，支持通配符*
+   */
+  clearByPattern(pattern) {
+    const keys = Array.from(this.cache.keys());
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+
+    let cleared = 0;
+    keys.forEach(key => {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+        cleared++;
+      }
+    });
+
+    logger.debug(`Cleared ${cleared} cache entries matching pattern: ${pattern}`);
+    return cleared;
+  }
+
+  /**
+   * 清除指定页面的所有缓存
+   * @param {string} page - 页面名称
+   */
+  clearPageCache(page) {
+    const patterns = {
+      chart: ['/api/v1/stocks/.*/quotes.*', '/api/v1/stocks/.*/analysis.*'],
+      watchlist: ['/api/v1/watchlist.*'],
+      multi: ['/api/v1/stocks/.*/multi.*'],
+      logs: [],
+      settings: ['/api/v1/settings.*']
+    };
+
+    const pagePatterns = patterns[page] || [];
+    let totalCleared = 0;
+
+    pagePatterns.forEach(pattern => {
+      totalCleared += this.clearByPattern(pattern);
+    });
+
+    logger.info(`Cleared ${totalCleared} cache entries for page: ${page}`);
+    return totalCleared;
+  }
 }
 
 // 导出默认实例

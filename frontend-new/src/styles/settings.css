@@ -1,28 +1,24 @@
 /**
- * 系统设置样式
+ * 系统设置样式 - 简洁紧凑版
  */
 
 .settings-container {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-sm) 0;
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
+  padding: var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-md);
 }
 
 .settings-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
@@ -32,45 +28,23 @@
   gap: var(--spacing-sm);
 }
 
-.settings-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.settings-btn-primary {
-  background: var(--color-primary);
-  color: white;
-}
-
-.settings-btn-primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.settings-btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.settings-btn-secondary:hover {
-  background: var(--bg-tertiary);
-}
-
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
+/* 紧凑的设置区块 */
 .settings-section {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  transition: all 0.3s ease;
+}
+
+.settings-section:hover {
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .settings-section-title {
@@ -78,8 +52,20 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
+.settings-section-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* 表单行 */
 .settings-form {
   display: flex;
   flex-direction: column;
@@ -88,11 +74,12 @@
 
 .settings-field {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .settings-label {
+  min-width: 120px;
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-secondary);
@@ -100,50 +87,52 @@
 
 .settings-input,
 .settings-select {
-  padding: var(--spacing-sm) var(--spacing-md);
+  flex: 1;
+  padding: 10px 14px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: var(--font-size-base);
-  transition: border-color 0.2s;
+  font-size: var(--font-size-sm);
+  transition: all 0.25s ease;
 }
 
 .settings-input:focus,
 .settings-select:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-.settings-input::placeholder {
-  color: var(--text-tertiary);
-}
-
+/* 复选框组 - 横向紧凑 */
 .settings-checkbox-group {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .settings-checkbox {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
 
 .settings-checkbox:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 .settings-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+  accent-color: var(--color-primary);
 }
 
 .settings-checkbox span {
@@ -152,58 +141,36 @@
   user-select: none;
 }
 
-.settings-range {
-  width: 100%;
-  margin-bottom: var(--spacing-xs);
-}
-
-.settings-range-value {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-primary);
-}
-
-.settings-hint {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  margin-top: var(--spacing-xs);
-  display: block;
-}
-
-.settings-hint span {
-  color: var(--color-primary);
-  font-weight: 500;
-}
-
+/* 空状态 */
 .settings-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
-  background: var(--bg-primary);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
+  border: 2px dashed rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
 }
 
 .settings-empty-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .settings-empty-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
-/* 响应式设计 */
+/* 响应式 */
 @media (max-width: 768px) {
   .settings-container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
   }
 
   .settings-header {
@@ -216,15 +183,31 @@
     width: 100%;
   }
 
-  .settings-btn {
+  .settings-actions .btn {
     flex: 1;
+  }
+
+  .settings-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .settings-label {
+    min-width: 0;
+  }
+
+  .settings-input,
+  .settings-select {
+    width: 100%;
   }
 
   .settings-checkbox-group {
     flex-direction: column;
   }
 
-  .settings-section {
-    padding: var(--spacing-md);
+  .settings-checkbox {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

@@ -40,7 +40,6 @@
   --z-modal: 500;
   --z-tooltip: 700;
 }
-}
 
 /* ========================================
    深色模式基础
@@ -268,7 +267,7 @@ body {
    ======================================== */
 
 .tab-content {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-md);
 }
 
 .tab-panel {
@@ -297,23 +296,27 @@ body {
 
 .analysis-layout {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: var(--spacing-xl);
+  grid-template-columns: 1fr 350px;
+  gap: var(--spacing-lg);
+  width: 100%;
 }
 
 .chart-area {
   min-width: 0;
+  width: 100%;
 }
 
 .chart-container {
   width: 100%;
-  height: 420px;
+  height: 100%;
+  min-height: 450px;
   background: var(--gradient-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   box-shadow: var(--shadow-lg);
   transition: box-shadow var(--transition-base);
+  box-sizing: border-box;
 }
 
 .chart-container:hover {
@@ -370,9 +373,10 @@ body {
   background: var(--gradient-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 0;
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 /* ========================================
@@ -493,15 +497,15 @@ body {
 
 @media (max-width: 768px) {
   .tab-content {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
   }
 
   .app-header {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
   }
 
   .stock-input-bar {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 0;
     flex-wrap: wrap;
   }
 
@@ -510,7 +514,7 @@ body {
   }
 
   .tab-nav {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-sm) 0;
   }
 
   .tab-btn {
@@ -527,7 +531,7 @@ body {
   }
 
   .data-card {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-sm);
   }
 }
 
@@ -695,3 +699,458 @@ body {
 .bg-primary { background: var(--bg-primary); }
 .bg-secondary { background: var(--bg-secondary); }
 .bg-tertiary { background: var(--bg-tertiary); }
+
+/* ========================================
+   Tooltip 提示框样式
+   ======================================== */
+
+.wyckoff-tooltip {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  max-width: 300px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.wyckoff-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wyckoff-tooltip .tooltip-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.wyckoff-tooltip .tooltip-line {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  margin-bottom: 2px;
+}
+
+.wyckoff-tooltip .tooltip-line:last-child {
+  margin-bottom: 0;
+}
+
+/* Tooltip 目标元素样式 */
+.tooltip-target {
+  cursor: help;
+  position: relative;
+}
+
+.tooltip-target[data-tooltip]:hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-primary);
+  opacity: 0.5;
+}
+
+/* 信号强度条样式 */
+.signal-strength {
+  display: inline-block;
+  cursor: help;
+}
+
+.signal-strength-bar {
+  transition: all 0.2s ease;
+}
+
+.signal-strength:hover .signal-strength-bar {
+  transform: scaleY(1.2);
+}
+
+/* 表格单元格tooltip */
+.tooltip-cell {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-cell:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ========================================
+   图表显示修复 - 确保完整显示
+   ======================================== */
+
+/* 图表容器修复 */
+.chart-area {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#mainChart,
+#volumeChart {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 300px;
+}
+
+.chart-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 表格横向滚动修复 */
+.kline-table-area table {
+  min-width: 100%;
+  width: max-content;
+}
+
+/* 分析布局修复 */
+.analysis-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--spacing-xl);
+  min-height: 500px;
+}
+
+@media (max-width: 1024px) {
+  .analysis-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   图表区域布局修复
+   ======================================== */
+
+.chart-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+
+.chart-header {
+  flex-shrink: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.chart-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0;
+}
+
+.chart-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.chart-control-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chart-control-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.chart-control-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+#mainChart.chart-container {
+  flex: 1;
+  min-height: 450px !important;
+  max-height: 500px;
+  width: 100%;
+  padding: var(--spacing-sm) !important;
+}
+
+#volumeChart.chart-container {
+  flex: 0 0 auto;
+  height: 150px !important;
+  min-height: 150px !important;
+  max-height: 150px;
+  width: 100%;
+  padding: var(--spacing-sm) !important;
+}
+
+/* 确保图表内容填充容器 */
+#mainChart.chart-container > div,
+#volumeChart.chart-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ========================================
+   增强分析结果样式
+   ======================================== */
+
+.analysis-result-full {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.analysis-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+}
+
+.analysis-section h5 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 股票基本信息 */
+.stock-basic-info {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: white;
+}
+
+.stock-name {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+.stock-code {
+  font-size: var(--font-size-base);
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.price-info {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.current-price {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.price-change {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.price-details {
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+}
+
+/* 威科夫分析 */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.analysis-item .label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.analysis-item .value {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.phase-A, .phase-SC, .phase-AR { color: #10b981; }
+.phase-D, .phase-DS { color: #ef4444; }
+.phase-unknown { color: var(--text-secondary); }
+
+.direction-long { color: #10b981; }
+.direction-short { color: #ef4444; }
+.direction-neutral { color: var(--text-secondary); }
+
+.score-up { color: #10b981; }
+.score-down { color: #ef4444; }
+
+.suggestion-buy { color: #10b981; }
+.suggestion-sell { color: #ef4444; }
+.suggestion-hold { color: #f59e0b; }
+
+.analysis-reason {
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* 技术指标 */
+.ma-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.ma-item {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.ma-item.ma-up {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.ma-item.ma-down {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* 信号历史 */
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.signal-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid;
+}
+
+.signal-item.signal-long {
+  border-left-color: #10b981;
+}
+
+.signal-item.signal-short {
+  border-left-color: #ef4444;
+}
+
+.signal-item.signal-neutral {
+  border-left-color: var(--text-secondary);
+}
+
+.signal-date {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.signal-info {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.signal-direction-small {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.signal-item.signal-long .signal-direction-small {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.signal-item.signal-short .signal-direction-small {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.signal-score {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.signal-suggestion {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   移动端按钮尺寸优化
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 所有按钮最小尺寸 */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 主要按钮更大 */
+  .btn-primary,
+  .btn-analyze,
+  #analyze-btn {
+    min-height: 60px;
+    min-width: 60px;
+    padding: 16px 32px;
+    font-size: 16px;
+  }
+
+  /* 图标按钮 */
+  .btn-icon,
+  button[aria-label*="icon"] {
+    min-width: 50px;
+    min-height: 50px;
+  }
+
+  /* 关注列表卡片 */
+  .stock-card {
+    min-height: 60px;
+    padding: 12px 16px;
+  }
+}

@@ -366,7 +366,7 @@ def favorite_stock(code: str, db: Session = Depends(get_db)):
 @router.delete("/favorite/{code}")
 def unfavorite_stock(code: str, db: Session = Depends(get_db)):
     """
-    取消收藏自选股
+    取消收藏自选股（转为浏览股）
 
     Args:
         code: 股票代码
@@ -377,14 +377,15 @@ def unfavorite_stock(code: str, db: Session = Depends(get_db)):
     """
     try:
         service = WatchlistService(db)
-        success = service.unfavorite_stock(code)
+        result = service.unfavorite_stock(code)
 
-        if success:
-            return MessageResponse(
-                message=f"股票{code}已从自选股移除"
-            )
+        if result["success"]:
+            return MessageResponse(message=result["message"])
         else:
-            raise HTTPException(status_code=404, detail=f"股票{code}未找到")
+            if result.get("action") == "not_found":
+                raise HTTPException(status_code=404, detail=result.get("message", "股票未找到"))
+            else:
+                raise HTTPException(status_code=400, detail=result.get("message", "操作失败"))
 
     except HTTPException:
         raise

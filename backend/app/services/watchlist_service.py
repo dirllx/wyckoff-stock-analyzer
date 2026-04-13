@@ -320,16 +320,63 @@ class WatchlistService:
             self.db.rollback()
             return {"success": False, "action": "error", "message": str(e)}
 
-    def unfavorite_stock(self, code: str) -> bool:
+    def unfavorite_stock(self, code: str) -> dict:
         """
-        将自选股取消收藏（删除）
+        将自选股转为浏览股（取消收藏）
+
+        逻辑：
+        - 如果股票在自选股中，转换为浏览股
+        - 如果股票不在自选股中，返回not_found
 
         Args:
             code: 股票代码
 
         Returns:
-            是否取消成功
+            dict: {"success": bool, "action": str, "message": str}
         """
-        # 取消收藏就是删除自选股记录
-        return self.remove_from_watchlist(code)
+        try:
+            # 查找自选股记录
+            favorite_item = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_code == code,
+                UserStockWatch.watch_type == "favorite"
+            ).first()
+
+            if not favorite_item:
+                logger.warning(f"股票{code}不在自选股列表中")
+                return {"success": False, "action": "not_found", "message": "股票不在自选股中"}
+
+            # 检查是否已在浏览股中
+            existing_browse = self.db.query(UserStockWatch).filter(
+                UserStockWatch.stock_code == code,
+                UserStockWatch.watch_type == "browse"
+            ).first()
+
+            if existing_browse:
+                logger.info(f"股票{code}已在浏览股列表中，删除自选股记录")
+                # 删除自选股记录
+                self.db.delete(favorite_item)
+                self.db.commit()
+                return {
+                    "success": True,
+                    "action": "already_exists",
+                    "message": f"股票{code}已在浏览股中，已删除自选股记录"
+                }
+
+            # 转换为浏览股
+            favorite_item.watch_type = "browse"
+            favorite_item.priority = 0
+            favorite_item.updated_at = datetime.now()
+
+            self.db.commit()
+            logger.info(f"股票{code}已从自选股转为浏览股")
+            return {
+                "success": True,
+                "action": "converted",
+                "message": f"股票{code}已从自选股转为浏览股"
+            }
+
+        except Exception as e:
+            logger.error(f"取消收藏失败: {e}")
+            self.db.rollback()
+            return {"success": False, "action": "error", "message": str(e)}
 

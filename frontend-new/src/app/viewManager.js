@@ -7,7 +7,9 @@ import { logger } from '../utils/logger.js';
 import { DOM } from './dom.js';
 
 const STORAGE_KEY = 'chart-view-preference';
-const VIEW_TYPES = {
+
+// 导出视图类型常量
+export const VIEW_TYPES = {
   CHART: 'chart',
   TABLE: 'table'
 };
@@ -156,12 +158,6 @@ export class ViewManager {
     logger.info('ViewManager initialized');
   }
 }
-
-// 导出视图类型常量
-export const VIEW_TYPES = {
-  CHART: 'chart',
-  TABLE: 'table'
-};
 
 // 创建全局单例
 let viewManager = null;

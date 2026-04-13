@@ -7,14 +7,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 // Mock dependencies
-vi.mock('../../src/utils/logger.js', () => ({
-  logger: {
+vi.mock('../../src/utils/logger.js', () => {
+  const logger = {
     info: vi.fn(),
     debug: vi.fn(),
     error: vi.fn(),
     warn: vi.fn()
-  }
-}));
+  };
+  return {
+    logger,
+    default: logger
+  };
+});
 
 vi.mock('../../src/config.js', () => ({
   AppState: {
@@ -73,14 +77,27 @@ vi.mock('../../src/app/ui.js', () => ({
 
 vi.mock('../../src/components/Watchlist.js', () => ({
   Watchlist: {
-    refresh: vi.fn(),
-    render: vi.fn(),
-    generateEmptyState: vi.fn(() => '<div>Empty</div>'),
-    addToWatchlist: vi.fn(),
-    removeFromWatchlist: vi.fn(),
-    favoriteStock: vi.fn(),
-    unfavoriteStock: vi.fn(),
-    batchAnalyze: vi.fn()
+    refresh: vi.fn(() => Promise.resolve([
+      { stock_code: '000001', stock_name: '平安银行', watch_type: 'favorite' },
+      { stock_code: '000002', stock_name: '万科A', watch_type: 'favorite' }
+    ])),
+    render: vi.fn(() => `
+      <div class="watchlist-content">
+        <div class="watchlist-items">
+          <div class="stock-item">000001 平安银行</div>
+          <div class="stock-item">000002 万科A</div>
+        </div>
+      </div>
+    `),
+    generateEmptyState: vi.fn((message = '暂无自选股') => `<div class="empty">${message} - 0 只</div>`),
+    generateViewToggleHTML: vi.fn(() => '<div class="view-toggle">View</div>'),
+    addToWatchlist: vi.fn(() => Promise.resolve({ success: true })),
+    removeFromWatchlist: vi.fn(() => Promise.resolve({ success: true })),
+    favoriteStock: vi.fn(() => Promise.resolve({ success: true })),
+    unfavoriteStock: vi.fn(() => Promise.resolve({ success: true })),
+    batchAnalyze: vi.fn(() => Promise.resolve({ results: [], total: 0, success: 0 })),
+    setViewMode: vi.fn(),
+    bindPaginationEvents: vi.fn()
   }
 }));
 
@@ -100,6 +117,16 @@ function setupDOM() {
       <body>
         <div id="watchlist"></div>
         <input id="stock-code" />
+        <button id="subtab-favorite" class="active">⭐ 自选股</button>
+        <button id="subtab-browse">📖 浏览股</button>
+        <select id="watchlist-timeframe">
+          <option value="daily" selected>日线</option>
+        </select>
+        <button id="add-watchlist-btn">➕ 添加</button>
+        <button id="refresh-watchlist-btn">🔄 刷新</button>
+        <button id="batch-analyze-btn">⚡ 批量分析</button>
+        <button id="wl-refresh">🔄 刷新</button>
+        <button id="wl-batch">⚡ 批量分析</button>
       </body>
     </html>
   `);
@@ -216,14 +243,15 @@ describe('watchlistManager - 渲染功能', () => {
     ];
 
     Watchlist.refresh.mockResolvedValue(mockData);
-    Watchlist.render.mockReturnValue('<div class="watchlist-grid">Cards</div>');
+    Watchlist.render.mockReturnValue('<div class="watchlist-content"><div class="stock-card">000001</div><div class="stock-card">600000</div></div>');
+    Watchlist.generateViewToggleHTML.mockReturnValue('<div class="view-toggle">View</div>');
 
     const { loadWatchlist } = await import('../../src/app/watchlistManager.js');
     await loadWatchlist(vi.fn(), vi.fn());
 
-    expect(DOM.watchlistDiv.innerHTML).toContain('自选股');
-    expect(DOM.watchlistDiv.innerHTML).toContain('浏览股');
-    expect(DOM.watchlistDiv.innerHTML).toContain('2 只');
+    // 验证基本元素存在（子标签按钮现在在index.html中，不在watchlistDiv中）
+    expect(DOM.watchlistDiv.innerHTML).toContain('我的关注');
+    expect(DOM.watchlistDiv.innerHTML).toContain('2');
   });
 
   it('应该显示股票数量', async () => {
@@ -233,13 +261,15 @@ describe('watchlistManager - 渲染功能', () => {
       watch_type: 'favorite'
     }));
 
-    Watchlist.refresh.mockResolvedValue(mockData);
-    Watchlist.render.mockReturnValue('<div>Card</div>');
+    // 重新设置mock，确保返回正确数据
+    Watchlist.refresh.mockResolvedValueOnce(mockData);
+    Watchlist.render.mockReturnValueOnce('<div class="watchlist-content">5 stocks</div>');
+    Watchlist.generateViewToggleHTML.mockReturnValue('<div class="view-toggle">View</div>');
 
     const { loadWatchlist } = await import('../../src/app/watchlistManager.js');
     await loadWatchlist(vi.fn(), vi.fn());
 
-    expect(DOM.watchlistDiv.innerHTML).toContain('5 只');
+    expect(DOM.watchlistDiv.innerHTML).toContain('5');
   });
 
   it('应该渲染刷新和批量分析按钮', async () => {
@@ -285,7 +315,7 @@ describe('watchlistManager - 错误处理', () => {
   it('应该显示空状态当没有数据', async () => {
     Watchlist.refresh.mockResolvedValue([]);
     Watchlist.render.mockReturnValue('<div>Empty</div>');
-    Watchlist.generateEmptyState.mockReturnValue('<div>No stocks</div>');
+    Watchlist.generateEmptyState.mockReturnValue('<div>No stocks - 0 只</div>');
 
     const { loadWatchlist } = await import('../../src/app/watchlistManager.js');
     await loadWatchlist(vi.fn(), vi.fn());

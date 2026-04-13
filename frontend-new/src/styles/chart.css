@@ -15,12 +15,99 @@
   }
 }
 
-.chart-container {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+/* ========================================
+   图表/表格切换按钮
+   ======================================== */
+
+.chart-toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0;
+  padding: 0;
+}
+
+.toggle-btn {
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.toggle-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--text-primary);
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border-color: transparent;
+}
+
+/* ========================================
+   图表信息面板
+   ======================================== */
+
+#chart-info-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  padding: 0;
+}
+
+#chart-info-panel > div {
   padding: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+#chart-info-panel > div > div:first-child {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 500;
+}
+
+#chart-info-panel > div > div:last-child {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+/* 威科夫阶段徽章样式 */
+.phase-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.phase-A { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+.phase-U { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; }
+.phase-D { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+.phase-DS { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid #8b5cf6; }
+.phase-neutral { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid #374151; }
+
+.chart-container {
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: var(--spacing-lg) 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   min-height: 400px;
   position: relative;
 }
@@ -29,7 +116,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-md);
+  margin: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
 }
@@ -86,7 +173,8 @@
 #mainChart,
 #volumeChart {
   width: 100%;
-  height: 350px;
+  height: 100%;
+  min-height: 300px;
 }
 
 /* ========================================
@@ -256,28 +344,67 @@
 @media (max-width: 768px) {
   #charts {
     grid-template-columns: 1fr;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
   }
 
   .chart-container {
-    min-height: 300px;
-    padding: var(--spacing-sm);
+    min-height: 320px;
+    padding: var(--spacing-md) 0;
+    border-radius: 12px;
   }
 
   #mainChart,
   #volumeChart {
-    height: 250px;
+    height: 280px;
+    width: 100% !important;
+    min-width: unset !important;
   }
 
   .chart-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
+    margin: 0 var(--spacing-sm) var(--spacing-md) var(--spacing-sm);
   }
 
   .chart-controls {
     width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* 移动端图表容器优化 */
+@media (max-width: 480px) {
+  #mainChart,
+  #volumeChart {
+    height: 220px;
+    padding: 8px !important;
+  }
+
+  .chart-toggle {
+    gap: var(--spacing-xs);
+  }
+
+  .toggle-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+
+  #chart-info-panel {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-sm);
+  }
+
+  #chart-info-panel > div {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  #chart-info-panel > div > div:first-child {
+    font-size: var(--font-size-xs);
+  }
+
+  #chart-info-panel > div > div:last-child {
+    font-size: var(--font-size-sm);
   }
 }
 
@@ -295,20 +422,6 @@
   .chart-controls {
     display: none;
   }
-}
-
-/* ========================================
-   ECharts 图表样式
-   ======================================== */
-
-#mainChart,
-#volumeChart {
-  width: 100%;
-  height: 400px;
-}
-
-#mainChart {
-  height: 500px;
 }
 
 /* ECharts tooltip 样式自定义 */
@@ -336,7 +449,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 400px;
+  min-height: 400px;
   color: var(--text-secondary);
   font-size: var(--font-size-base);
 }
@@ -346,12 +459,12 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 400px;
+  min-height: 400px;
   color: var(--text-tertiary);
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
 }
 
 .chart-empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
+  font-size: 64px;
+  opacity: 0.4;
 }

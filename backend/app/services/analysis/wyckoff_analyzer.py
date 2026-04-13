@@ -11,6 +11,12 @@ from app.models.database import StockQuote, Stock
 from app.services.analysis.enhanced_scorer import EnhancedScorer
 
 
+# 威科夫分析常量
+HIGH_VOLUME_THRESHOLD = 1.3  # 放量判断阈值：成交量超过量MA5的1.3倍
+MIN_QUOTES_REQUIRED = 20      # 最小K线数量要求
+TREND_STRENGTH_THRESHOLD = 0.7  # 趋势强度阈值
+
+
 class WyckoffAnalyzer:
     """威科夫分析器"""
 
@@ -446,16 +452,23 @@ class WyckoffAnalyzer:
         """
         latest = df.iloc[-1]
 
+        # 判断是否放量（与前端保持一致）
+        is_high_volume = (
+            pd.notna(latest['volume_ma5']) and
+            latest['volume_ma5'] > 0 and
+            latest['volume'] > latest['volume_ma5'] * HIGH_VOLUME_THRESHOLD
+        )
+
         # 上涨趋势 (U)
         if trend_analysis.get('direction') == 'LONG' and trend_analysis.get('strength') == 'STRONG':
-            if volume_analysis.get('direction') == 'LONG':
+            if is_high_volume:
                 return 'U(放量上涨)'
             else:
                 return 'U(缩量上涨)'
 
         # 下跌趋势 (D)
         if trend_analysis.get('direction') == 'SHORT' and trend_analysis.get('strength') == 'STRONG':
-            if volume_analysis.get('direction') == 'SHORT':
+            if is_high_volume:
                 return 'D(放量下跌)'
             else:
                 return 'D(缩量下跌)'
@@ -470,8 +483,8 @@ class WyckoffAnalyzer:
 
                 # 价格在下半区
                 if current_price < (recent_high + recent_low) / 2:
-                    # 检查成交量
-                    if volume_analysis.get('anomaly') and volume_analysis.get('direction') == 'LONG':
+                    # 检查成交量（使用统一的放量判断）
+                    if is_high_volume:
                         return 'A(吸筹放量)'
                     else:
                         return 'A(吸筹)'
@@ -485,8 +498,8 @@ class WyckoffAnalyzer:
 
                 # 价格在上半区
                 if current_price > (recent_high + recent_low) / 2:
-                    # 检查成交量
-                    if volume_analysis.get('anomaly') and volume_analysis.get('direction') == 'SHORT':
+                    # 检查成交量（使用统一的放量判断）
+                    if is_high_volume:
                         return 'DS(派发放量)'
                     else:
                         return 'DS(派发)'

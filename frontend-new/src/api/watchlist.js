@@ -17,10 +17,11 @@ export const watchlistApi = {
   /**
    * 添加股票到关注列表
    * @param {string} code - 股票代码
+   * @param {string} watchType - 关注类型 (favorite | browse)，默认 browse
    * @returns {Promise<Object>} 更新后的关注列表
    */
-  async add(code) {
-    return await client.post('/api/v1/watchlist', { code });
+  async add(code, watchType = 'browse') {
+    return await client.post('/api/v1/watchlist', { code, watch_type: watchType });
   },
 
   /**

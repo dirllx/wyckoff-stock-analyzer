@@ -5,64 +5,66 @@
 /* 自选股网格布局 */
 .watchlist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 /* 自选股卡片 */
 .watchlist-card {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  transition: all var(--transition-base);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .watchlist-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+  transform: translateY(-4px);
 }
 
 .watchlist-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .watchlist-card-code {
-  font-size: var(--font-size-base);
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
   color: var(--text-primary);
   font-family: monospace;
+  letter-spacing: 0.5px;
 }
 
 .watchlist-card-remove {
-  background: none;
+  background: rgba(239, 68, 68, 0.1);
   border: none;
-  color: var(--text-tertiary);
+  color: var(--color-error);
   font-size: 18px;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   line-height: 1;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   transition: all var(--transition-fast);
 }
 
 .watchlist-card-remove:hover {
-  color: var(--color-error);
-  background-color: var(--bg-tertiary);
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(1.1);
 }
 
 .watchlist-card-name {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .watchlist-card-info {
@@ -74,79 +76,89 @@
 .watchlist-card-phase,
 .watchlist-card-signal {
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
 }
 
 .watchlist-card-actions {
-  margin-top: var(--spacing-sm);
+  margin-top: var(--spacing-md);
   display: flex;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
 }
 
 .watchlist-card-btn {
   flex: 1;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 12px;
   font-size: 20px;
-  background: var(--bg-tertiary);
-  border: none;
-  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .watchlist-card-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .btn-analyze:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: transparent;
 }
 
 .btn-multi:hover {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  border-color: transparent;
 }
 
 .btn-favorite:hover {
   background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: transparent;
 }
 
 .btn-unfavorite:hover {
   background: linear-gradient(135deg, #6b7280, #4b5563);
+  border-color: transparent;
 }
 
 /* 关注列表子标签 */
 .watchlist-tabs {
   display: flex;
   gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  padding: var(--spacing-sm);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
 }
 
 .watchlist-tab {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 0.25s ease;
 }
 
 .watchlist-tab:hover {
   color: var(--text-primary);
-  background: var(--bg-tertiary);
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .watchlist-tab.active {
-  color: var(--color-primary);
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.1));
+  color: white;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* 空状态 */
@@ -155,29 +167,29 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
   color: var(--text-tertiary);
-  border: 2px dashed var(--border-color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-secondary);
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
 }
 
 .watchlist-empty-icon {
-  font-size: 48px;
-  margin-bottom: var(--spacing-md);
-  opacity: 0.5;
+  font-size: 64px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.4;
 }
 
 .watchlist-empty-text {
-  font-size: var(--font-size-base);
-  font-weight: 500;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
 }
 
 .watchlist-empty-hint {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--text-tertiary);
 }
 
@@ -186,12 +198,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0;
   margin-bottom: var(--spacing-lg);
 }
 
 .watchlist-header h3 {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
 }
 
 .watchlist-actions {
@@ -203,9 +217,11 @@
 .watchlist-count {
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 /* 响应式设计 */
@@ -215,10 +231,296 @@
   }
 
   .watchlist-card {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-md);
   }
 
   .watchlist-card-name {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* ========================================
+   视图切换按钮
+   ======================================== */
+
+.watchlist-view-toggle {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: 6px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+}
+
+.view-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  color: var(--text-secondary);
+  font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--text-primary);
+}
+
+.view-btn.view-btn-active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* ========================================
+   表格视图样式
+   ======================================== */
+
+.watchlist-table-wrapper {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.watchlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.watchlist-table thead {
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.watchlist-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.watchlist-table tbody {
+  background: var(--bg-primary);
+}
+
+.watchlist-table-row {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.watchlist-table-row:hover {
+  background: var(--bg-secondary);
+}
+
+.watchlist-table-row:last-child {
+  border-bottom: none;
+}
+
+.watchlist-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
+}
+
+.watchlist-table-btn {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-height: 36px;
+}
+
+.watchlist-table-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 阶段和信号徽章（表格内） */
+.phase-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.phase-U {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.phase-D {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.phase-A {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.phase-DS {
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+}
+
+.phase-震荡 {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.signal-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.signal-买入 {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.signal-卖出 {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.signal-持有 {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.signal-观望 {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+/* 表格响应式 */
+@media (max-width: 768px) {
+  .watchlist-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .watchlist-table {
+    min-width: 800px;
+  }
+
+  .watchlist-table th,
+  .watchlist-table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ========================================
+   翻页控制样式
+   ======================================== */
+
+.watchlist-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  background: linear-gradient(135deg, #21262d 0%, #161b22 100%);
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 0 0 12px 12px;
+  margin-top: -1px;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.pagination-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.pagination-btn:hover:not(.disabled) {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.pagination-btn:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.pagination-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 移动端翻页按钮适配 */
+@media (max-width: 768px) {
+  .watchlist-pagination {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+  }
+
+  .pagination-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pagination-btn {
+    flex: 1;
+    justify-content: center;
+    padding: var(--spacing-md);
+    min-height: 44px;
+  }
+
+  .pagination-btn span:last-child {
+    display: inline; /* 移动端也显示文字 */
   }
 }

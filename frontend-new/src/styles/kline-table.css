@@ -1,119 +1,135 @@
 /* ========================================
-   K线表格筛选栏
+   K线表格样式 - 完全匹配旧版本
    ======================================== */
 
-.kline-table-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+/* 表格容器 - 与旧版本完全一致 */
+.kline-table-container {
+  background: #1f2937;
+  border-radius: 10px;
+  padding: 0 0 12px 0;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid #374151;
+  max-height: 800px;
 }
 
-.kline-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+/* 表格基础样式 - 与旧版本完全一致 */
+.kline-table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: auto;
 }
 
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+/* 单元格样式 - 与旧版本完全一致 */
+.kline-table th,
+.kline-table td {
+  padding: 6px 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid #374151;
+  border-bottom: 1px solid #374151;
 }
 
-.filter-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
+/* 表头样式 - 与旧版本完全一致 */
+.kline-table th {
+  background: #1f2937;
+  color: #f9fafb;
+  font-weight: 600;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
-.filter-select {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  min-width: 120px;
-  transition: all var(--transition-fast);
+/* 第一行数据增加上边距 */
+.kline-table tbody tr:first-child td {
+  padding-top: 12px;
 }
 
-.filter-select:hover {
-  border-color: var(--border-hover);
+/* 第一列（日期）左对齐 */
+.kline-table td:first-child,
+.kline-table th:first-child {
+  text-align: left;
+  padding-left: 12px;
 }
 
-.filter-select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.filter-input {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  width: 150px;
-  transition: all var(--transition-fast);
-}
-
-.filter-input:hover {
-  border-color: var(--border-hover);
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.filter-btn {
-  padding: var(--spacing-xs) var(--spacing-md);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+/* 行交互效果 - 与旧版本完全一致 */
+.kline-table tr {
+  transition: background 0.2s;
   cursor: pointer;
-  transition: all var(--transition-fast);
 }
 
-.filter-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
+.kline-table tr:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
 }
 
-.filter-btn-reset {
-  color: var(--color-error);
-  border-color: rgba(239, 68, 68, 0.3);
+.kline-table tr:active {
+  background: rgba(59, 130, 246, 0.25) !important;
 }
 
-.filter-btn-reset:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: var(--color-error);
+/* 涨跌颜色 - 与旧版本完全一致 */
+.kline-red { color: #ef4444; }
+.kline-green { color: #10b981; }
+
+/* ========================================
+   阶段徽章样式 - 与旧版本完全一致
+   ======================================== */
+
+.phase-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+  cursor: help;
+  position: relative;
+  white-space: nowrap;
 }
 
-.filter-stats {
-  margin-left: auto;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+.phase-A {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid #fbbf24;
 }
 
-.filter-count {
-  font-weight: 700;
-  color: var(--primary-color);
+.phase-U {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+
+.phase-D {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.phase-DS {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+}
+
+.phase-neutral {
+  background: rgba(156, 163, 175, 0.1);
+  color: #9ca3af;
+  border: 1px solid #374151;
 }
 
 /* ========================================
-   Tooltip 悬停提示
+   Tooltip 样式 - 与旧版本一致
    ======================================== */
 
 .tooltip-cell {
@@ -128,19 +144,20 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 6px 10px;
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba(17, 24, 39, 0.98);
   border: 1px solid #374151;
   border-radius: 6px;
-  font-size: 11px;
-  color: #f9fafb;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
+  font-size: 10px;
+  color: #e5e7eb;
+  white-space: pre-line;
   z-index: 1000;
-  margin-bottom: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  line-height: 1.4;
+  margin-bottom: 6px;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .tooltip-cell:hover::after {
@@ -148,158 +165,8 @@
 }
 
 /* ========================================
-   信号强度指示器
+   空状态和错误状态
    ======================================== */
-
-.signal-strength {
-  display: inline-block;
-}
-
-.signal-strength-bar {
-  transition: all 0.2s ease;
-}
-
-.signal-strength:hover .signal-strength-bar {
-  transform: scaleY(1.2);
-}
-
-/* ========================================
-   表格分页
-   ======================================== */
-
-.table-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
-}
-
-.pagination-info {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.pagination-controls {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.pagination-btn {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-btn.active {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-/* ========================================
-   K线表格样式
-   ======================================== */
-
-.kline-table-container {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.kline-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-sm);
-}
-
-.kline-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: var(--bg-secondary);
-  border-bottom: 2px solid var(--border-color);
-}
-
-.kline-table th {
-  padding: var(--spacing-sm) var(--spacing-md);
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.kline-table tbody tr {
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color var(--transition-fast);
-  cursor: pointer;
-}
-
-.kline-table tbody tr:hover {
-  background-color: var(--bg-secondary);
-}
-
-.kline-table td {
-  padding: var(--spacing-sm) var(--spacing-md);
-  text-align: left;
-  color: var(--text-primary);
-}
-
-/* 涨跌颜色（中国股市：红涨绿跌） */
-.kline-red {
-  color: var(--color-error);
-}
-
-.kline-green {
-  color: var(--color-success);
-}
-
-/* 威科夫阶段颜色 */
-.phase-U {
-  color: var(--color-error);
-  font-weight: 600;
-}
-
-.phase-D {
-  color: var(--color-success);
-  font-weight: 600;
-}
-
-.phase-A {
-  color: var(--color-warning);
-  font-weight: 600;
-}
-
-.phase-DS {
-  color: var(--color-info);
-  font-weight: 600;
-}
-
-.phase-neutral {
-  color: var(--text-tertiary);
-}
 
 .table-empty,
 .table-error {
@@ -310,4 +177,46 @@
 
 .table-error {
   color: var(--color-error);
+}
+
+/* ========================================
+   移动端优化 - 保持横向滚动
+   ======================================== */
+
+@media (max-width: 768px) {
+  .kline-table-container {
+    /* 移动端确保可以横向滚动 */
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kline-table {
+    /* 确保表格不被压缩 */
+    min-width: max-content;
+    font-size: 11px;
+  }
+
+  .kline-table th,
+  .kline-table td {
+    /* 移动端减小内边距 */
+    padding: 4px 6px;
+  }
+
+  /* 阶段徽章在移动端缩小 */
+  .phase-badge {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kline-table {
+    font-size: 10px;
+  }
+
+  .kline-table th,
+  .kline-table td {
+    padding: 3px 4px;
+  }
 }

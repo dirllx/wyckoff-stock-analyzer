@@ -116,8 +116,21 @@ class DataStorage:
                     quotes_to_add.append(quote)
                     saved_count += 1
 
-            # 批量添加新记录
+            # 批量添加新记录前，确保所有numpy类型转换为Python原生类型
             if quotes_to_add:
+                for quote in quotes_to_add:
+                    # 转换StockQuote对象中的所有属性为Python原生类型
+                    for attr in ['open', 'high', 'low', 'close', 'volume', 'amount',
+                                 'ma5', 'ma10', 'ma15', 'ma20', 'ma30', 'ma60', 'ma90', 'ma120', 'ma250',
+                                 'duokong_line', 'volume_ma5', 'obv']:
+                        val = getattr(quote, attr, None)
+                        if val is not None:
+                            # 处理numpy类型和其他可能的类型
+                            if hasattr(val, 'dtype'):  # numpy类型
+                                setattr(quote, attr, float(val))
+                            elif hasattr(val, 'item'):  # numpy标量
+                                setattr(quote, attr, val.item())
+
                 self.db.bulk_save_objects(quotes_to_add)
 
             self.db.commit()

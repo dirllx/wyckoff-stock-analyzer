@@ -1,28 +1,25 @@
 /**
- * 系统健康检查样式
+ * 系统健康检查样式 - 简洁紧凑版
  */
 
 .health-container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
-  background: var(--bg-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-sm) 0;
 }
 
+/* 头部 - 紧凑 */
 .health-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
   margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
 }
 
 .health-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
@@ -32,45 +29,24 @@
   gap: var(--spacing-sm);
 }
 
-.health-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.health-btn-primary {
-  background: var(--color-primary);
-  color: white;
-}
-
-.health-btn-primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.health-btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.health-btn-secondary:hover {
-  background: var(--bg-tertiary);
-}
-
+/* 内容 */
 .health-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
+/* 健康区块 */
 .health-section {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
+  background: linear-gradient(145deg, #1a1f35 0%, #151929 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  padding: var(--spacing-md);
+  transition: all 0.3s ease;
+}
+
+.health-section:hover {
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .health-section-title {
@@ -78,12 +54,23 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
-/* 系统状态概览 */
+.health-section-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #6366f1, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* 状态概览 - 紧凑网格 */
 .health-status-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -91,103 +78,82 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.05);
   border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.health-status-card:hover {
+  transform: translateY(-2px);
 }
 
 .health-status-card.status-healthy {
-  border-color: var(--color-success);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .health-status-card.status-degraded {
-  border-color: var(--color-warning);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .health-status-card.status-unhealthy {
-  border-color: var(--color-error);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(239, 68, 68, 0.1) 100%);
-}
-
-.health-status-card.status-unknown {
-  border-color: var(--text-tertiary);
-  background: var(--bg-primary);
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .health-status-icon {
-  font-size: 2rem;
+  font-size: 24px;
 }
 
 .health-status-info {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 2px;
 }
 
 .health-status-label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
 
 .health-status-value {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
-.health-info-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-}
-
-.health-info-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.health-info-value {
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-/* 服务状态网格 */
+/* 服务网格 - 紧凑 */
 .health-services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--spacing-md);
 }
 
 .health-service-card {
   padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.05);
   border: 2px solid transparent;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+}
+
+.health-service-card:hover {
+  transform: translateY(-2px);
 }
 
 .health-service-card.service-healthy {
-  border-color: var(--color-success);
+  border-color: #10b981;
 }
 
 .health-service-card.service-degraded {
-  border-color: var(--color-warning);
+  border-color: #f59e0b;
 }
 
 .health-service-card.service-unhealthy {
-  border-color: var(--color-error);
-}
-
-.health-service-card.service-unknown {
-  border-color: var(--text-tertiary);
+  border-color: #ef4444;
 }
 
 .health-service-header {
@@ -198,38 +164,36 @@
 }
 
 .health-service-icon {
-  font-size: 1.5rem;
+  font-size: 20px;
 }
 
 .health-service-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+  flex: 1;
 }
 
 .health-service-name {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .health-service-status {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
 
 .health-service-response-time {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-tertiary);
   padding-top: var(--spacing-xs);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(99, 102, 241, 0.15);
 }
 
-/* 测试状态概览 */
+/* 测试状态 - 紧凑 */
 .health-test-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
 }
 
@@ -237,115 +201,41 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid transparent;
 }
 
 .health-test-card.health-test-pass {
-  border-color: var(--color-success);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .health-test-card.health-test-fail {
-  border-color: var(--color-error);
-  background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .health-test-icon {
-  font-size: 1.5rem;
+  font-size: 18px;
 }
 
 .health-test-info {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 2px;
 }
 
 .health-test-label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
 
 .health-test-value {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.health-test-meta {
-  padding: var(--spacing-sm);
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-/* 测试结果列表 */
-.health-test-results {
-  margin-top: var(--spacing-lg);
-}
-
-.health-test-results h4 {
   font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.health-test-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.health-test-result {
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  border-left: 4px solid transparent;
-}
-
-.health-test-result.test-pass {
-  border-left-color: var(--color-success);
-}
-
-.health-test-result.test-fail {
-  border-left-color: var(--color-error);
-}
-
-.health-test-result-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xs);
-}
-
-.health-test-result-icon {
-  font-size: 1rem;
-}
-
-.health-test-result-name {
-  flex: 1;
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.health-test-result-duration {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-}
-
-.health-test-result-error {
-  padding: var(--spacing-sm);
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  color: var(--color-error);
-  margin-top: var(--spacing-xs);
 }
 
 /* 空状态 */
@@ -355,17 +245,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, #161b22 0%, #0d1117 100%);
+  border: 2px dashed rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
 }
 
 .health-empty-icon,
 .health-error-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .health-empty-title,
@@ -373,13 +264,13 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
-/* 响应式设计 */
+/* 响应式 */
 @media (max-width: 768px) {
   .health-container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
   }
 
   .health-header {
@@ -392,7 +283,7 @@
     width: 100%;
   }
 
-  .health-btn {
+  .health-actions .btn {
     flex: 1;
   }
 

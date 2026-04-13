@@ -1,5 +1,6 @@
 import Logger from '../utils/logger.js';
 import { apiCache } from '../utils/cache.js';
+import { AppConfig } from '../config.js';
 
 /**
  * API错误类
@@ -26,7 +27,7 @@ export class ApiClient {
    * @param {Object} config.headers - 默认请求头
    */
   constructor(config = {}) {
-    this.baseURL = config.baseURL || '';
+    this.baseURL = config.baseURL || AppConfig.API_BASE;
     this.timeout = config.timeout || 120000;
     this.maxRetries = config.maxRetries || 3;
     this.defaultHeaders = {
@@ -57,6 +58,8 @@ export class ApiClient {
       });
       url += `?${searchParams.toString()}`;
     }
+
+    Logger.debug(`Built URL: ${url} (baseURL=${this.baseURL}, endpoint=${endpoint})`);
 
     return url;
   }
@@ -293,7 +296,7 @@ export class ApiClient {
 
 // 导出默认实例（向后兼容）
 const defaultClient = new ApiClient({
-  baseURL: import.meta.env.VITE_API_BASE_URL || ''
+  baseURL: AppConfig.API_BASE
 });
 
 export default defaultClient;

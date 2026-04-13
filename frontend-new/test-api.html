@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #0f3460;
+        }
+        input, button {
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #0f3460;
+            background: #0f3460;
+            color: #eee;
+            font-size: 14px;
+        }
+        button {
+            cursor: pointer;
+            background: #e94560;
+        }
+        button:hover {
+            background: #ff6b6b;
+        }
+        .result {
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .highlight {
+            background: #fbbf24;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 API测试页面</h1>
+
+    <div class="test-card">
+        <h3>测试1: 直接API调用（带refresh=true）</h3>
+        <input type="text" id="stockCode" value="688234" placeholder="股票代码">
+        <button onclick="testWithRefresh()">测试（refresh=true）</button>
+        <button onclick="testWithoutRefresh()">测试（无refresh）</button>
+        <div id="result1" class="result">等待测试...</div>
+    </div>
+
+    <div class="test-card">
+        <h3>测试2: 检查后端计算</h3>
+        <button onclick="checkBackendCalc()">检查放量计算</button>
+        <div id="result2" class="result">等待测试...</div>
+    </div>
+
+    <div class="test-card">
+        <h3>测试3: 检查缓存状态</h3>
+        <button onclick="checkCache()">检查缓存</button>
+        <div id="result3" class="result">等待测试...</div>
+    </div>
+
+    <script>
+        // 使用相对路径，通过Vite代理访问后端
+        const API_BASE = '/api/v1';
+
+        async function testWithRefresh() {
+            const code = document.getElementById('stockCode').value;
+            const resultDiv = document.getElementById('result1');
+
+            try {
+                resultDiv.innerHTML = '<span class="info">正在请求...</span>';
+
+                console.log('发送请求到:', `${API_BASE}/stocks/analyze`);
+                console.log('请求体:', { code, timeframe: 'daily', refresh: true });
+
+                const res = await fetch(`${API_BASE}/stocks/analyze`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code, timeframe: 'daily', refresh: true })
+                });
+
+                console.log('响应状态:', res.status, res.statusText);
+
+                if (!res.ok) {
+                    resultDiv.innerHTML = `<span class="error">❌ HTTP ${res.status}: ${res.statusText}</span>`;
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('响应数据:', data);
+
+                const summary = data.analysis_summary || {};
+                const quote = data.current_quote || {};
+
+                const vol = quote.volume || 0;
+                const volMa5 = quote.volume_ma5 || 1;
+                const ratio = (vol / volMa5).toFixed(2);
+
+                resultDiv.innerHTML = `
+<span class="success">✅ API请求成功</span>
+
+<span class="highlight">市场阶段: ${summary.wyckoff_phase}</span>
+
+📊 成交量: ${vol.toLocaleString()}
+📊 量MA5: ${volMa5.toLocaleString()}
+📊 量比: ${ratio}倍 (${ratio > 1.3 ? '✅ 放量' : '❌ 缩量'})
+
+💡 from_cache: ${data.from_cache}
+
+📝 分析原因: ${summary.reason?.substring(0, 80)}...
+                `;
+            } catch (err) {
+                console.error('请求失败:', err);
+                resultDiv.innerHTML = `<span class="error">❌ 错误: ${err.message}\n\n请打开控制台(F12)查看详细错误</span>`;
+            }
+        }
+
+        async function testWithoutRefresh() {
+            const code = document.getElementById('stockCode').value;
+            const resultDiv = document.getElementById('result1');
+
+            try {
+                const res = await fetch(`${API_BASE}/stocks/analyze`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ code, timeframe: 'daily' })
+                });
+
+                const data = await res.json();
+                const summary = data.analysis_summary || {};
+
+                resultDiv.innerHTML = `
+<span class="info">无refresh参数</span>
+<span class="highlight">市场阶段: ${summary.wyckoff_phase}</span>
+💡 from_cache: ${data.from_cache}
+                `;
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 错误: ${err.message}</span>`;
+            }
+        }
+
+        async function checkBackendCalc() {
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = '<span class="info">正在检查...</span>';
+
+            // 模拟后端计算逻辑
+            const testCases = [
+                { vol: 19467754, volMa5: 12222691.2, expected: '放量' },
+                { vol: 10000000, volMa5: 12222691.2, expected: '缩量' },
+                { vol: 20000000, volMa5: 10000000, expected: '放量' }
+            ];
+
+            let html = '<span class="success">后端放量计算逻辑测试：</span>\n\n';
+
+            testCases.forEach((tc, i) => {
+                const ratio = tc.vol / tc.volMa5;
+                const isHighVolume = ratio > 1.3;
+                const result = isHighVolume ? '放量' : '缩量';
+                const match = result === tc.expected ? '✅' : '❌';
+
+                html += `${match} 测试${i+1}: 成交量${tc.vol.toLocaleString()}, 量MA5${tc.volMa5.toLocaleString()}\n`;
+                html += `   量比: ${ratio.toFixed(2)}倍 → ${result} (期望: ${tc.expected})\n\n`;
+            });
+
+            // 实际688234数据
+            const actualVol = 19467754;
+            const actualVolMa5 = 12222691.2;
+            const actualRatio = actualVol / actualVolMa5;
+            const actualResult = actualRatio > 1.3 ? '放量' : '缩量';
+
+            html += `<span class="highlight">688234实际数据:</span>\n`;
+            html += `成交量: ${actualVol.toLocaleString()}\n`;
+            html += `量MA5: ${actualVolMa5.toLocaleString()}\n`;
+            html += `量比: ${actualRatio.toFixed(2)}倍\n`;
+            html += `结果: ${actualResult} (阈值: 1.3倍)`;
+
+            resultDiv.innerHTML = html;
+        }
+
+        async function checkCache() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '<span class="info">检查浏览器缓存...</span>\n\n';
+
+            resultDiv.innerHTML += `localStorage keys: ${Object.keys(localStorage).length}\n`;
+            resultDiv.innerHTML += `sessionStorage keys: ${Object.keys(sessionStorage).length}\n\n`;
+
+            // 检查是否有缓存数据
+            const hasCache = Object.keys(localStorage).some(k => k.includes('wyckoff') || k.includes('cache') || k.includes('analysis'));
+            resultDiv.innerHTML += hasCache ? '⚠️ 发现缓存数据' : '✅ 无缓存数据';
+
+            // 提供清除按钮
+            resultDiv.innerHTML += '\n\n<button onclick="clearAllCache()">清除所有缓存</button>';
+        }
+
+        function clearAllCache() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('result3').innerHTML = '<span class="success">✅ 缓存已清除</span>';
+        }
+    </script>
+</body>
+</html>
