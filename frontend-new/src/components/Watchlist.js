@@ -3,6 +3,7 @@
  * 管理和显示用户的自选股列表
  */
 
+import { formatDateString } from '../utils/helpers.js';
 import { watchlistApi } from '../api/watchlist.js';
 import { stocksApi } from '../api/stocks.js';
 import { logger } from '../utils/logger.js';
@@ -11,6 +12,7 @@ import { eventBus, Events } from '../config.js';
 import { createPhaseBadge, createSignalBadge } from '../utils/formatting.js';
 import { getSignalStrength, calculateMAStatus, calculateVolumeStatus, formatChangePercent } from '../utils/enhancedFormatting.js';
 import { WatchlistPagination } from '../utils/watchlistPagination.js';
+import { VirtualScroll } from './VirtualScroll.js';
 
 /**
  * 自选股类
@@ -35,6 +37,26 @@ export class Watchlist {
    * 已选择的股票代码
    */
   static selectedStocks = new Set();
+
+  /**
+   * 虚拟滚动阈值 - 超过此行数启用虚拟滚动
+   */
+  static VIRTUAL_SCROLL_THRESHOLD = 50;
+
+  /**
+   * 虚拟滚动实例
+   */
+  static virtualScrollInstance = null;
+
+  /**
+   * 当前表格数据（用于虚拟滚动）
+   */
+  static currentTableData = null;
+
+  /**
+   * 当前表格标签（用于虚拟滚动）
+   */
+  static currentTableTab = 'favorite';
 
   /**
    * 阶段显示名称映射
@@ -141,12 +163,18 @@ export class Watchlist {
       ? `<input type="checkbox" class="watchlist-card-checkbox" data-code="${card.code}" ${isSelected ? 'checked' : ''} style="position: absolute; top: 8px; left: 8px; width: 18px; height: 18px; cursor: pointer;">`
       : '';
 
-    // 根据股票的 watch_type 显示不同的操作按钮（与老版本一致）
-    // card.watch_type 为 'favorite' 时显示取消关注按钮，为 'browse' 时显示添加到自选股按钮
+    // 根据股票的 watch_type 和当前标签显示不同的操作按钮
     const isFavorite = card.watch_type === 'favorite';
+
+    // 按钮文案根据当前标签动态设置
+    const unfavoriteTitle = currentTab === 'favorite'
+      ? '取消自选股，转为浏览股'
+      : '取消收藏，移到浏览股';
+    const favoriteTitle = '添加到自选股';
+
     const toggleButton = isFavorite
-      ? `<button class="watchlist-card-btn btn-unfavorite" data-action="unfavorite" data-code="${card.code}" title="取消关注，转为浏览股" style="flex: 1; background: linear-gradient(135deg, #6b7280, #4b5563); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;">💔</button>`
-      : `<button class="watchlist-card-btn btn-favorite" data-action="favorite" data-code="${card.code}" title="添加到自选股" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;">⭐</button>`;
+      ? `<button class="watchlist-card-btn btn-unfavorite" data-action="unfavorite" data-code="${card.code}" title="${unfavoriteTitle}" style="flex: 1; background: linear-gradient(135deg, #6b7280, #4b5563); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;">💔</button>`
+      : `<button class="watchlist-card-btn btn-favorite" data-action="favorite" data-code="${card.code}" title="${favoriteTitle}" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706); padding: 5px 6px; border: none; color: white; border-radius: 4px; font-size: 10px; cursor: pointer;">⭐</button>`;
 
     return `
       <div class="watchlist-card" data-code="${card.code}" style="position: relative;">
@@ -172,44 +200,83 @@ export class Watchlist {
 
   /**
    * 生成空状态HTML
+   * @param {string} message - 自定义提示消息
    * @returns {string} 空状态HTML
    */
-  static generateEmptyState() {
+  static generateEmptyState(message = null) {
+    const emptyText = message || '暂无数据';
+    const hintText = message ? '' : '输入股票代码并点击"添加"按钮';
+
     return `
       <div class="watchlist-empty">
         <div class="watchlist-empty-icon">📋</div>
-        <div class="watchlist-empty-text">还没有自选股</div>
-        <div class="watchlist-empty-hint">输入股票代码并点击"添加"按钮</div>
+        <div class="watchlist-empty-text">${emptyText}</div>
+        ${hintText ? `<div class="watchlist-empty-hint">${hintText}</div>` : ''}
       </div>
     `;
   }
 
   /**
-   * 渲染自选股列表
-   * @param {Array} data - 自选股数据
-   * @param {string} currentTab - 当前标签 (favorite | browse)
-   * @returns {string} 完整HTML
+   * 生成骨架屏HTML（表格视图）
+   * @returns {string} 骨架屏HTML
    */
-  static render(data, currentTab = 'favorite') {
-    if (!data || data.length === 0) {
-      const emptyMessage = currentTab === 'favorite'
-        ? '暂无自选股，从浏览股收藏股票'
-        : '暂无浏览股，分析股票后会自动记录';
-      return this.generateEmptyState(emptyMessage);
+  static generateTableSkeleton() {
+    let rows = '';
+    for (let i = 0; i < 8; i++) {
+      rows += `
+        <div class="skeleton-row">
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+          <div class="skeleton-cell"></div>
+        </div>
+      `;
     }
-
-    // 根据视图模式选择渲染方式
-    if (this.currentViewMode === 'table') {
-      return this.renderTableView(data, currentTab);
-    }
-
-    const cards = this.convertToCards(data);
-
-    const cardsHTML = cards.map(card => this.generateCardHTML(card, currentTab)).join('');
 
     return `
-      <div class="watchlist-grid">
-        ${cardsHTML}
+      <div class="watchlist-table-skeleton">
+        <div class="skeleton-header">
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+          <div class="skeleton-header-cell"></div>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }
+
+  /**
+   * 生成加载状态HTML
+   * @returns {string} 加载状态HTML
+   */
+  static generateLoadingState() {
+    return `
+      <div class="watchlist-loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
       </div>
     `;
   }
@@ -467,6 +534,14 @@ export class Watchlist {
   }
 
   /**
+   * 获取当前周期
+   * @returns {string} 当前周期
+   */
+  static getCurrentTimeframe() {
+    return WatchlistPagination.getCurrentTimeframe();
+  }
+
+  /**
    * 应用排序
    * @param {Array} data - 数据数组
    * @returns {Array} 排序后的数据
@@ -592,13 +667,23 @@ export class Watchlist {
    * @returns {string} 表格HTML
    */
   static renderTableView(data, currentTab) {
+    // 保存当前数据供虚拟滚动使用
+    this.currentTableData = data;
+    this.currentTableTab = currentTab;
+
+    // 获取当前周期
+    const currentTimeframe = WatchlistPagination.getCurrentTimeframe();
+
     // 检测哪些MA列有数据
     const hasMA20 = data.some(item => item.quote && item.quote.ma20 != null);
     const hasMA30 = data.some(item => item.quote && item.quote.ma30 != null);
     const hasMA60 = data.some(item => item.quote && item.quote.ma60 != null);
 
+    // 判断是否使用虚拟滚动
+    const useVirtualScroll = data.length >= this.VIRTUAL_SCROLL_THRESHOLD;
+
     let html = `
-      <div class="watchlist-table-wrapper">
+      <div class="watchlist-table-wrapper" ${useVirtualScroll ? 'id="watchlist-virtual-scroll-container"' : ''}>
         <table class="watchlist-table">
           <thead>
             <tr>
@@ -607,8 +692,6 @@ export class Watchlist {
               <th>日期</th>
               <th>收盘价</th>
               <th>涨跌幅</th>
-              <th>评分</th>
-              <th>信号强度</th>
               <th>量能</th>
               <th>MA5</th>
               <th>MA10</th>
@@ -616,96 +699,196 @@ export class Watchlist {
               ${hasMA30 ? '<th>MA30</th>' : ''}
               ${hasMA60 ? '<th>MA60</th>' : ''}
               <th>阶段</th>
+              <th>评分</th>
+              <th>信号强度</th>
               <th>信号</th>
               <th>操作</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody${useVirtualScroll ? ' class="virtual-tbody"' : ''}>
     `;
 
-    data.forEach(item => {
-      const quote = item.quote || {};
-      const displayName = item.stock_name ? (item.stock_name.length > 4 ? item.stock_name.substring(0, 4) : item.stock_name) : '-';
-
-      // 计算涨跌幅
-      let changeDisplay = '-';
-      let changeColor = '#9ca3af';
-      if (quote.close && quote.open) {
-        const changePct = ((quote.close - quote.open) / quote.open * 100);
-        changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
-        changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
-      }
-
-      // MA显示（值和对比百分比）
-      const formatMAWithPercent = (maValue, closeValue) => {
-        if (maValue == null) return '-';
-        const diff = closeValue ? ((closeValue - maValue) / maValue * 100) : 0;
-        const sign = diff >= 0 ? '+' : '';
-        const color = diff >= 0 ? '#10b981' : '#ef4444';
-        return `<span style="color: ${color};">${maValue.toFixed(1)} / ${sign}${diff.toFixed(1)}%</span>`;
-      };
-
-      // 量能显示
-      let volDisplay = '-';
-      if (quote.volume && quote.volume_ma5) {
-        const ratio = (quote.volume / quote.volume_ma5).toFixed(1);
-        const emoji = parseFloat(ratio) >= 1.5 ? '🔥' : (parseFloat(ratio) >= 1.2 ? '📈' : '📊');
-        volDisplay = `${emoji}${ratio}x`;
-      }
-
-      // 信号强度
-      const signalStrength = getSignalStrength(quote);
-
-      // 评分
-      const score = item.score || 0;
-      const scoreColor = score >= 3 ? '#10b981' : score >= 1 ? '#f59e0b' : score <= -1 ? '#ef4444' : '#9ca3af';
-
-      // 阶段和信号
-      const phaseCode = item.phase || '震荡';
-      const signalCode = item.signal || '观望';
+    if (useVirtualScroll) {
+      // 虚拟滚动模式 - 只渲染表头，tbody留空由VirtualScroll填充
+      html += `
+          </tbody>
+        </table>
+      </div>
+      ${this.generatePaginationControls()}
+      <div style="text-align: center; color: #9ca3af; font-size: 11px; padding: 4px;">
+        🚀 虚拟滚动已启用 (${data.length} 行)
+      </div>
+      `;
+    } else {
+      // 普通模式 - 渲染所有行
+      data.forEach(item => {
+        html += this.generateTableRow(item, hasMA20, hasMA30, hasMA60, currentTab, currentTimeframe);
+      });
 
       html += `
-        <tr class="watchlist-table-row" data-code="${item.stock_code}">
-          <td><strong>${item.stock_code}</strong></td>
-          <td style="color: #10b981;">${displayName}</td>
-          <td style="color: #9ca3af;">${quote.date ? quote.date.substring(0, 10) : '-'}</td>
-          <td style="color: ${quote.close && quote.close < quote.open ? '#ef4444' : '#10b981'}; font-weight: 600;">
-            ${quote.close ? quote.close.toFixed(2) : '-'}
-          </td>
-          <td style="color: ${changeColor};">${changeDisplay}</td>
-          <td style="color: ${scoreColor}; font-weight: 600;">${score > 0 ? '+' : ''}${score}</td>
-          <td>${signalStrength}</td>
-          <td>${volDisplay}</td>
-          <td>${formatMAWithPercent(quote.ma5, quote.close)}</td>
-          <td>${formatMAWithPercent(quote.ma10, quote.close)}</td>
-          ${hasMA20 ? `<td>${formatMAWithPercent(quote.ma20, quote.close)}</td>` : ''}
-          ${hasMA30 ? `<td>${formatMAWithPercent(quote.ma30, quote.close)}</td>` : ''}
-          ${hasMA60 ? `<td>${formatMAWithPercent(quote.ma60, quote.close)}</td>` : ''}
-          <td><span class="phase-badge phase-${phaseCode}">${phaseCode}</span></td>
-          <td><span class="signal-badge signal-${signalCode}">${signalCode}</span></td>
-          <td>
-            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-              <button class="watchlist-table-btn btn-analyze" data-action="analyze" data-code="${item.stock_code}" title="日线分析">📊</button>
-              <button class="watchlist-table-btn btn-multi" data-action="multi" data-code="${item.stock_code}" title="多周期分析">📈</button>
-              ${item.watch_type === 'favorite' ?
-                `<button class="watchlist-table-btn btn-unfavorite" data-action="unfavorite" data-code="${item.stock_code}" title="取消关注，转为浏览股">💔</button>` :
-                `<button class="watchlist-table-btn btn-favorite" data-action="favorite" data-code="${item.stock_code}" title="添加到自选股">⭐</button>`
-              }
-              <button class="watchlist-table-btn btn-delete" data-action="delete" data-code="${item.stock_code}" title="删除">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
-
-    html += `
           </tbody>
         </table>
       </div>
       ${this.generatePaginationControls()}
     `;
+    }
 
     return html;
+  }
+
+  /**
+   * 生成单行HTML（用于虚拟滚动）
+   * @param {Object} item - 股票数据
+   * @param {boolean} hasMA20 - 是否有MA20列
+   * @param {boolean} hasMA30 - 是否有MA30列
+   * @param {boolean} hasMA60 - 是否有MA60列
+   * @param {string} currentTab - 当前标签 (favorite | browse)
+   * @param {string} currentTimeframe - 当前周期 (daily/weekly/monthly/30m/60m等)
+   * @returns {string} 行HTML
+   */
+  static generateTableRow(item, hasMA20 = true, hasMA30 = true, hasMA60 = true, currentTab = 'favorite', currentTimeframe = 'daily') {
+    const quote = item.quote || {};
+    const displayName = item.stock_name ? (item.stock_name.length > 4 ? item.stock_name.substring(0, 4) : item.stock_name) : '-';
+
+    // 计算涨跌幅
+    let changeDisplay = '-';
+    let changeColor = '#9ca3af';
+    if (quote.close && quote.open) {
+      const changePct = ((quote.close - quote.open) / quote.open * 100);
+      changeDisplay = changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`;
+      changeColor = changePct >= 0 ? '#ef4444' : '#10b981';
+    }
+
+    // MA显示 - 使用旧版本K线表格的彩色方案
+    const formatMAWithColor = (maValue, color) => {
+      if (maValue == null) return '-';
+      return `<span class="ma" style="color: ${color};">${maValue.toFixed(2)}</span>`;
+    };
+
+    // 量能显示 - 与旧版K线表格一致，使用"万"为单位
+    let volDisplay = '-';
+    if (quote.volume) {
+      const wan = Math.round(quote.volume / 10000);
+      volDisplay = `${wan}万`;
+    }
+
+    // 信号强度
+    const signalStrength = getSignalStrength(quote);
+
+    // 评分
+    const score = item.score || 0;
+    const scoreColor = score >= 3 ? '#10b981' : score >= 1 ? '#f59e0b' : score <= -1 ? '#ef4444' : '#9ca3af';
+
+    // 阶段和信号
+    const phaseCode = item.phase || '震荡';
+    const signalCode = item.signal || '观望';
+
+    // 日期格式化：根据周期显示不同格式
+    // 分钟线（1m、5m、15m、30m、60m）显示到分钟：MM-DD HH:MM
+    // 日线、周线、月线显示到天：MM-DD
+    let dateDisplay = '-';
+    if (quote.date) {
+      dateDisplay = formatDateString(quote.date, currentTimeframe) || '-';
+    }
+
+    // 按钮文案根据当前标签动态设置
+    const unfavoriteTitle = currentTab === 'favorite'
+      ? '取消自选股，转为浏览股'
+      : '取消收藏，移到浏览股';
+    const favoriteTitle = '添加到自选股';
+
+    return `
+      <tr class="watchlist-table-row" data-code="${item.stock_code}" data-index="${item._index || 0}">
+        <td><strong>${item.stock_code}</strong></td>
+        <td style="color: #10b981;">${displayName}</td>
+        <td style="color: #9ca3af;">${dateDisplay}</td>
+        <td style="color: ${quote.close && quote.close < quote.open ? '#ef4444' : '#10b981'}; font-weight: 600;">
+          ${quote.close ? quote.close.toFixed(2) : '-'}
+        </td>
+        <td style="color: ${changeColor};">${changeDisplay}</td>
+        <td>${volDisplay}</td>
+        <td>${formatMAWithColor(quote.ma5, '#3b82f6')}</td>
+        <td>${formatMAWithColor(quote.ma10, '#8b5cf6')}</td>
+        ${hasMA20 ? `<td>${formatMAWithColor(quote.ma20, '#f59e0b')}</td>` : ''}
+        ${hasMA30 ? `<td>${formatMAWithColor(quote.ma30, '#10b981')}</td>` : ''}
+        ${hasMA60 ? `<td>${formatMAWithColor(quote.ma60, '#ec4899')}</td>` : ''}
+        <td><span class="phase-badge phase-${phaseCode}">${phaseCode}</span></td>
+        <td style="color: ${scoreColor}; font-weight: 600;">${score > 0 ? '+' : ''}${score}</td>
+        <td>${signalStrength}</td>
+        <td><span class="signal-badge signal-${signalCode}">${signalCode}</span></td>
+        <td>
+          <div style="display: flex; gap: 4px; flex-wrap: nowrap;">
+            <button class="watchlist-table-btn btn-analyze" data-action="analyze" data-code="${item.stock_code}" title="日线分析">📊</button>
+            <button class="watchlist-table-btn btn-multi" data-action="multi" data-code="${item.stock_code}" title="多周期分析">📈</button>
+            ${item.watch_type === 'favorite' ?
+              `<button class="watchlist-table-btn btn-unfavorite" data-action="unfavorite" data-code="${item.stock_code}" title="${unfavoriteTitle}">💔</button>` :
+              `<button class="watchlist-table-btn btn-favorite" data-action="favorite" data-code="${item.stock_code}" title="${favoriteTitle}">⭐</button>`
+            }
+            <button class="watchlist-table-btn btn-delete" data-action="delete" data-code="${item.stock_code}" title="删除">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  /**
+   * 初始化虚拟滚动
+   * @param {HTMLElement} container - 容器元素
+   */
+  static initVirtualScroll(container) {
+    if (!this.currentTableData || this.currentTableData.length < this.VIRTUAL_SCROLL_THRESHOLD) {
+      return;
+    }
+
+    // 清理旧实例
+    this.destroyVirtualScroll();
+
+    // 获取当前周期
+    const currentTimeframe = WatchlistPagination.getCurrentTimeframe();
+
+    // 检测哪些MA列有数据
+    const hasMA20 = this.currentTableData.some(item => item.quote && item.quote.ma20 != null);
+    const hasMA30 = this.currentTableData.some(item => item.quote && item.quote.ma30 != null);
+    const hasMA60 = this.currentTableData.some(item => item.quote && item.quote.ma60 != null);
+
+    // 添加索引到数据
+    const dataWithIndex = this.currentTableData.map((item, index) => ({
+      ...item,
+      _index: index
+    }));
+
+    // 创建虚拟滚动实例
+    this.virtualScrollInstance = new VirtualScroll(container, {
+      rowHeight: 40, // 每行高度
+      bufferRows: 10, // 缓冲行数
+      renderRow: (item, index) => this.generateTableRow(item, hasMA20, hasMA30, hasMA60, this.currentTableTab, currentTimeframe),
+      onRowClick: (index, item) => {
+        // 行点击事件
+        logger.debug('Row clicked:', item.stock_code);
+      }
+    });
+
+    this.virtualScrollInstance.setData(dataWithIndex);
+    logger.info('VirtualScroll initialized with', dataWithIndex.length, 'rows');
+  }
+
+  /**
+   * 销毁虚拟滚动
+   */
+  static destroyVirtualScroll() {
+    if (this.virtualScrollInstance) {
+      this.virtualScrollInstance.destroy();
+      this.virtualScrollInstance = null;
+    }
+  }
+
+  /**
+   * 清理资源
+   */
+  static cleanup() {
+    this.destroyVirtualScroll();
+    this.currentTableData = null;
+    this.currentTableTab = 'favorite';
   }
 
   /**

@@ -124,13 +124,14 @@ async function bindKlineTableRowClicks(quotes, signals = null) {
 async function handleTableFilterChange(type, value, quotes, signals = null) {
   try {
     const KT = await getKlineTable();
+    const currentTimeframe = AppState.currentStock?.timeframe || 'daily';
 
     // 设置筛选条件
     KT.setFilter(type, value);
 
     // 重新渲染表格
     const signalsMap = signals ? KT.buildSignalsMap(signals) : null;
-    const tableHTML = KT.render(quotes, 'daily', signals);
+    const tableHTML = KT.render(quotes, currentTimeframe, signals);
 
     if (DOM.klineTable) {
       DOM.klineTable.innerHTML = tableHTML;
@@ -153,13 +154,14 @@ async function handleTableFilterChange(type, value, quotes, signals = null) {
 async function handleTableFilterReset(quotes, signals = null) {
   try {
     const KT = await getKlineTable();
+    const currentTimeframe = AppState.currentStock?.timeframe || 'daily';
 
     // 重置筛选
     KT.resetFilters();
 
     // 重新渲染表格
     const signalsMap = signals ? KT.buildSignalsMap(signals) : null;
-    const tableHTML = KT.render(quotes, 'daily', signals);
+    const tableHTML = KT.render(quotes, currentTimeframe, signals);
 
     if (DOM.klineTable) {
       DOM.klineTable.innerHTML = tableHTML;
@@ -199,10 +201,11 @@ async function renderQuotes(code, quotes) {
 
     // 获取已有信号数据（可能在分析阶段已获取）
     const existingSignals = AppState.currentStock?.signals || null;
+    const currentTimeframe = AppState.currentStock?.timeframe || 'daily';
 
     // 渲染K线表格（传入信号数据以匹配信号列）
     const signalsMap = existingSignals ? KT.buildSignalsMap(existingSignals) : null;
-    const tableHTML = KT.render(quotes, 'daily', existingSignals);
+    const tableHTML = KT.render(quotes, currentTimeframe, existingSignals);
 
     // 插入到DOM
     if (DOM.klineTable) {
@@ -221,7 +224,7 @@ async function renderQuotes(code, quotes) {
         if (virtualContainer) {
           // 延迟初始化以确保DOM布局完成
           setTimeout(() => {
-            const vs = KT.initVirtualScroll(virtualContainer, quotes, 'daily', signalsMap);
+            const vs = KT.initVirtualScroll(virtualContainer, quotes, currentTimeframe, signalsMap);
             if (vs) {
               AppState.virtualScroll = vs;
             }
@@ -233,7 +236,7 @@ async function renderQuotes(code, quotes) {
 
     // 渲染图表
     if (DOM.mainChart) {
-      const mainChartInstance = SC.initMainChart(DOM.mainChart, quotes, 'daily');
+      const mainChartInstance = SC.initMainChart(DOM.mainChart, quotes, currentTimeframe);
       if (mainChartInstance) {
         AppState.charts.main = mainChartInstance;
         // 设置响应式调整
@@ -243,7 +246,7 @@ async function renderQuotes(code, quotes) {
     }
 
     if (DOM.volumeChart) {
-      const volumeChartInstance = SC.initVolumeChart(DOM.volumeChart, quotes, 'daily');
+      const volumeChartInstance = SC.initVolumeChart(DOM.volumeChart, quotes, currentTimeframe);
       if (volumeChartInstance) {
         AppState.charts.volume = volumeChartInstance;
         // 设置响应式调整
@@ -572,6 +575,10 @@ async function renderActionCard(signals, quotes, code) {
  */
 async function handleStockAnalyzed({ code, timeframe, analysis, signals, klines }) {
   logger.info(`Stock analyzed event received: ${code}, timeframe: ${timeframe}`);
+
+  // 添加到股票代码历史记录
+  const { default: StockInput } = await import('../components/StockInput.js');
+  StockInput.addToHistory(code);
 
   let quotes = null;
 

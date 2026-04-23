@@ -12,6 +12,7 @@ import { switchTab } from './ui.js';
 import { WatchlistPagination } from '../utils/watchlistPagination.js';
 import { stocksApi } from '../api/stocks.js';
 import { operationLog } from '../utils/operationLog.js';
+import { debounce } from '../utils/helpers.js';
 
 // Lazy-loaded Watchlist component
 const getWatchlist = () => import('../components/Watchlist.js').then(m => m.Watchlist);
@@ -84,7 +85,8 @@ function initWatchlistGlobalControls(globalErrorHandler, analyzeStock) {
   const filterBearish = document.getElementById('filter-bearish');
   const filterHighScore = document.getElementById('filter-high-score');
 
-  const handleFilterChange = async () => {
+  // 筛选处理逻辑（防抖优化）
+  const handleFilterChangeImmediate = async () => {
     filterState.bullish = filterBullish?.checked || false;
     filterState.bearish = filterBearish?.checked || false;
     filterState.highScore = filterHighScore?.checked || false;
@@ -125,6 +127,9 @@ function initWatchlistGlobalControls(globalErrorHandler, analyzeStock) {
 
     logger.info(`Filters applied: ${JSON.stringify(filterState)}, showing ${filteredCount}/${totalCount}`);
   };
+
+  // 创建防抖版本（300ms延迟，避免频繁更新）
+  const handleFilterChange = debounce(handleFilterChangeImmediate, 300);
 
   if (filterBullish && !filterBullish.dataset.initialized) {
     filterBullish.addEventListener('change', handleFilterChange);
@@ -178,6 +183,15 @@ async function switchWatchlistTab(tab, globalErrorHandler, analyzeStock) {
   currentWatchlistTab = tab;
   logger.info(`Switching watchlist tab to: ${tab}`);
 
+  // 更新 WatchlistPagination 的 tab 状态
+  const { WatchlistPagination } = await import('../utils/watchlistPagination.js');
+  WatchlistPagination.switchTab(tab);
+
+  // 清除 watchlist 缓存，确保获取最新数据
+  const { apiCache } = await import('../utils/cache.js');
+  apiCache.clearByPattern('/api/v1/watchlist.*');
+  logger.debug('Cleared watchlist cache on tab switch');
+
   // 更新按钮样式（使用内联样式，因为HTML中使用的是内联样式）
   const favoriteBtn = document.getElementById('subtab-favorite');
   const browseBtn = document.getElementById('subtab-browse');
@@ -192,9 +206,6 @@ async function switchWatchlistTab(tab, globalErrorHandler, analyzeStock) {
     }
   }
 
-  // 更新分页管理器的标签状态
-  WatchlistPagination.switchTab(tab);
-
   // 刷新列表
   await loadWatchlist(globalErrorHandler, analyzeStock);
 }
@@ -208,6 +219,16 @@ async function loadWatchlist(globalErrorHandler, analyzeStock) {
   try {
     logger.info('Loading watchlist...');
     operationLog.action('加载关注列表', `标签: ${currentWatchlistTab}`);
+
+    // 显示骨架屏加载状态
+    if (DOM.watchlistDiv) {
+      DOM.watchlistDiv.innerHTML = `
+        <div class="watchlist-loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">加载中...</div>
+        </div>
+      `;
+    }
 
     const WL = await getWatchlist();
     const watchlistData = await WL.refresh(currentWatchlistTab);
@@ -257,6 +278,15 @@ async function loadWatchlist(globalErrorHandler, analyzeStock) {
       // 绑定翻页事件
       WL.bindPaginationEvents(DOM.watchlistDiv);
 
+      // 初始化虚拟滚动（如果数据量超过阈值）
+      const virtualContainer = document.getElementById('watchlist-virtual-scroll-container');
+      if (virtualContainer) {
+        // 使用 requestAnimationFrame 确保 DOM 已完全渲染
+        requestAnimationFrame(() => {
+          WL.initVirtualScroll(virtualContainer);
+        });
+      }
+
       // 绑定自选股卡片事件
       bindWatchlistEvents(globalErrorHandler, analyzeStock);
 
@@ -265,10 +295,27 @@ async function loadWatchlist(globalErrorHandler, analyzeStock) {
   } catch (error) {
     logger.error('Failed to load watchlist:', error);
 
+    // 改进错误提示，提供用户友好的信息
+    let errorMessage = '加载关注列表失败';
+    let errorHint = '请稍后重试或联系管理员';
+
+    if (error.message) {
+      if (error.message.includes('fetch')) {
+        errorMessage = '网络连接失败';
+        errorHint = '请检查网络连接后重试';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = '请求超时';
+        errorHint = '请稍后重试';
+      }
+    }
+
     if (DOM.watchlistDiv) {
       const WL = await getWatchlist();
-      DOM.watchlistDiv.innerHTML = WL.generateEmptyState();
+      DOM.watchlistDiv.innerHTML = WL.generateEmptyState(`${errorMessage}，${errorHint}`);
     }
+
+    // 使用 toast 显示错误提示
+    toast.error(`${errorMessage}，${errorHint}`);
 
     globalErrorHandler(error, 'Watchlist Load');
   }
@@ -423,11 +470,16 @@ function bindWatchlistEvents(globalErrorHandler, analyzeStock) {
       const code = event.currentTarget.dataset.code;
       logger.info(`Unfavorite button clicked for code: ${code}`);
       if (code) {
-        operationLog.action('从自选股移除', `股票: ${code}`);
+        // 根据当前标签显示不同的操作日志
+        const actionText = currentWatchlistTab === 'favorite' ? '取消自选股' : '取消收藏';
+        operationLog.action(actionText, `股票: ${code}`);
         const WL = await getWatchlist();
         await WL.unfavoriteStock(code);
         await reloadWatchlist();
-        operationLog.success('移除成功', `${code} 已从自选股移除`);
+        const successText = currentWatchlistTab === 'favorite'
+          ? `${code} 已从自选股移到浏览股`
+          : `${code} 已取消收藏`;
+        operationLog.success('操作成功', successText);
       }
     }, 'Unfavorite Stock'));
   });

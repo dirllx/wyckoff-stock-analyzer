@@ -6,7 +6,7 @@
 import { stocksApi } from '../api/stocks.js';
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
-import { createSignalBadge, createScoreBadge } from '../utils/formatting.js';
+import { createSignalBadge, createScoreBadge, formatDateString } from '../utils/formatting.js';
 
 /**
  * 信号展示类
@@ -106,26 +106,7 @@ export class Signals {
    * @returns {string} 格式化后的日期
    */
   static formatDate(dateStr, timeframe) {
-    if (!dateStr) return '';
-
-    const date = new Date(dateStr);
-    const isIntraday = timeframe === '30' || timeframe === '60';
-
-    // 格式化日期部分为 YYYY-MM-DD
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const datePart = `${year}-${month}-${day}`;
-
-    // 分钟线显示日期和时间
-    if (isIntraday) {
-      const hour = String(date.getHours()).padStart(2, '0');
-      const minute = String(date.getMinutes()).padStart(2, '0');
-      return `${datePart} ${hour}:${minute}`;
-    }
-
-    // 日线及以上只显示日期
-    return datePart;
+    return formatDateString(dateStr, timeframe);
   }
 
   /**

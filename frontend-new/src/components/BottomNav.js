@@ -103,8 +103,70 @@ export class BottomNav {
     // 更新当前页面
     this.setCurrentPage(page);
 
+    // 页面ID映射（底部导航ID -> 标签页内容ID）
+    const pageToTabId = {
+      'chart': 'tab-analyze',
+      'watchlist': 'tab-watchlist',
+      'multi': 'tab-multi',
+      'settings': 'tab-config',
+      'logs': 'tab-status'
+    };
+
+    // 切换标签页内容
+    this.switchTabContent(pageToTabId[page]);
+
+    // 更新URL hash
+    window.location.hash = hash;
+
     // 触发页面切换事件
     eventBus.emit(Events.TAB_CHANGE, { tab: page, hash });
+  }
+
+  /**
+   * 切换标签页内容（参考旧版本 showTab 函数）
+   */
+  switchTabContent(targetTabId) {
+    if (!targetTabId) return;
+
+    // 顶部标签按钮ID映射
+    const tabIdToButtonId = {
+      'tab-analyze': 'tabAnalyze',
+      'tab-watchlist': 'btnWatchlist',
+      'tab-multi': 'tabMulti',
+      'tab-config': 'tabConfig',
+      'tab-status': 'tabStatus'
+    };
+
+    // 隐藏所有标签页内容
+    const allTabs = document.querySelectorAll('.tab-content');
+    allTabs.forEach(tab => {
+      tab.classList.remove('active');
+      tab.style.display = 'none';
+    });
+
+    // 移除所有标签按钮的active状态
+    const allButtons = document.querySelectorAll('.tab-btn');
+    allButtons.forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // 显示目标标签页
+    const targetTab = document.getElementById(targetTabId);
+    if (targetTab) {
+      targetTab.classList.add('active');
+      targetTab.style.display = 'block';
+    }
+
+    // 激活对应的标签按钮
+    const targetButtonId = tabIdToButtonId[targetTabId];
+    if (targetButtonId) {
+      const targetButton = document.getElementById(targetButtonId);
+      if (targetButton) {
+        targetButton.classList.add('active');
+      }
+    }
+
+    logger.debug(`Switched to tab: ${targetTabId}`);
   }
 
   /**

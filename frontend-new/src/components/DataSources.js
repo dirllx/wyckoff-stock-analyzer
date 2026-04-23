@@ -181,7 +181,7 @@ export class DataSources {
     for (const [name, health] of Object.entries(this.health)) {
       const isAvailable = health.available ?? health.is_available ?? false;
       const statusClass = isAvailable ? 'status-healthy' : 'status-unhealthy';
-      const lastSuccess = health.last_success ? new Date(health.last_success).toLocaleString('zh-CN') : '无';
+      const lastSuccess = health.last_success ? new Date(health.last_success).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '无';
 
       html += `
         <div class="datasource-health-item">

@@ -11,7 +11,7 @@ export const watchlistApi = {
    */
   async getAll(watchType = null) {
     const params = watchType ? { watch_type: watchType } : {};
-    return await client.get('/api/v1/watchlist', params);
+    return await client.get('/api/v1/watchlist', { params });
   },
 
   /**

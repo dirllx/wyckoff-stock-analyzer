@@ -4,6 +4,7 @@
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
 import { patternsApi } from '../api/patterns.js';
+import { formatDateString } from '../utils/formatting.js';
 
 export class Patterns {
   /**
@@ -460,18 +461,11 @@ export class Patterns {
   /**
    * 格式化日期
    * @param {string} dateString - 日期字符串
-   * @returns {string} 格式化的日期
+   * @returns {string} 格式化的日期 (MM-DD)
    */
   static formatDate(dateString) {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return formatDateString(dateString, 'daily');
     } catch (error) {
       return dateString;
     }

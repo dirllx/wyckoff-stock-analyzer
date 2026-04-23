@@ -17,65 +17,35 @@
 /* 表格基础样式 - 与旧版本完全一致 */
 .kline-table {
   width: 100%;
-  max-width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-  table-layout: auto;
+  font-size: 11px;
+  table-layout: fixed;
+  min-width: 1600px;
 }
 
 /* 单元格样式 - 与旧版本完全一致 */
 .kline-table th,
 .kline-table td {
-  padding: 6px 6px;
-  text-align: center;
+  padding: 6px 4px;
+  text-align: right;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-  border-left: none;
-  border-right: none;
-  border-top: 1px solid #374151;
   border-bottom: 1px solid #374151;
 }
 
 /* 表头样式 - 与旧版本完全一致 */
 .kline-table th {
-  background: #1f2937;
-  color: #f9fafb;
   font-weight: 600;
-  font-size: 11px;
+  color: #9ca3af;
+  font-size: 10px;
+  background: #111827;
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
-/* 第一行数据增加上边距 */
-.kline-table tbody tr:first-child td {
-  padding-top: 12px;
 }
 
 /* 第一列（日期）左对齐 */
-.kline-table td:first-child,
-.kline-table th:first-child {
+.kline-table td:first-child {
   text-align: left;
-  padding-left: 12px;
-}
-
-/* 行交互效果 - 与旧版本完全一致 */
-.kline-table tr {
-  transition: background 0.2s;
-  cursor: pointer;
-}
-
-.kline-table tr:hover {
-  background: rgba(59, 130, 246, 0.15) !important;
-}
-
-.kline-table tr:active {
-  background: rgba(59, 130, 246, 0.25) !important;
 }
 
 /* 涨跌颜色 - 与旧版本完全一致 */
@@ -93,9 +63,6 @@
   font-size: 10px;
   font-weight: 600;
   margin-left: 4px;
-  cursor: help;
-  position: relative;
-  white-space: nowrap;
 }
 
 .phase-A {
@@ -129,57 +96,6 @@
 }
 
 /* ========================================
-   Tooltip 样式 - 与旧版本一致
-   ======================================== */
-
-.tooltip-cell {
-  position: relative;
-  cursor: help;
-}
-
-.tooltip-cell::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  background: rgba(17, 24, 39, 0.98);
-  border: 1px solid #374151;
-  border-radius: 6px;
-  font-size: 10px;
-  color: #e5e7eb;
-  white-space: pre-line;
-  z-index: 1000;
-  margin-bottom: 6px;
-  min-width: 200px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.tooltip-cell:hover::after {
-  opacity: 1;
-}
-
-/* ========================================
-   空状态和错误状态
-   ======================================== */
-
-.table-empty,
-.table-error {
-  padding: var(--spacing-xl);
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.table-error {
-  color: var(--color-error);
-}
-
-/* ========================================
    移动端优化 - 保持横向滚动
    ======================================== */
 
@@ -188,35 +104,16 @@
     /* 移动端确保可以横向滚动 */
     overflow-x: auto;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   .kline-table {
-    /* 确保表格不被压缩 */
-    min-width: max-content;
-    font-size: 11px;
-  }
-
-  .kline-table th,
-  .kline-table td {
-    /* 移动端减小内边距 */
-    padding: 4px 6px;
+    font-size: 10px;
+    min-width: 1200px;
   }
 
   /* 阶段徽章在移动端缩小 */
   .phase-badge {
     font-size: 8px;
     padding: 1px 3px;
-  }
-}
-
-@media (max-width: 480px) {
-  .kline-table {
-    font-size: 10px;
-  }
-
-  .kline-table th,
-  .kline-table td {
-    padding: 3px 4px;
   }
 }

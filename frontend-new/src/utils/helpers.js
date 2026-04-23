@@ -5,7 +5,6 @@
 
 /**
  * Formats a date string based on the timeframe
- * Matches the original frontend implementation
  * @param {string} dateStr - The date string to format (e.g., "2024-01-15" or "2024-01-15 10:30:00")
  * @param {string} timeframe - The timeframe ('daily', 'weekly', 'monthly', '60m', '30m', etc.)
  * @returns {string} The formatted date string
@@ -13,38 +12,30 @@
 export function formatDateString(dateStr, timeframe) {
   if (!dateStr) return '';
 
-  // dateStr 格式可能是 "2024-01-15 10:30:00" 或 "2024-01-15"
-  const parts = dateStr.split(' ');
-  const datePart = parts[0]; // "2024-01-15"
-  const timePart = parts[1]; // "10:30:00" 如果有的话
+  try {
+    // 使用 Date 对象解析各种格式（ISO、标准格式等）
+    const date = new Date(dateStr);
 
-  if (!datePart) return '';
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return dateStr;
+    }
 
-  // 分割日期部分
-  const dateComponents = datePart.split('-');
-  if (dateComponents.length >= 3) {
-    const year = dateComponents[0];
-    const month = dateComponents[1];
-    const day = dateComponents[2];
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
 
-    // 分钟线（30分钟、60分钟）显示日期和时间
-    if (timeframe === '30' || timeframe === '30m' || timeframe === '60' || timeframe === '60m') {
-      if (timePart) {
-        const timeComponents = timePart.split(':');
-        if (timeComponents.length >= 2) {
-          const hour = timeComponents[0];
-          const minute = timeComponents[1];
-          return `${month}-${day} ${hour}:${minute}`;
-        }
-      }
-      return `${month}-${day}`;
+    // 分钟线（1、5、15、30、60分钟）显示日期和时间
+    if (['1', '5', '15', '30', '60', '1m', '5m', '15m', '30m', '60m'].includes(timeframe)) {
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${month}-${day} ${hour}:${minute}`;
     }
 
     // 日线、周线、月线只显示 MM-DD
     return `${month}-${day}`;
+  } catch (error) {
+    return dateStr;
   }
-
-  return datePart;
 }
 
 /**
@@ -270,4 +261,46 @@ export function formatLargeNumber(num) {
  */
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * 防抖函数 - 延迟执行
+ * @param {Function} func - 要防抖的函数
+ * @param {number} delay - 延迟时间（毫秒）
+ * @returns {Function} 防抖后的函数
+ */
+export function debounce(func, delay = 300) {
+  let timeoutId = null;
+
+  return function(...args) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+      timeoutId = null;
+    }, delay);
+  };
+}
+
+/**
+ * 节流函数 - 限制执行频率
+ * @param {Function} func - 要节流的函数
+ * @param {number} delay - 节流时间（毫秒）
+ * @returns {Function} 节流后的函数
+ */
+export function throttle(func, delay = 100) {
+  let lastCall = 0;
+
+  return function(...args) {
+    const now = Date.now();
+
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      return func.apply(this, args);
+    }
+
+    return undefined;
+  };
 }

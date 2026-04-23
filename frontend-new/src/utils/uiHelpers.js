@@ -69,11 +69,18 @@ export async function showWatchlistPicker(targetInputId, callback) {
   watchlistPickerCallback = callback;
 
   try {
+    // 清除 watchlist 缓存，确保获取最新数据
+    const { apiCache } = await import('./cache.js');
+    apiCache.clearByPattern('/api/v1/watchlist.*');
+    logger.debug('Cleared watchlist cache before opening picker');
+
     // 加载两种类型的关注列表数据
     const [favoriteData, browseData] = await Promise.all([
       Watchlist.refresh('favorite'),
       Watchlist.refresh('browse')
     ]);
+
+    logger.info(`Picker data loaded: favorite=${favoriteData.length}, browse=${browseData.length}`);
 
     // 构建HTML内容
     let html = '';

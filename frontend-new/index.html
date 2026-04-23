@@ -22,6 +22,8 @@
   <link rel="stylesheet" href="/src/styles/table.css">
   <link rel="stylesheet" href="/src/styles/kline-table.css">
   <link rel="stylesheet" href="/src/styles/watchlist.css">
+  <link rel="stylesheet" href="/src/styles/watchlist-skeleton.css">
+  <link rel="stylesheet" href="/src/styles/watchlist-controls.css">
   <link rel="stylesheet" href="/src/styles/signals.css">
   <link rel="stylesheet" href="/src/styles/multiTimeframe.css">
   <link rel="stylesheet" href="/src/styles/prediction.css">
@@ -210,81 +212,81 @@
     <!-- 我的关注Tab -->
     <div id="tab-watchlist" class="tab-content">
       <!-- 主工具栏 -->
-      <div style="background: #1f2937; border-radius: 8px; padding: 8px 8px; margin: 0px 0 0 0; border: 1px solid #374151;">
+      <div class="watchlist-toolbar">
         <!-- 第一行：添加 + 操作按钮 -->
-        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+        <div class="toolbar-section">
           <!-- 添加股票 -->
-          <div style="display: flex; gap: 4px; flex: 0 0 auto;">
-            <input type="text" class="form-input" id="watchlist-code" placeholder="股票代码" style="min-width: 100px; padding: 6px 10px; font-size: 12px; height: 32px; font-weight: 600;">
-            <button class="btn btn-primary" id="add-watchlist-btn" style="padding: 6px 12px; font-size: 12px; height: 32px; font-weight: 600;">➕ 添加</button>
+          <div class="control-group">
+            <input type="text" class="form-input" id="watchlist-code" placeholder="股票代码">
+            <button class="btn btn-primary" id="add-watchlist-btn">➕ 添加</button>
           </div>
 
           <div style="flex: 1;"></div>
 
           <!-- 操作按钮 -->
-          <div style="display: flex; gap: 6px;">
-            <button class="btn btn-secondary" id="batch-import-toggle-btn" style="padding: 6px 12px; font-size: 12px; height: 32px; font-weight: 600;">📥 批量导入</button>
-            <button class="btn btn-primary" id="batch-analyze-btn" style="padding: 6px 12px; font-size: 12px; height: 32px; font-weight: 600;">⚡ 批量分析</button>
-            <button class="btn btn-warning" id="clear-cache-btn" style="padding: 6px 12px; font-size: 12px; background: linear-gradient(135deg, #f59e0b, #d97706) !important; height: 32px; font-weight: 600;">🗑️ 清缓存</button>
-            <button class="btn btn-secondary" id="refresh-watchlist-btn" style="padding: 6px 12px; font-size: 12px; height: 32px; font-weight: 600;">🔄 刷新</button>
+          <div class="control-group">
+            <button class="btn btn-secondary" id="batch-import-toggle-btn">📥 批量导入</button>
+            <button class="btn btn-primary" id="batch-analyze-btn">⚡ 批量分析</button>
+            <button class="btn btn-warning" id="clear-cache-btn">🗑️ 清缓存</button>
+            <button class="btn btn-secondary" id="refresh-watchlist-btn">🔄 刷新</button>
           </div>
         </div>
 
         <!-- 第二行：筛选 -->
-        <div id="watchlist-filter-row" style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; justify-content: space-between; width: 100%;">
-          <span style="color: #9ca3af; font-size: 12px; font-weight: 600;">🎯 筛选:</span>
-          <label style="color: #f9fafb; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600;">
-            <input type="checkbox" id="filter-bullish" style="width: 14px; height: 14px;">
+        <div id="watchlist-filter-row" class="toolbar-section">
+          <span class="control-label">🎯 筛选:</span>
+          <label class="control-label-inline">
+            <input type="checkbox" id="filter-bullish">
             <span>只看看涨</span>
           </label>
-          <label style="color: #f9fafb; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600;">
-            <input type="checkbox" id="filter-bearish" style="width: 14px; height: 14px;">
+          <label class="control-label-inline">
+            <input type="checkbox" id="filter-bearish">
             <span>只看看跌</span>
           </label>
-          <label style="color: #f9fafb; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 600;">
-            <input type="checkbox" id="filter-high-score" style="width: 14px; height: 14px;">
+          <label class="control-label-inline">
+            <input type="checkbox" id="filter-high-score">
             <span>评分≥3</span>
           </label>
         </div>
 
         <!-- 批量导入区域（可折叠） -->
-        <div id="batch-import-area" style="display: none; background: #111827; padding: 8px; border-radius: 6px; border: 1px solid #374151; margin-bottom: 6px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <div style="font-size: 12px; font-weight: 600; color: #f9fafb;">📥 批量导入</div>
-            <button id="batch-import-close-btn" style="background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer;">&times;</button>
+        <div id="batch-import-area" class="batch-import-area">
+          <div class="batch-import-header">
+            <div class="batch-import-title">📥 批量导入</div>
+            <button id="batch-import-close-btn" class="close-btn">&times;</button>
           </div>
           <textarea
             id="batch-import-text"
+            class="batch-import-textarea"
             placeholder="粘贴文本，自动识别股票代码。支持：603520、SH603520、sz300001 或任何包含6位数字的文本"
-            style="width: 100%; min-height: 60px; padding: 6px 10px; background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: #f9fafb; font-size: 12px; resize: vertical; margin-bottom: 6px;"
           ></textarea>
-          <div style="display: flex; gap: 6px;">
-            <button class="btn btn-primary" id="batch-import-preview-btn" style="padding: 6px 12px; font-size: 12px; height: 32px;">🔍 识别</button>
-            <button class="btn btn-secondary" id="batch-import-clear-btn" style="padding: 6px 12px; font-size: 12px; height: 32px;">清空</button>
+          <div class="control-group">
+            <button class="btn btn-primary" id="batch-import-preview-btn">🔍 识别</button>
+            <button class="btn btn-secondary" id="batch-import-clear-btn">清空</button>
           </div>
-          <div id="batch-import-preview" style="display: none; margin-top: 6px;">
-            <div style="font-size: 11px; color: #9ca3af; margin-bottom: 4px;">识别到：</div>
-            <div id="batch-import-preview-list" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;"></div>
-            <button class="btn btn-primary" id="batch-import-confirm-btn" style="width: 100%; padding: 6px 12px; font-size: 12px; height: 32px;">✅ 确认导入</button>
+          <div id="batch-import-preview" class="batch-import-preview">
+            <div class="batch-import-preview-label">识别到：</div>
+            <div id="batch-import-preview-list" class="batch-import-preview-list"></div>
+            <button class="btn btn-primary" id="batch-import-confirm-btn">✅ 确认导入</button>
           </div>
         </div>
 
         <!-- 第三行：视图切换 + 排序 + 批量选择 + 自选股/浏览股切换 -->
-        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; justify-content: space-between; width: 100%;">
+        <div class="toolbar-section">
           <!-- 视图切换按钮 -->
-          <div style="display: flex; gap: 3px;">
-            <button id="viewMode-card" class="view-btn" data-view="card" style="padding: 6px 12px; background: #374151; color: #f9fafb; border: 1px solid #4b5563; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; height: 32px;">
+          <div class="control-group">
+            <button id="viewMode-card" class="view-btn" data-view="card">
               📇 卡片
             </button>
-            <button id="viewMode-table" class="view-btn" data-view="table" style="padding: 6px 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; height: 32px;">
+            <button id="viewMode-table" class="view-btn active" data-view="table">
               📋 表格
             </button>
           </div>
 
           <!-- 排序控件（仅卡片视图） -->
-          <div id="card-view-sort-controls" style="display: none; gap: 6px; align-items: center;">
-            <span style="color: #9ca3af; font-size: 11px; font-weight: 600;">📊 排序:</span>
-            <select id="watchlist-sort-select" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 4px; font-size: 12px; font-weight: 600; height: 32px;">
+          <div id="card-view-sort-controls" class="control-group" style="display: none;">
+            <span class="control-label">📊 排序:</span>
+            <select id="watchlist-sort-select">
               <option value="default">默认</option>
               <option value="score_desc">评分 (高→低)</option>
               <option value="score_asc">评分 (低→高)</option>
@@ -295,45 +297,39 @@
           </div>
 
           <!-- 批量选择控件（仅卡片视图） -->
-          <div id="card-view-batch-controls" style="display: none; gap: 6px; align-items: center;">
-            <button id="batch-select-toggle-btn" style="padding: 6px 10px; background: #8b5cf6; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; height: 32px;">
-              ☑️ 批量选择
-            </button>
-            <button id="batch-delete-btn" style="padding: 6px 10px; background: #dc2626; border: none; color: white; border-radius: 4px; font-size: 11px; cursor: pointer; display: none; font-weight: 600; height: 32px;">
-              🗑️ 删除
-            </button>
-            <span id="filter-stats" style="color: #10b981; font-size: 11px; font-weight: 600;"></span>
+          <div id="card-view-batch-controls" class="control-group" style="display: none;">
+            <button id="batch-select-toggle-btn">☑️ 批量选择</button>
+            <button id="batch-delete-btn" style="display: none;">🗑️ 删除</button>
+            <span id="filter-stats"></span>
           </div>
 
-          <div style="width: 1px; height: 20px; background: #374151; margin: 0 8px;"></div>
+          <div class="toolbar-divider"></div>
 
           <!-- 自选股 / 浏览股切换 -->
-          <button id="subtab-favorite" data-watchlist-tab="favorite" style="padding: 6px 14px; height: 32px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+          <button id="subtab-favorite" class="subtab-btn active" data-watchlist-tab="favorite">
             ⭐ 自选股
           </button>
-          <button id="subtab-browse" data-watchlist-tab="browse" style="padding: 6px 14px; height: 32px; background: #374151; color: #f9faff; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+          <button id="subtab-browse" class="subtab-btn" data-watchlist-tab="browse">
             📖 浏览股
           </button>
 
           <!-- 周期选择器 -->
-          <div style="display: flex; align-items: center; gap: 4px; margin-left: 8px;">
-            <span style="color: #9ca3af; font-size: 11px; font-weight: 600;">⏰ 周期:</span>
-            <select id="watchlist-timeframe" style="padding: 4px 8px; background: #374151; border: 1px solid #4b5563; color: #f9fafb; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; height: 32px;">
+          <div class="control-group">
+            <span class="control-label">⏰ 周期:</span>
+            <select id="watchlist-timeframe">
               <option value="30">30分钟</option>
               <option value="60">60分钟</option>
               <option value="daily" selected>日线</option>
               <option value="weekly">周线</option>
               <option value="monthly">月线</option>
             </select>
-            <span id="stock-type-indicator" style="color: #10b981; font-size: 10px; margin-left: 6px; padding: 2px 6px; background: #1f2937; border-radius: 4px; border: 1px solid #374151; font-weight: 600;">
-              📈 A股
-            </span>
+            <span id="stock-type-indicator">📈 A股</span>
           </div>
         </div>
       </div>
 
       <!-- 关注列表内容 -->
-      <div id="watchlist" style="padding: 0 8px 8px 8px;"></div>
+      <div id="watchlist"></div>
     </div>
 
     <!-- 系统配置Tab -->

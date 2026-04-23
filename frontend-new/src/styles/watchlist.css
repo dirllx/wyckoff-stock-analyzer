@@ -2,6 +2,141 @@
    自选股样式
    ======================================== */
 
+/* 工具栏容器 */
+.watchlist-toolbar {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 0;
+  border: 1px solid #374151;
+}
+
+/* 工具栏分隔线 */
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #374151;
+  margin: 0 8px;
+}
+
+/* 子标签按钮 */
+.subtab-btn {
+  padding: 6px 14px;
+  background: #374151;
+  color: #f9faff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 80px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.subtab-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+}
+
+/* 批量导入区域 */
+.batch-import-area {
+  display: none;
+  background: #111827;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  margin-bottom: 8px;
+}
+
+.batch-import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.batch-import-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 16px;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.close-btn:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.batch-import-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 10px;
+  background: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  color: #f9faff;
+  font-size: 12px;
+  resize: vertical;
+  margin-bottom: 6px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.batch-import-preview {
+  display: none;
+  margin-top: 6px;
+}
+
+.batch-import-preview-label {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.batch-import-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+/* 股票类型指示器 */
+#stock-type-indicator {
+  color: #10b981;
+  font-size: 10px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: #1f2937;
+  border-radius: 4px;
+  border: 1px solid #374151;
+  font-weight: 600;
+}
+
+/* 筛选统计 */
+#filter-stats {
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* 自选股网格布局 */
 .watchlist-grid {
   display: grid;
@@ -280,113 +415,197 @@
 }
 
 /* ========================================
-   表格视图样式
+   表格视图样式 - 与旧版本K线表格样式完全一致
    ======================================== */
 
 .watchlist-table-wrapper {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: var(--spacing-lg);
+  background: #1f2937;
+  border-radius: 10px;
+  padding: 0 0 12px 0;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid #374151;
+  max-height: 800px;
 }
 
 .watchlist-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
+  table-layout: fixed;
+  min-width: 1600px;
 }
 
-.watchlist-table thead {
-  background: var(--bg-secondary);
-  border-bottom: 2px solid var(--border-color);
+/* 单元格样式 - 与旧版本K线表格一致 */
+.watchlist-table th,
+.watchlist-table td {
+  padding: 2px 1px;
+  text-align: center;
+  border-bottom: none;
+  line-height: 1.2;
 }
 
+/* 表头样式 - 与旧版本K线表格一致 */
 .watchlist-table th {
-  padding: var(--spacing-sm) var(--spacing-md);
-  text-align: left;
   font-weight: 600;
-  color: var(--text-secondary);
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
+  color: #9ca3af;
+  font-size: 10px;
+  background: #111827;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* 第一列（代码）居中对齐 */
+.watchlist-table td:first-child {
+  text-align: center;
+}
+
+/* 第一列表头也居中对齐 */
+.watchlist-table th:first-child {
+  text-align: center;
+}
+
+/* 列宽设置 */
+/* 第1-2列（代码、名称）：45px */
+.watchlist-table th:nth-child(1),
+.watchlist-table td:nth-child(1),
+.watchlist-table th:nth-child(2),
+.watchlist-table td:nth-child(2) {
+  width: 45px;
+}
+
+/* 第3列（日期）：68px */
+.watchlist-table th:nth-child(3),
+.watchlist-table td:nth-child(3) {
+  width: 68px;
+}
+
+/* 第4-12列（收盘价、涨跌幅、量能、MA5、MA10、MA20、MA30、MA60、阶段）：45px */
+.watchlist-table th:nth-child(n+4):nth-child(-n+12),
+.watchlist-table td:nth-child(n+4):nth-child(-n+12) {
+  width: 45px;
+}
+
+/* 第13列（评分）：38px */
+.watchlist-table th:nth-child(13),
+.watchlist-table td:nth-child(13) {
+  width: 38px;
+}
+
+/* 第14-15列（信号强度、信号）：45px */
+.watchlist-table th:nth-child(n+14):nth-child(-n+15),
+.watchlist-table td:nth-child(n+14):nth-child(-n+15) {
+  width: 45px;
+}
+
+/* 第16列（操作）：85px */
+.watchlist-table th:nth-child(16),
+.watchlist-table td:nth-child(16) {
+  width: 85px;
 }
 
 .watchlist-table tbody {
-  background: var(--bg-primary);
+  background: #1f2937;
 }
 
-.watchlist-table-row {
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color var(--transition-fast);
+/* 行样式 */
+.watchlist-table tbody tr {
+  transition: background 0.2s;
   cursor: pointer;
 }
 
 .watchlist-table-row:hover {
-  background: var(--bg-secondary);
+  background: rgba(59, 130, 246, 0.15) !important;
 }
 
-.watchlist-table-row:last-child {
-  border-bottom: none;
+.watchlist-table-row:active {
+  background: rgba(59, 130, 246, 0.25) !important;
 }
 
-.watchlist-table td {
-  padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--text-primary);
-}
+/* 涨跌颜色 - 与旧版本K线表格一致 */
+.watchlist-table .kline-red { color: #ef4444; }
+.watchlist-table .kline-green { color: #10b981; }
+
+/* MA列颜色 - 与旧版本K线表格一致 */
+.watchlist-table .ma5 { color: #3b82f6; }
+.watchlist-table .ma10 { color: #8b5cf6; }
+.watchlist-table .ma15 { color: #f59e0b; }
+.watchlist-table .ma30 { color: #10b981; }
+.watchlist-table .ma60 { color: #ec4899; }
+.watchlist-table .ma90 { color: #14b8a6; }
+.watchlist-table .ma120 { color: #f97316; }
+.watchlist-table .ma250 { color: #06b6d4; }
 
 .watchlist-table-btn {
-  padding: 8px 14px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+  border-radius: 4px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.25s ease;
-  min-height: 36px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-shrink: 0;
 }
 
 .watchlist-table-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background: rgba(99, 102, 241, 0.1);
+  transform: scale(1.1);
 }
 
-/* 阶段和信号徽章（表格内） */
+.watchlist-table-btn:active {
+  transform: scale(0.95);
+}
+
+/* 阶段和信号徽章（表格内）- 与旧版本一致 */
 .phase-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: var(--font-size-sm);
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
-}
-
-.phase-U {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-.phase-D {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  margin-left: 4px;
 }
 
 .phase-A {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid #fbbf24;
+}
+
+.phase-U {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+
+.phase-D {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
 .phase-DS {
-  background: rgba(6, 182, 212, 0.15);
-  color: #06b6d4;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
 }
 
+.phase-neutral,
 .phase-震荡 {
-  background: rgba(107, 114, 128, 0.15);
-  color: #6b7280;
+  background: rgba(156, 163, 175, 0.1);
+  color: #9ca3af;
+  border: 1px solid #374151;
 }
 
 .signal-badge {
@@ -429,8 +648,30 @@
 
   .watchlist-table th,
   .watchlist-table td {
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: 4px 6px; /* 与 kline-table 移动端一致 */
     font-size: var(--font-size-xs);
+  }
+
+  .watchlist-table-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-table th,
+  .watchlist-table td {
+    padding: 3px 4px; /* 与 kline-table 小屏幕一致 */
+    font-size: 10px;
+  }
+
+  .watchlist-table-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 12px;
   }
 }
 

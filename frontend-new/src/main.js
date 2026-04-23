@@ -28,6 +28,7 @@ import { healthApi } from './api/health.js';
 // 移动端组件
 import BottomNav from './components/BottomNav.js';
 import { HealthStatusBar } from './components/HealthStatusBar.js';
+import StockInput from './components/StockInput.js';
 import mobileRefresh from './utils/mobileRefresh.js';
 import offlineDetector from './utils/offline.js';
 import performanceMonitor from './utils/performanceMonitor.js';
@@ -850,12 +851,6 @@ function bindEvents() {
     await loadWatchlist(globalErrorHandler, doAnalyzeStock);
   });
 
-  // 监听周期切换事件
-  eventBus.on('WATCHLIST_TIMEFRAME_CHANGED', async () => {
-    logger.info('Watchlist timeframe changed event received');
-    await loadWatchlist(globalErrorHandler, doAnalyzeStock);
-  });
-
   // 监听视图切换事件
   eventBus.on('WATCHLIST_VIEW_CHANGED', async () => {
     logger.info('Watchlist view changed event received');
@@ -914,6 +909,14 @@ async function initApp() {
 
     // 初始化主题
     initTheme();
+
+    // 初始化股票输入快速选择器
+    try {
+      StockInput.init();
+      logger.info('StockInput initialized');
+    } catch (error) {
+      logger.warn('Failed to initialize StockInput:', error);
+    }
 
     // 初始化移动端组件
     if (window.innerWidth <= 768) {

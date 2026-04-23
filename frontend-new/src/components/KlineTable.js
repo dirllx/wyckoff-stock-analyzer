@@ -43,10 +43,10 @@ export class KlineTable {
   }
 
   /**
-   * 格式化日期 - 与旧版本一致
+   * 格式化日期 - 短日期格式（月-日）
    * @param {string} dateStr - 日期字符串
    * @param {string} timeframe - 时间周期
-   * @returns {string} 格式化后的日期
+   * @returns {string} 格式化后的日期（MM-DD）
    */
   static formatDate(dateStr, timeframe = 'daily') {
     return formatDateString(dateStr, timeframe);
@@ -481,9 +481,8 @@ export class KlineTable {
     // 信号列
     headers.push('信号');
 
-    // 多空线列
-    const hasDuokong = quotes && quotes.length > 0 && quotes.some(q => q.duokong_line != null);
-    if (hasDuokong) headers.push('多空线');
+    // 多空线列（始终显示，参考旧版本）
+    headers.push('多空线');
 
     // 涨跌幅列（新功能）
     headers.push('涨跌幅');
@@ -507,28 +506,9 @@ export class KlineTable {
    * @returns {string} 信号单元格HTML
    */
   static formatSignal(quote, signalsMap) {
-    if (!signalsMap) return '-';
-
-    const dateStr = quote.date ? quote.date.substring(0, 10) : null;
-    const signal = signalsMap[dateStr];
-
-    if (!signal) {
-      // 没有信号数据时，仍然显示信号强度指示器
-      const strengthIndicator = this.getSignalStrength(quote);
-      return strengthIndicator || '-';
-    }
-
-    const isLong = signal.direction === 'LONG';
-    const color = isLong ? 'var(--color-success, #10b981)' : 'var(--color-error, #ef4444)';
-    const arrow = isLong ? '↑' : '↓';
-    const label = isLong ? '多' : '空';
-    const score = signal.score || '';
-    const title = signal.reason || `${signal.direction} ${score}分`;
-
-    // 添加信号强度指示器（新功能）
-    const strengthIndicator = this.getSignalStrength(quote);
-
-    return `<span style="color:${color};cursor:help;" title="${title}">${arrow}${label}${score}</span>${strengthIndicator}`;
+    // 参考旧版本：直接使用 getSignalStrength 显示信号强度
+    // 不依赖 signalsMap
+    return this.getSignalStrength(quote) || '-';
   }
 
   /**
@@ -542,10 +522,27 @@ export class KlineTable {
     const map = {};
     signals.forEach(signal => {
       if (signal.date) {
-        const dateStr = signal.date.substring(0, 10);
-        // 保留评分最高的信号
-        if (!map[dateStr] || (signal.score > map[dateStr].score)) {
-          map[dateStr] = signal;
+        // 健壮的日期提取 - 处理各种日期格式
+        let dateStr = null;
+        try {
+          const date = new Date(signal.date);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            dateStr = `${year}-${month}-${day}`;
+          } else {
+            dateStr = signal.date.substring(0, 10);
+          }
+        } catch {
+          dateStr = signal.date.substring(0, 10);
+        }
+
+        if (dateStr) {
+          // 保留评分最高的信号
+          if (!map[dateStr] || (signal.score > map[dateStr].score)) {
+            map[dateStr] = signal;
+          }
         }
       }
     });

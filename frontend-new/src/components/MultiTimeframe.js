@@ -8,6 +8,7 @@ import { stocksApi } from '../api/stocks.js';
 import apiClient from '../api/client.js';
 import { logger } from '../utils/logger.js';
 import { toast } from '../utils/toast.js';
+import { formatDateString } from '../utils/formatting.js';
 
 /**
  * 多周期分析类
@@ -539,11 +540,7 @@ export class MultiTimeframe {
       `;
 
       validSignals.slice(0, 6).forEach(signal => {
-        const isIntraday = signal.timeframe === '30' || signal.timeframe === '60';
-        const dateObj = new Date(signal.date);
-        const signalDate = isIntraday
-          ? `${dateObj.toLocaleDateString('zh-CN')} ${dateObj.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
-          : dateObj.toLocaleDateString('zh-CN');
+        const signalDate = formatDateString(signal.date, signal.timeframe);
 
         const scoreColor = signal.score >= 5 ? '#10b981' : signal.score >= 4 ? '#f59e0b' : '#9ca3af';
         const directionIcon = signal.direction === 'LONG' ? '📈' : signal.direction === 'SHORT' ? '📉' : '➡️';

@@ -1,0 +1,286 @@
+/* ========================================
+   关注列表控件统一样式
+   统一按钮、输入框、选择器的高度和宽度
+   ======================================== */
+
+/* ========================================
+   基础尺寸变量
+   ======================================== */
+:root {
+  --control-height: 32px;
+  --control-padding-btn: 6px 12px;
+  --control-padding-input: 6px 10px;
+  --control-font-size: 12px;
+  --control-font-weight: 600;
+  --control-border-radius: 6px;
+  --control-gap: 6px;
+}
+
+/* ========================================
+   统一按钮样式
+   ======================================== */
+#tab-watchlist button,
+#tab-watchlist .btn,
+.watchlist-control-btn {
+  height: var(--control-height);
+  padding: var(--control-padding-btn);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  border-radius: var(--control-border-radius);
+  min-width: fit-content;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+/* 主要按钮 */
+#tab-watchlist .btn-primary,
+#tab-watchlist button.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+}
+
+#tab-watchlist .btn-primary:hover,
+#tab-watchlist button.btn-primary:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* 次要按钮 */
+#tab-watchlist .btn-secondary,
+#tab-watchlist button.btn-secondary {
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+}
+
+#tab-watchlist .btn-secondary:hover,
+#tab-watchlist button.btn-secondary:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* 警告按钮 */
+#tab-watchlist .btn-warning,
+#tab-watchlist button.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+}
+
+/* 表格操作按钮 */
+.watchlist-table-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+}
+
+/* ========================================
+   统一输入框样式
+   ======================================== */
+#tab-watchlist input[type="text"],
+#tab-watchlist input.form-input {
+  height: var(--control-height);
+  padding: var(--control-padding-input);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  border-radius: var(--control-border-radius);
+  border: 1px solid #4b5563;
+  background: #1f2937;
+  color: #f9faff;
+  outline: none;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+  box-sizing: border-box;
+}
+
+#tab-watchlist input[type="text"]:focus,
+#tab-watchlist input.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+  background: #111827;
+}
+
+#tab-watchlist input[type="text"]::placeholder,
+#tab-watchlist input.form-input::placeholder {
+  color: #6b7280;
+}
+
+/* ========================================
+   统一选择器样式
+   ======================================== */
+#tab-watchlist select {
+  height: var(--control-height);
+  padding: var(--control-padding-input);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  border-radius: var(--control-border-radius);
+  border: 1px solid #4b5563;
+  background: #1f2937;
+  color: #f9faff;
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  min-width: 80px;
+}
+
+#tab-watchlist select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+  background: #111827;
+}
+
+/* ========================================
+   统一复选框样式
+   ======================================== */
+#tab-watchlist input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+/* ========================================
+   控件组统一样式
+   ======================================== */
+#tab-watchlist .control-group {
+  display: flex;
+  gap: var(--control-gap);
+  align-items: center;
+}
+
+#tab-watchlist .control-group-inline {
+  display: inline-flex;
+  gap: var(--control-gap);
+  align-items: center;
+}
+
+/* ========================================
+   标签样式统一
+   ======================================== */
+#tab-watchlist .control-label {
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+#tab-watchlist .control-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  color: #f9fafb;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ========================================
+   特殊控件样式
+   ======================================== */
+
+/* 视图切换按钮 */
+.view-btn {
+  height: var(--control-height);
+  padding: var(--control-padding-btn);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  border-radius: calc(var(--control-border-radius) - 1px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.view-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+}
+
+.view-btn:not(.active) {
+  background: #374151;
+  color: #f9faff;
+  border: 1px solid #4b5563;
+}
+
+/* 子标签切换按钮 */
+#subtab-favorite,
+#subtab-browse {
+  height: var(--control-height);
+  padding: var(--control-padding-btn);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  border-radius: var(--control-border-radius);
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+#subtab-favorite.active,
+#subtab-browse.active {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+}
+
+#subtab-favorite:not(.active),
+#subtab-browse:not(.active) {
+  background: #374151;
+  color: #f9faff;
+}
+
+/* ========================================
+   工具栏区域样式
+   ======================================== */
+#tab-watchlist .toolbar-section {
+  display: flex;
+  gap: var(--control-gap);
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+#tab-watchlist .toolbar-section:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   响应式适配
+   ======================================== */
+@media (max-width: 768px) {
+  :root {
+    --control-height: 36px;
+    --control-padding-btn: 6px 10px;
+    --control-padding-input: 6px 8px;
+    --control-font-size: 11px;
+  }
+
+  #tab-watchlist button,
+  #tab-watchlist .btn {
+    min-height: 44px; /* 移动端触摸友好 */
+    min-width: 44px;
+  }
+
+  #tab-watchlist input[type="text"],
+  #tab-watchlist input.form-input,
+  #tab-watchlist select {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --control-height: 40px;
+  }
+}

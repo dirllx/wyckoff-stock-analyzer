@@ -340,13 +340,9 @@
     gap: 12px;
   }
 
-  /* 标签页导航 */
+  /* 隐藏顶部标签页导航（移动端使用底部导航代替） */
   .tab-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 8px 16px;
-    gap: 8px;
+    display: none !important;
   }
 
   .tab-btn {
@@ -356,19 +352,55 @@
   }
 
   /* 表格响应式 */
+  /* 表格响应式 */
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   table {
-    font-size: 14px;
+    font-size: 11px;
+    width: 100%;
+    table-layout: fixed;
   }
 
   table th,
   table td {
-    padding: 8px 12px;
-    min-width: 80px;
+    padding: 4px 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 根据列数自动分配宽度 */
+  table {
+    table-layout: fixed;
+  }
+
+  /* 所有列平均分配，最小宽度 */
+  table th,
+  table td {
+    min-width: 35px;
+    max-width: 60px;
+  }
+
+  /* 第一列（日期）加宽10% */
+  table th:first-child,
+  table td:first-child {
+    min-width: 65px;
+    max-width: 80px;
+    width: 11%; /* 约10%加宽 */
+  }
+
+  /* 数值列右对齐 */
+  table td:not(:first-child):not(:last-child) {
+    text-align: right;
+  }
+
+  /* 数值列右对齐 */
+  table th:not(:first-child):not(:last-child),
+  table td:not(:first-child):not(:last-child) {
+    text-align: right;
   }
 
   /* 图表容器 */
@@ -388,6 +420,46 @@
   /* 关注列表 */
   .watchlist-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* 关注列表表格 */
+  .watchlist-table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .watchlist-table {
+    font-size: 11px;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .watchlist-table th,
+  .watchlist-table td {
+    padding: 4px 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 35px;
+    max-width: 60px;
+  }
+
+  .watchlist-table th:first-child,
+  .watchlist-table td:first-child {
+    min-width: 55px;
+    max-width: 80px;
+  }
+
+  /* K线表格 - 与关注列表表格高度一致 */
+  .kline-table-wrapper,
+  #klineTableContainer {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .kline-table {
+    max-height: 400px;
+    overflow-y: auto;
   }
 
   /* 表单元素 */

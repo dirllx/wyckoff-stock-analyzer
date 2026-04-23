@@ -197,18 +197,22 @@ export function formatDateString(dateStr, timeframe = 'daily') {
 
   const date = new Date(dateStr);
 
+  // 检查日期是否有效
+  if (isNaN(date.getTime())) {
+    return dateStr;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
   // 分钟线显示 MM-DD HH:MM
   if (['1', '5', '15', '30', '60'].includes(timeframe)) {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${month}-${day} ${hours}:${minutes}`;
   }
 
   // 日线以上显示 MM-DD
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
   return `${month}-${day}`;
 }
 

@@ -365,7 +365,7 @@ function renderStandardAnalysisUI(analysis, signals) {
 
       html += `
         <div class="signal-item signal-${signalClass}">
-          <div class="signal-date">${signal.date ? new Date(signal.date).toLocaleDateString('zh-CN') : '-'}</div>
+          <div class="signal-date">${signal.date ? signal.date.substring(0, 10).replace(/^(\d{4})-/, '') : '-'}</div>
           <div class="signal-info">
             <span class="signal-direction-small">${signalText}</span>
             <span class="signal-score">评分: ${signal.score}/5</span>
