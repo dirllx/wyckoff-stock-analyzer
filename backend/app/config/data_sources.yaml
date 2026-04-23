@@ -20,7 +20,7 @@ scheduling:
   strategy: priority
 sources:
   akshare:
-    enabled: true
+    enabled: false
     name: akshare
     priority: 3
     retry_count: 2
