@@ -32,6 +32,7 @@ from app.services.data.source_scheduler import get_scheduler
 from app.utils.converters import dict_to_stock_quotes
 from app.repositories.stock_repository import StockRepository
 from app.utils.cache_validator import CacheValidator
+from app.services.stock_validator import get_validator
 
 router = APIRouter()
 limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
@@ -82,6 +83,36 @@ limiter = Limiter(key_func=lambda r: r.client.host if r else "127.0.0.1")
 # @limiter.limit("10/minute")  # 暂时禁用速率限制
 async def analyze_stock(request: Request, body: StockAnalysisRequest, db: Session = Depends(get_db)):
     try:
+        # ========== 股票代码验证 ==========
+        validator = get_validator()
+        validation_result = validator.stock_exists(body.code)
+
+        if not validation_result["exists"]:
+            # 获取相似代码建议
+            similar_codes = validator.get_similar_codes(body.code)
+
+            error_msg = validation_result["message"]
+            if similar_codes:
+                error_msg += f"，您是否想查询: {', '.join(similar_codes[:3])}"
+
+            raise HTTPException(
+                status_code=400,
+                detail=error_msg
+            )
+
+        logger.info(f"股票验证通过: {body.code} - {validation_result.get('name', '')}")
+
+        # ========== ETF/基金分钟线特殊处理 ==========
+        market = validation_result.get("market", "")
+        is_etf_or_fund = market == "etf" or body.code.startswith(('5', '15', '16'))
+        is_minute_timeframe = body.timeframe in ['1', '5', '15', '30', '60']
+
+        if is_etf_or_fund and is_minute_timeframe:
+            raise HTTPException(
+                status_code=400,
+                detail=f"ETF/基金（{validation_result.get('name', body.code)}）仅支持日线查询，不支持分钟线。请切换到日线周期。"
+            )
+
         # ========== Redis缓存：先检查缓存 ==========
         # 注意：如果指定了end_date，跳过缓存（因为缓存不包含日期信息）
         cached_analysis = None
@@ -548,6 +579,116 @@ async def get_stock_signals(code: str, db: Session = Depends(get_db)):
         WyckoffSignalResponse.model_validate(signal)
         for signal in signals
     ]
+
+
+@router.get(
+    "/stocks/validate/{code}",
+    summary="验证股票代码",
+    description="""
+验证股票代码是否存在并获取基本信息。
+
+## 参数说明
+
+- **code**: 股票代码（6位数字）
+
+## 返回数据
+
+- **exists**: 是否存在
+- **valid**: 格式是否正确
+- **name**: 股票名称
+- **market**: 所属市场
+- **board**: 所属板块
+- **similar_codes**: 相似代码建议（当输入错误时）
+
+## 示例请求
+
+```
+GET /api/v1/stocks/validate/600000
+GET /api/v1/stocks/validate/516100
+```
+"""
+)
+async def validate_stock(code: str):
+    """验证股票代码"""
+    try:
+        validator = get_validator()
+
+        # 格式验证
+        format_result = validator.validate_format(code)
+
+        # 存在性验证
+        exists_result = validator.stock_exists(code)
+
+        # 如果不存在，获取相似代码
+        similar_codes = []
+        if not exists_result["exists"]:
+            similar_codes = validator.get_similar_codes(code)
+
+        return {
+            "code": code,
+            "valid": format_result["valid"],
+            "market": format_result["market"],
+            "board": format_result["board"],
+            "exists": exists_result["exists"],
+            "name": exists_result.get("name"),
+            "message": exists_result.get("message", format_result.get("message", "")),
+            "similar_codes": similar_codes
+        }
+
+    except Exception as e:
+        logger.error(f"股票验证失败: {e}")
+        raise HTTPException(status_code=500, detail=f"验证失败: {str(e)}")
+
+
+@router.get(
+    "/stocks/search",
+    summary="搜索股票",
+    description="""
+按代码或名称搜索股票。
+
+## 参数说明
+
+- **keyword**: 搜索关键词（股票代码或名称）
+- **limit**: 返回数量限制（默认20，最多50）
+
+## 返回数据
+
+返回匹配的股票列表，包含代码、名称、市场等信息。
+
+## 示例请求
+
+```
+GET /api/v1/stocks/search?keyword=600&limit=10
+GET /api/v1/stocks/search?keyword=银行
+```
+"""
+)
+async def search_stocks(keyword: str = "", limit: int = 20):
+    """搜索股票"""
+    try:
+        if not keyword or len(keyword) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="搜索关键词至少需要2个字符"
+            )
+
+        if limit > 50:
+            limit = 50
+
+        validator = get_validator()
+        results = validator.search_stocks(keyword, limit)
+
+        return {
+            "total": len(results),
+            "keyword": keyword,
+            "results": results
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"股票搜索失败: {e}")
+        raise HTTPException(status_code=500, detail=f"搜索失败: {str(e)}")
 
 
 @router.get(
@@ -1311,4 +1452,62 @@ async def get_bulk_stock_quotes(
     except Exception as e:
         logger.error(f"批量获取行情失败: {e}")
         raise HTTPException(status_code=500, detail=f"批量获取失败: {str(e)}")
+
+
+@router.delete("/stocks/{code}/clean", summary="清理股票数据")
+async def clean_stock_data(code: str, db: Session = Depends(get_db)):
+    """
+    清理指定股票的所有数据
+
+    用于删除某只股票的所有K线数据和股票记录，以便重新获取数据。
+
+    Args:
+        code: 股票代码
+
+    Returns:
+        清理结果
+    """
+    try:
+        logger.info(f"开始清理股票数据: {code}")
+
+        # 查找股票
+        stock = db.query(Stock).filter(Stock.code == code).first()
+
+        if not stock:
+            raise HTTPException(status_code=404, detail=f"股票 {code} 不存在")
+
+        # 删除该股票的所有K线数据
+        timeframes = ['daily', 'weekly', 'monthly', '30', '60', '15', '5', '1']
+        total_deleted = 0
+
+        for tf in timeframes:
+            deleted = db.query(StockQuote).filter(
+                StockQuote.stock_id == stock.id,
+                StockQuote.timeframe == tf
+            ).delete()
+            if deleted > 0:
+                logger.info(f"删除 {code} {tf} 周期数据: {deleted}条")
+                total_deleted += deleted
+            db.commit()  # 每个周期提交一次
+
+        # 删除股票记录
+        stock_name = stock.name
+        db.delete(stock)
+        db.commit()
+
+        logger.info(f"✅ 清理完成: {code} ({stock_name}), 删除 {total_deleted} 条K线数据")
+
+        return {
+            "code": code,
+            "name": stock_name,
+            "deleted_quotes": total_deleted,
+            "message": f"已清理 {code} ({stock_name}) 的所有数据"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"清理股票数据失败: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"清理失败: {str(e)}")
 

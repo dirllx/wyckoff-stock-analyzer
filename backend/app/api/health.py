@@ -14,6 +14,17 @@ from app.config import settings
 router = APIRouter()
 
 
+def get_database_type() -> str:
+    """获取当前数据库类型"""
+    from app.database import engine, DATABASE_URL
+    if DATABASE_URL.startswith("sqlite"):
+        return "sqlite"
+    elif "postgresql" in DATABASE_URL or "pg8000" in DATABASE_URL:
+        return "postgresql"
+    else:
+        return "unknown"
+
+
 def get_service_status():
     """获取各服务的详细状态"""
     services = {
@@ -25,7 +36,7 @@ def get_service_status():
         },
         "database": {
             "status": "connected" if test_db_connection() else "disconnected",
-            "type": "sqlite"
+            "type": get_database_type()
         },
         "redis": {
             "status": "connected" if test_redis_connection() else "disconnected",

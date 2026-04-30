@@ -99,22 +99,40 @@ class WyckoffAnalyzer:
         return result
 
     def _quotes_to_dataframe(self, quotes: List[StockQuote]) -> pd.DataFrame:
-        """将K线列表转换为DataFrame"""
+        """将K线列表转换为DataFrame（支持ORM对象和字典）"""
         data = []
         for quote in quotes:
-            data.append({
-                "date": quote.date,
-                "open": quote.open,
-                "high": quote.high,
-                "low": quote.low,
-                "close": quote.close,
-                "volume": quote.volume,
-                "ma5": quote.ma5,
-                "ma10": quote.ma10,
-                "ma20": quote.ma20,
-                "volume_ma5": quote.volume_ma5,
-                "obv": quote.obv
-            })
+            # 兼容字典格式和ORM对象格式
+            if isinstance(quote, dict):
+                # 字典格式（来自数据源调度器）
+                data.append({
+                    "date": quote.get("date"),
+                    "open": quote.get("open"),
+                    "high": quote.get("high"),
+                    "low": quote.get("low"),
+                    "close": quote.get("close"),
+                    "volume": quote.get("volume", 0),
+                    "ma5": quote.get("ma5"),
+                    "ma10": quote.get("ma10"),
+                    "ma20": quote.get("ma20"),
+                    "volume_ma5": quote.get("volume_ma5"),
+                    "obv": quote.get("obv")
+                })
+            else:
+                # ORM对象格式
+                data.append({
+                    "date": quote.date,
+                    "open": quote.open,
+                    "high": quote.high,
+                    "low": quote.low,
+                    "close": quote.close,
+                    "volume": quote.volume,
+                    "ma5": quote.ma5,
+                    "ma10": quote.ma10,
+                    "ma20": quote.ma20,
+                    "volume_ma5": quote.volume_ma5,
+                    "obv": quote.obv
+                })
 
         df = pd.DataFrame(data)
         df = df.sort_values("date").reset_index(drop=True)

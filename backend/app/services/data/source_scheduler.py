@@ -5,6 +5,7 @@
 import asyncio
 import time
 import yaml
+import threading
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 from pathlib import Path
@@ -28,6 +29,41 @@ def measure_time(func):
         elapsed = (time.time() - start) * 1000  # 毫秒
         return result, elapsed
     return wrapper
+
+
+def with_timeout(timeout_seconds):
+    """
+    超时装饰器，防止函数执行时间过长
+
+    Args:
+        timeout_seconds: 超时时间（秒）
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = [None]
+            exception = [None]
+
+            def worker():
+                try:
+                    result[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception[0] = e
+
+            thread = threading.Thread(target=worker, daemon=True)
+            thread.start()
+            thread.join(timeout=timeout_seconds)
+
+            if thread.is_alive():
+                logger.error(f"函数 {func.__name__} 执行超时（{timeout_seconds}秒）")
+                raise TimeoutError(f"函数 {func.__name__} 执行超时")
+
+            if exception[0]:
+                raise exception[0]
+
+            return result[0]
+        return wrapper
+    return decorator
 
 
 class DataSourceStats:
@@ -155,17 +191,17 @@ class SourceScheduler:
                 "ashare": {"enabled": True, "priority": 1},
                 "mcp": {"enabled": True, "priority": 2},
                 "baostock": {"enabled": True, "priority": 3},
-                "akshare": {"enabled": True, "priority": 4}
+                "akshare": {"enabled": False, "priority": 4}
             },
             "scheduling": {"strategy": "priority", "auto_fallback": True},
             "timeframe_priority": {
-                "daily": ["ashare", "mcp", "baostock", "akshare"],
-                "weekly": ["ashare", "mcp", "baostock", "akshare"],
-                "monthly": ["ashare", "mcp", "baostock", "akshare"],
-                "30": ["ashare", "mcp", "baostock", "akshare"],
-                "60": ["ashare", "mcp", "baostock", "akshare"],
-                "15": ["ashare", "mcp", "baostock", "akshare"],
-                "5": ["ashare", "mcp", "baostock", "akshare"]
+                "daily": ["ashare", "mcp", "baostock"],
+                "weekly": ["ashare", "mcp", "baostock"],
+                "monthly": ["ashare", "mcp", "baostock"],
+                "30": ["ashare"],
+                "60": ["ashare"],
+                "15": ["ashare"],
+                "5": ["ashare"]
             }
         }
 
@@ -242,6 +278,10 @@ class SourceScheduler:
 
         logger.info(f"数据源优先级列表 ({timeframe}): {priority_list}")
 
+        # 分钟线设置较短超时（30秒），日线更长（60秒）
+        is_minute_timeframe = timeframe in ['1', '5', '15', '30', '60']
+        timeout_seconds = 30 if is_minute_timeframe else 60
+
         attempts = 0
         last_error = None
 
@@ -259,29 +299,17 @@ class SourceScheduler:
             try:
                 logger.info(f"尝试使用 {source_name} 获取数据...")
 
-                # 调用数据源（同步方法，不需要await）
-                if source_name == "mcp":
-                    data, elapsed = self._fetch_from_mcp(
-                        source, code, timeframe, start_date, end_date
-                    )
-                elif source_name == "ashare":
-                    data, elapsed = self._fetch_from_ashare(
-                        source, code, timeframe, start_date, end_date
-                    )
-                elif source_name == "akshare":
-                    data, elapsed = self._fetch_from_akshare(
-                        source, code, timeframe, start_date, end_date
-                    )
-                elif source_name == "baostock":
-                    data, elapsed = self._fetch_from_baostock(
-                        source, code, timeframe, start_date, end_date
-                    )
-                elif source_name == "easyquotation":
-                    data, elapsed = self._fetch_from_easyquotation(
-                        source, code, timeframe, start_date, end_date
-                    )
-                else:
+                # 使用超时包装器获取数据
+                fetch_func = self._get_fetch_func(source_name)
+                if not fetch_func:
                     raise NotImplementedError(f"未实现的数据源: {source_name}")
+
+                # 包装函数以添加超时保护
+                @with_timeout(timeout_seconds)
+                def fetch_with_timeout():
+                    return fetch_func(source, code, timeframe, start_date, end_date)
+
+                data, elapsed = fetch_with_timeout()
 
                 # 检查数据是否为空
                 if data is None or (hasattr(data, '__len__') and len(data) == 0):
@@ -296,6 +324,12 @@ class SourceScheduler:
 
                 return data
 
+            except TimeoutError as e:
+                last_error = e
+                self.stats[source_name].record_failure(str(e))
+                logger.warning(f"❌ {source_name} 获取超时（{timeout_seconds}秒），尝试下一个数据源")
+                continue
+
             except Exception as e:
                 last_error = e
                 self.stats[source_name].record_failure(str(e))
@@ -306,6 +340,17 @@ class SourceScheduler:
 
         # 所有数据源都失败
         raise Exception(f"所有数据源获取失败，最后错误: {last_error}")
+
+    def _get_fetch_func(self, source_name: str):
+        """获取对应数据源的获取函数"""
+        fetch_funcs = {
+            "mcp": self._fetch_from_mcp,
+            "ashare": self._fetch_from_ashare,
+            "akshare": self._fetch_from_akshare,
+            "baostock": self._fetch_from_baostock,
+            "easyquotation": self._fetch_from_easyquotation
+        }
+        return fetch_funcs.get(source_name)
 
     def _fetch_from_ashare(
         self,

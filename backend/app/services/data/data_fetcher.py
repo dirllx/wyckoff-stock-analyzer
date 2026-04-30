@@ -98,24 +98,28 @@ class DataFetcher:
             # 科创板A股：688开头（必须在基金判断之前）
             elif code.startswith("688") and len(code) == 6:
                 # 科创板A股，使用A股接口
-                df = ak.stock_individual_info_em(symbol=code)
-                info = {"code": code, "market": "A股", "industry": ""}
+                try:
+                    df = ak.stock_individual_info_em(symbol=code)
+                    info = {"code": code, "market": "A股", "industry": ""}
 
-                # 先设置默认值
-                info["name"] = ""
+                    # 先设置默认值
+                    info["name"] = ""
 
-                # 将 item-value 映射到 info 字典
-                for _, row in df.iterrows():
-                    info[row["item"]] = row["value"]
+                    # 将 item-value 映射到 info 字典
+                    for _, row in df.iterrows():
+                        info[row["item"]] = row["value"]
 
-                # 标准化字段名
-                if "股票简称" in info:
-                    info["name"] = info["股票简称"]
-                if "行业" in info:
-                    info["industry"] = info["行业"]
+                    # 标准化字段名
+                    if "股票简称" in info:
+                        info["name"] = info["股票简称"]
+                    if "行业" in info:
+                        info["industry"] = info["行业"]
 
-                logger.info(f"获取股票{code}信息成功: {info.get('name', 'N/A')}")
-                return info
+                    logger.info(f"获取股票{code}信息成功: {info.get('name', 'N/A')}")
+                    return info
+                except Exception as e:
+                    logger.warning(f"获取科创板{code}信息失败: {e}，使用默认值")
+                    return {"code": code, "market": "A股", "name": "科创板股票", "industry": ""}
 
             # 基金/ETF：5开头且长度为6（排除688的科创板）
             elif code.startswith("5") and len(code) == 6:
@@ -132,34 +136,41 @@ class DataFetcher:
                         }
                 except Exception as e:
                     logger.warning(f"获取基金{code}信息失败: {e}")
+                    return {"code": code, "market": "基金", "name": "ETF基金", "industry": "ETF"}
 
             # 普通A股：0/3开头，或6开头但不是688（科创板已单独处理）
             elif code.startswith("0") or code.startswith("3") or \
                  (code.startswith("6") and not code.startswith("688")):
                 # A股
-                df = ak.stock_individual_info_em(symbol=code)
-                info = {"code": code, "market": "A股"}
+                try:
+                    df = ak.stock_individual_info_em(symbol=code)
+                    info = {"code": code, "market": "A股"}
 
-                # 先设置默认值
-                info["name"] = ""
-                info["industry"] = ""
+                    # 先设置默认值
+                    info["name"] = ""
+                    info["industry"] = ""
 
-                # 将 item-value 映射到 info 字典
-                for _, row in df.iterrows():
-                    info[row["item"]] = row["value"]
+                    # 将 item-value 映射到 info 字典
+                    for _, row in df.iterrows():
+                        info[row["item"]] = row["value"]
 
-                # 标准化字段名
-                if "股票简称" in info:
-                    info["name"] = info["股票简称"]
-                if "行业" in info:
-                    info["industry"] = info["行业"]
+                    # 标准化字段名
+                    if "股票简称" in info:
+                        info["name"] = info["股票简称"]
+                    if "行业" in info:
+                        info["industry"] = info["行业"]
+
+                    return info
+                except Exception as e:
+                    logger.warning(f"获取A股{code}信息失败: {e}，使用默认值")
+                    return {"code": code, "market": "A股", "name": "A股股票", "industry": ""}
 
             elif code.startswith("HK"):
                 # 港股带HK前缀的格式（如HK2157）
-                hk_code = code[2:]  # 去掉HK前缀
-                hk_code = hk_code.zfill(5)  # 格式化为5位
-
                 try:
+                    hk_code = code[2:]  # 去掉HK前缀
+                    hk_code = hk_code.zfill(5)  # 格式化为5位
+
                     stock_name = ak.stock_hk_spot_em()
                     stock_info = stock_name[stock_name["代码"] == hk_code]
                     if not stock_info.empty:
@@ -169,18 +180,16 @@ class DataFetcher:
                             "market": "港股",
                             "industry": ""
                         }
-                except (ValueError, KeyError, IndexError, ConnectionError) as e:
-                    logger.warning(f"获取港股{code}名称失败: {e}")
-                return {"code": code, "market": "港股", "name": "", "industry": ""}
+                except Exception as e:
+                    logger.warning(f"获取港股{code}信息失败: {e}")
+                return {"code": code, "market": "港股", "name": "港股股票", "industry": ""}
             else:
-                raise ValueError(f"无法识别股票代码: {code}")
+                logger.warning(f"无法识别股票代码: {code}，使用默认值")
+                return {"code": code, "market": "未知", "name": "", "industry": ""}
 
-            logger.info(f"获取股票{code}信息成功: {info.get('name', 'N/A')}")
-            return info
-
-        except (ValueError, KeyError, ConnectionError, RuntimeError) as e:
-            logger.error(f"获取股票{code}信息失败: {e}")
-            return {"code": code, "market": "未知", "name": "", "industry": ""}
+        except Exception as e:
+            logger.error(f"获取股票{code}信息失败: {e}，使用默认值")
+            return {"code": code, "market": "A股", "name": "股票", "industry": ""}
 
     @retry_on_network_error(max_retries=3, initial_delay=2.0)
     def get_stock_quotes(

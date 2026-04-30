@@ -1714,8 +1714,8 @@
         // 本地开发：API_BASE = http://${currentHost}:8000
         const currentHost = window.location.hostname;
         const API_BASE = window.location.port === '3000' && window.location.protocol === 'http:'
-            ? `http://${currentHost}:8000`  // 本地直连后端: Nginx 代理 /api → backend:8000
-            : `http://${currentHost}:8000`;  // 本地开发: 直连后端
+            ? `http://${currentHost}:8888`  // 本地直连后端: 修改为8888端口
+            : `http://${currentHost}:8888`;  // 本地开发: 直连后端
 
         // 显示 API 配置信息
         console.log('='.repeat(60));
@@ -4226,6 +4226,58 @@
                     return;
                 }
 
+                // ========== 股票代码验证 ==========
+                addLog('验证股票', `正在验证股票代码 ${code}...`);
+                try {
+                    const validateRes = await fetch(`${API_BASE}/api/v1/stocks/validate/${code}`);
+                    const validateData = await validateRes.json();
+
+                    if (!validateData.exists) {
+                        // 股票不存在，显示错误和建议
+                        let errorMsg = validateData.message || '股票代码不存在';
+                        let suggestions = '';
+
+                        if (validateData.similar_codes && validateData.similar_codes.length > 0) {
+                            suggestions = `
+                                <div style="background: rgba(76, 201, 240, 0.1); border: 1px solid rgba(76, 201, 240, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px;">
+                                    <div style="color: #4cc9f0; font-size: 13px; font-weight: 600; margin-bottom: 6px;">💡 您是否想查询以下股票？</div>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        ${validateData.similar_codes.slice(0, 5).map(similarCode => `
+                                            <button onclick="document.getElementById('stockCode').value='${similarCode}'; analyzeStock();"
+                                                    style="background: rgba(76, 201, 240, 0.2); color: #4cc9f0; border: 1px solid rgba(76, 201, 240, 0.4); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                ${similarCode}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        resultDiv.innerHTML = `
+                            <div class="card" style="margin-top: 10px;">
+                                <div class="card-header" style="background: #7f1d1d;">
+                                    <h3 class="card-title" style="color: #fca5a5;">❌ 股票代码无效</h3>
+                                </div>
+                                <div style="padding: 16px;">
+                                    <p style="color: #fca5a5; margin-bottom: 12px;">${errorMsg}</p>
+                                    ${suggestions}
+                                </div>
+                            </div>
+                        `;
+                        addLog('验证失败', errorMsg);
+                        updateTestStatus('验证失败', false, errorMsg);
+                        return;
+                    }
+
+                    // 股票存在，显示股票名称
+                    if (validateData.name) {
+                        addLog('验证通过', `股票: ${code} - ${validateData.name}`);
+                    }
+                } catch (validateError) {
+                    // 验证失败不阻止分析，继续尝试
+                    console.warn('股票验证失败，继续分析:', validateError);
+                }
+
                 addLog('开始分析', `股票: ${code}, 周期: ${timeframe}`);
                 updateTestStatus('股票分析', false, '正在分析...');
 
@@ -4498,7 +4550,34 @@
 
             } catch (error) {
                 console.error('分析失败:', error);
-                const errorMsg = error.message || '未知错误';
+                let errorMsg = error.message || '未知错误';
+
+                // 检查是否包含股票代码建议
+                let suggestions = '';
+                if (errorMsg.includes('您是否想查询')) {
+                    const parts = errorMsg.split('您是否想查询');
+                    if (parts.length > 1) {
+                        const suggestedCodesPart = parts[1].split(':')[0] || parts[1];
+                        // 提取股票代码
+                        const codeMatches = suggestedCodesPart.match(/\d{6}/g);
+                        if (codeMatches && codeMatches.length > 0) {
+                            errorMsg = parts[0].trim();
+                            suggestions = `
+                                <div style="background: rgba(76, 201, 240, 0.1); border: 1px solid rgba(76, 201, 240, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px;">
+                                    <div style="color: #4cc9f0; font-size: 13px; font-weight: 600; margin-bottom: 6px;">💡 您是否想查询以下股票？</div>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        ${codeMatches.slice(0, 5).map(similarCode => `
+                                            <button onclick="document.getElementById('stockCode').value='${similarCode}'; analyzeStock();"
+                                                    style="background: rgba(76, 201, 240, 0.2); color: #4cc9f0; border: 1px solid rgba(76, 201, 240, 0.4); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                ${similarCode}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                }
 
                 // 检查是否是不支持分钟线数据的错误（只有明确说"不支持"才是）
                 const isMinuteNotSupported = errorMsg.includes('不支持分钟线') ||
@@ -4506,9 +4585,28 @@
                                               errorMsg.includes('基金/ETF') ||
                                               errorMsg.includes('港股不支持');
 
+                // 检查是否是网络连接错误
+                const isNetworkError = errorMsg.includes('Connection aborted') ||
+                                       errorMsg.includes('RemoteDisconnected') ||
+                                       errorMsg.includes('Connection reset') ||
+                                       errorMsg.includes('Timeout') ||
+                                       errorMsg.includes('连接中断') ||
+                                       errorMsg.includes('连接被重置');
+
                 // 根据错误类型显示不同的提示
                 let hintMessage = '';
-                if (isMinuteNotSupported) {
+                if (isNetworkError) {
+                    hintMessage = `
+                        <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px;">
+                            <div style="color: #fbbf24; font-size: 13px; font-weight: 600; margin-bottom: 6px;">⚠️ 网络连接问题</div>
+                            <div style="color: #d1d5db; font-size: 12px; line-height: 1.6;">
+                                • 数据源服务器连接中断或网络不稳定<br>
+                                • <strong>解决方案</strong>：请稍后重试，或尝试其他股票代码<br>
+                                • 首次查询股票时需要从数据源获取数据，请确保网络连接正常
+                            </div>
+                        </div>
+                    `;
+                } else if (isMinuteNotSupported) {
                     hintMessage = `
                         <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 6px; padding: 12px; margin-top: 12px;">
                             <div style="color: #fbbf24; font-size: 13px; font-weight: 600; margin-bottom: 6px;">💡 温馨提示</div>
@@ -4519,7 +4617,8 @@
                             </div>
                         </div>
                     `;
-                } else {
+                } else if (!suggestions) {
+                    // 只有在没有建议时才显示通用提示
                     hintMessage = `
                         <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;">
                             提示：如果是首次查询分钟线数据，可能需要较长时间，请耐心等待。
@@ -4534,7 +4633,13 @@
                         </div>
                         <div style="padding: 16px;">
                             <p style="color: #fca5a5;">${errorMsg}</p>
+                            ${suggestions}
                             ${hintMessage}
+                            <div style="margin-top: 12px;">
+                                <button onclick="analyzeStock()" class="btn" style="padding: 8px 16px; font-size: 13px;">
+                                    🔄 重试
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;

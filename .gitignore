@@ -58,7 +58,27 @@ backend/wyckoff.db.*-shm
 backend/wyckoff.db.*-wal
 backend/wyckoff.db.broken*
 backend/wyckoff.db.corrupted
-# 环境变量备份
+# 环境变量（包含敏感信息）
+backend/.env
 backend/.env.*
+
 # 测试覆盖率
 backend/.coverage
+
+# 临时脚本和启动文件
+*.bat
+*.ps1
+backend/test_*.py
+backend/clean_*.py
+backend/disable_mcp.py
+backend/setup_postgres.py
+
+# 前端临时测试文件
+frontend/test-*.html
+frontend/*-test.html
+frontend/diagnostic*.html
+frontend/api-diagnostic.html
+frontend/deploy-status.html
+frontend/simple-test.html
+frontend/performance-test.html
+frontend/timeout-fix.js

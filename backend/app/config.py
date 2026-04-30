@@ -8,8 +8,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """应用配置"""
 
-    # 数据库配置
-    DATABASE_URL: str = "sqlite:///./wyckoff.db"
+    # 数据库配置 - 使用PostgreSQL with pg8000 driver
+    DATABASE_URL: str = "postgresql+pg8000://postgres:postgres@localhost:5432/wyckoff_db"
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # API配置

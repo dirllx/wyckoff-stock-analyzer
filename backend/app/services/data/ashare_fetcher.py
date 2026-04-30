@@ -23,7 +23,7 @@ class AshareFetcher:
     TENCENT_DAY_URL = "http://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
     TENCENT_MIN_URL = "http://ifzq.gtimg.cn/appstock/app/kline/mkline"
 
-    TIMEOUT = 10
+    TIMEOUT = 30  # 增加超时时间到30秒
 
     # 频率映射
     SINA_FREQ_MAP = {
@@ -146,28 +146,34 @@ class AshareFetcher:
             "datalen": count,
         }
 
-        try:
-            resp = self._session.get(self.SINA_KLINE_URL, params=params, timeout=self.TIMEOUT)
-            data = json.loads(resp.content)
+        # 重试机制
+        for attempt in range(3):
+            try:
+                resp = self._session.get(self.SINA_KLINE_URL, params=params, timeout=self.TIMEOUT)
+                data = json.loads(resp.content)
 
-            if not data or isinstance(data, dict):
-                return None
+                if not data or isinstance(data, dict):
+                    return None
 
-            df = pd.DataFrame(data, columns=['day', 'open', 'high', 'low', 'close', 'volume'])
-            df['open'] = df['open'].astype(float)
-            df['high'] = df['high'].astype(float)
-            df['low'] = df['low'].astype(float)
-            df['close'] = df['close'].astype(float)
-            df['volume'] = df['volume'].astype(float)
-            df['day'] = pd.to_datetime(df['day'])
-            df = df.set_index('day')
-            df.index.name = ''
+                df = pd.DataFrame(data, columns=['day', 'open', 'high', 'low', 'close', 'volume'])
+                df['open'] = df['open'].astype(float)
+                df['high'] = df['high'].astype(float)
+                df['low'] = df['low'].astype(float)
+                df['close'] = df['close'].astype(float)
+                df['volume'] = df['volume'].astype(float)
+                df['day'] = pd.to_datetime(df['day'])
+                df = df.set_index('day')
+                df.index.name = ''
 
-            return df
+                return df
 
-        except Exception as e:
-            logger.debug(f"Sina获取失败: {e}")
-            return None
+            except Exception as e:
+                logger.debug(f"Sina获取失败 (尝试 {attempt + 1}/3): {e}")
+                if attempt < 2:
+                    time.sleep(1)  # 等待1秒后重试
+                else:
+                    logger.warning(f"Sina获取最终失败: {e}")
+                    return None
 
     def _get_tencent_day(
         self, code: str, end_date: str, count: int, frequency: str
@@ -180,30 +186,36 @@ class AshareFetcher:
 
         url = f"{self.TENCENT_DAY_URL}?param={code},{unit},,{end_date},{count},qfq"
 
-        try:
-            resp = self._session.get(url, timeout=self.TIMEOUT)
-            st = json.loads(resp.content)
+        # 重试机制
+        for attempt in range(3):
+            try:
+                resp = self._session.get(url, timeout=self.TIMEOUT)
+                st = json.loads(resp.content)
 
-            if 'data' not in st or code not in st['data']:
-                return None
+                if 'data' not in st or code not in st['data']:
+                    return None
 
-            stk = st['data'][code]
-            ms = 'qfq' + unit
-            buf = stk[ms] if ms in stk else stk.get(unit)
+                stk = st['data'][code]
+                ms = 'qfq' + unit
+                buf = stk[ms] if ms in stk else stk.get(unit)
 
-            if not buf:
-                return None
+                if not buf:
+                    return None
 
-            df = pd.DataFrame(buf, columns=['time', 'open', 'close', 'high', 'low', 'volume'], dtype='float')
-            df['time'] = pd.to_datetime(df['time'])
-            df = df.set_index('time')
-            df.index.name = ''
+                df = pd.DataFrame(buf, columns=['time', 'open', 'close', 'high', 'low', 'volume'], dtype='float')
+                df['time'] = pd.to_datetime(df['time'])
+                df = df.set_index('time')
+                df.index.name = ''
 
-            return df
+                return df
 
-        except Exception as e:
-            logger.debug(f"腾讯日线获取失败: {e}")
-            return None
+            except Exception as e:
+                logger.debug(f"腾讯日线获取失败 (尝试 {attempt + 1}/3): {e}")
+                if attempt < 2:
+                    time.sleep(1)
+                else:
+                    logger.warning(f"腾讯日线获取最终失败: {e}")
+                    return None
 
     def _get_tencent_min(
         self, code: str, count: int, frequency: str
